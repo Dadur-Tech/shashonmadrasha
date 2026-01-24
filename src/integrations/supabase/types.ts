@@ -334,6 +334,13 @@ export type Database = {
             foreignKeyName: "donations_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
@@ -389,6 +396,13 @@ export type Database = {
             columns: ["exam_id"]
             isOneToOne: false
             referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "lillah_students_public"
             referencedColumns: ["id"]
           },
           {
@@ -1128,6 +1142,13 @@ export type Database = {
             foreignKeyName: "student_attendance_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
@@ -1198,6 +1219,13 @@ export type Database = {
             columns: ["fee_type_id"]
             isOneToOne: false
             referencedRelation: "fee_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fees_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "lillah_students_public"
             referencedColumns: ["id"]
           },
           {
@@ -1629,6 +1657,13 @@ export type Database = {
             foreignKeyName: "weekly_jamiyat_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_jamiyat_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
@@ -1643,6 +1678,31 @@ export type Database = {
       }
     }
     Views: {
+      lillah_students_public: {
+        Row: {
+          class_department: string | null
+          class_id: string | null
+          class_name: string | null
+          father_name: string | null
+          full_name: string | null
+          id: string | null
+          is_orphan: boolean | null
+          lillah_reason: string | null
+          photo_url: string | null
+          sponsor_id: string | null
+          sponsor_name: string | null
+          student_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_gateways_public: {
         Row: {
           created_at: string | null

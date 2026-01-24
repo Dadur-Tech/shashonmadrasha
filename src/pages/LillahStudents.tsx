@@ -6,39 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Users, Baby, Home, ArrowLeft, Search, Phone, MapPin, BookOpen } from "lucide-react";
+import { Heart, Users, Baby, Home, ArrowLeft, Search, BookOpen } from "lucide-react";
 import { useState } from "react";
 
 export default function LillahStudentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
 
-  // Fetch all lillah students
+  // Fetch all lillah students using public view (no sensitive data)
   const { data: lillahStudents = [], isLoading } = useQuery({
     queryKey: ["all-lillah-students"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("students")
-        .select(`
-          id,
-          student_id,
-          full_name,
-          father_name,
-          photo_url,
-          address,
-          guardian_phone,
-          is_orphan,
-          lillah_reason,
-          sponsor_id,
-          classes(name, department),
-          sponsors(full_name)
-        `)
-        .eq("is_lillah", true)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+        .from("lillah_students_public" as any)
+        .select("*")
+        .order("full_name");
       
       if (error) throw error;
-      return data || [];
+      
+      // Transform to match expected structure
+      return (data || []).map((student: any) => ({
+        ...student,
+        classes: student.class_name ? {
+          name: student.class_name,
+          department: student.class_department,
+        } : null,
+        sponsors: student.sponsor_name ? {
+          full_name: student.sponsor_name,
+        } : null,
+      }));
     },
   });
 
@@ -241,12 +237,6 @@ export default function LillahStudentsPage() {
                             <div className="flex items-center gap-2">
                               <BookOpen className="w-4 h-4 flex-shrink-0" />
                               <span className="truncate">{student.classes.name}</span>
-                            </div>
-                          )}
-                          {student.address && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4 flex-shrink-0" />
-                              <span className="truncate">{student.address}</span>
                             </div>
                           )}
                           {student.lillah_reason && (

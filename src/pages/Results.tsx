@@ -68,18 +68,46 @@ export default function ResultsPage() {
     queryFn: async () => {
       if (!selectedExam) return [];
 
-      let query = supabase
+      // Step 1: Fetch exam results
+      const { data: resultsData, error: resultsError } = await supabase
         .from("exam_results")
-        .select(`
-          *,
-          students(id, full_name, student_id, photo_url, class_id, classes(id, name, department))
-        `)
+        .select("*")
         .eq("exam_id", selectedExam);
 
-      const { data } = await query;
-      if (!data) return [];
+      if (resultsError) throw resultsError;
+      if (!resultsData || resultsData.length === 0) return [];
 
-      // Group by student
+      // Step 2: Get unique student IDs
+      const studentIds = [...new Set(resultsData.map(r => r.student_id))];
+
+      // Step 3: Fetch students using public view
+      const { data: studentsData, error: studentsError } = await supabase
+        .from("students_public")
+        .select("id, student_id, full_name, photo_url, class_id")
+        .in("id", studentIds);
+
+      if (studentsError) throw studentsError;
+
+      // Step 4: Fetch class info
+      const classIds = [...new Set((studentsData || []).map(s => s.class_id).filter(Boolean))];
+      let classMap = new Map<string, any>();
+      
+      if (classIds.length > 0) {
+        const { data: classData } = await supabase
+          .from("classes")
+          .select("id, name, department")
+          .in("id", classIds);
+        
+        classMap = new Map((classData || []).map(c => [c.id, c]));
+      }
+
+      // Step 5: Build student map with class info
+      const studentMap = new Map((studentsData || []).map(s => [
+        s.id, 
+        { ...s, classes: classMap.get(s.class_id) || null }
+      ]));
+
+      // Step 6: Group by student
       const studentResults: Record<string, {
         student: any;
         subjects: { name: string; obtained: number; full: number; grade: string }[];
@@ -87,13 +115,15 @@ export default function ResultsPage() {
         totalFull: number;
       }> = {};
 
-      data.forEach(result => {
-        if (!result.students) return;
-        const studentId = result.students.id;
+      resultsData.forEach(result => {
+        const student = studentMap.get(result.student_id);
+        if (!student) return;
+        
+        const studentId = student.id;
         
         if (!studentResults[studentId]) {
           studentResults[studentId] = {
-            student: result.students,
+            student: student,
             subjects: [],
             totalObtained: 0,
             totalFull: 0,
