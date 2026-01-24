@@ -1,9 +1,55 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Heart, Book, PlayCircle, ArrowRight, Sparkles } from "lucide-react";
+import { Heart, Book, PlayCircle, ArrowRight, Sparkles, Users, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export function HeroSection() {
+  // Fetch institution settings
+  const { data: institution } = useQuery({
+    queryKey: ["institution-public"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Fetch live stats
+  const { data: stats } = useQuery({
+    queryKey: ["hero-stats"],
+    queryFn: async () => {
+      const [students, teachers, classes, departments] = await Promise.all([
+        supabase.from("students").select("*", { count: "exact", head: true }).in("status", ["active", "lillah"]),
+        supabase.from("teachers").select("*", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("classes").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("departments").select("*", { count: "exact", head: true }).eq("is_active", true),
+      ]);
+      
+      const yearsExperience = institution?.established_year 
+        ? new Date().getFullYear() - institution.established_year 
+        : 30;
+      
+      return {
+        students: students.count || 0,
+        teachers: teachers.count || 0,
+        classes: classes.count || 0,
+        departments: departments.count || 0,
+        yearsExperience,
+      };
+    },
+    enabled: !!institution,
+  });
+
+  const institutionName = institution?.name || "আল জামিয়া আরাবিয়া";
+  const institutionNameParts = institutionName.split(" ");
+  const firstPart = institutionNameParts.slice(0, 3).join(" ");
+  const secondPart = institutionNameParts.slice(3).join(" ") || "শাসন সিংগাতী মাদ্রাসা";
+
   return (
     <section className="relative pt-28 pb-20 md:pt-36 md:pb-32 overflow-hidden">
       {/* Animated Background */}
@@ -42,6 +88,17 @@ export function HeroSection() {
           <PlayCircle className="w-5 h-5 text-success" />
         </div>
       </motion.div>
+
+      {/* Additional floating elements */}
+      <motion.div 
+        animate={{ y: [0, 15, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-60 right-[15%] hidden lg:block"
+      >
+        <div className="w-10 h-10 rounded-lg bg-warning/10 backdrop-blur-sm border border-warning/20 flex items-center justify-center">
+          <GraduationCap className="w-5 h-5 text-warning" />
+        </div>
+      </motion.div>
       
       <div className="container mx-auto px-4 relative">
         <div className="max-w-5xl mx-auto text-center">
@@ -50,6 +107,22 @@ export function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
+            {/* Institution Logo */}
+            {institution?.logo_url && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="mb-6"
+              >
+                <img 
+                  src={institution.logo_url} 
+                  alt={institutionName}
+                  className="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-2xl object-cover shadow-xl border-4 border-primary/20"
+                />
+              </motion.div>
+            )}
+
             {/* Badge */}
             <motion.span
               initial={{ scale: 0.9 }}
@@ -70,7 +143,7 @@ export function HeroSection() {
                 transition={{ delay: 0.2 }}
                 className="block"
               >
-                আল জামিয়া আরাবিয়া
+                {firstPart}
               </motion.span>
               <motion.span
                 initial={{ opacity: 0, y: 20 }}
@@ -78,7 +151,7 @@ export function HeroSection() {
                 transition={{ delay: 0.4 }}
                 className="block text-gradient mt-3"
               >
-                শাসন সিংগাতী মাদ্রাসা
+                {secondPart}
               </motion.span>
             </h1>
             
@@ -121,7 +194,7 @@ export function HeroSection() {
               </a>
             </motion.div>
             
-            {/* Quick Stats */}
+            {/* Quick Stats - Dynamic */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -129,18 +202,36 @@ export function HeroSection() {
               className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
             >
               {[
-                { value: "৩০+", label: "বছরের অভিজ্ঞতা" },
-                { value: "৫০০+", label: "ছাত্র সংখ্যা" },
-                { value: "৫০+", label: "অভিজ্ঞ শিক্ষক" },
-                { value: "৪টি", label: "বিভাগ" },
+                { 
+                  value: stats?.yearsExperience ? `${stats.yearsExperience}+` : "৩০+", 
+                  label: "বছরের অভিজ্ঞতা",
+                  icon: GraduationCap 
+                },
+                { 
+                  value: stats?.students ? `${stats.students}+` : "৫০০+", 
+                  label: "ছাত্র সংখ্যা",
+                  icon: Users 
+                },
+                { 
+                  value: stats?.teachers ? `${stats.teachers}+` : "৫০+", 
+                  label: "অভিজ্ঞ শিক্ষক",
+                  icon: Users 
+                },
+                { 
+                  value: stats?.departments ? `${stats.departments}টি` : "৪টি", 
+                  label: "বিভাগ",
+                  icon: Book 
+                },
               ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1.2 + index * 0.1 }}
-                  className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50"
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all cursor-default"
                 >
+                  <stat.icon className="w-6 h-6 text-primary/60 mx-auto mb-2" />
                   <p className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</p>
                   <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
                 </motion.div>
