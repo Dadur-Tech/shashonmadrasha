@@ -1,34 +1,86 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Demo login - will be replaced with actual auth
-    setTimeout(() => {
+    if (!email || !password) {
       toast({
-        title: "সফলভাবে লগইন হয়েছে",
-        description: "ড্যাশবোর্ডে স্বাগতম!",
+        title: "তথ্য দিন",
+        description: "ইমেইল ও পাসওয়ার্ড দিন",
+        variant: "destructive",
       });
-      navigate("/admin");
+      return;
+    }
+    
+    setIsLoading(true);
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      toast({
+        title: "লগইন সমস্যা",
+        description: error.message || "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে",
+        variant: "destructive",
+      });
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    
+    toast({
+      title: "সফলভাবে লগইন হয়েছে",
+      description: "ড্যাশবোর্ডে স্বাগতম!",
+    });
+    navigate("/admin");
+    setIsLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !fullName) {
+      toast({
+        title: "তথ্য দিন",
+        description: "সব তথ্য পূরণ করুন",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    const { error } = await signUp(email, password, fullName);
+    
+    if (error) {
+      toast({
+        title: "রেজিস্ট্রেশন সমস্যা",
+        description: error.message || "রেজিস্ট্রেশনে সমস্যা হয়েছে",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+    
+    toast({
+      title: "রেজিস্ট্রেশন সফল!",
+      description: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। এখন লগইন করুন।",
+    });
+    setIsLoading(false);
   };
 
   return (
@@ -58,81 +110,143 @@ export default function LoginPage() {
 
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">লগইন করুন</CardTitle>
-            <CardDescription>আপনার অ্যাকাউন্টে প্রবেশ করুন</CardDescription>
+            <CardTitle className="text-xl">অ্যাকাউন্ট</CardTitle>
+            <CardDescription>লগইন করুন অথবা নতুন অ্যাকাউন্ট তৈরি করুন</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">ইমেইল</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@madrasa.edu"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="login">লগইন</TabsTrigger>
+                <TabsTrigger value="register">রেজিস্টার</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">ইমেইল</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="admin@madrasa.edu"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">পাসওয়ার্ড</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">পাসওয়ার্ড</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="pl-10 pr-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-border" />
-                  <span className="text-muted-foreground">মনে রাখুন</span>
-                </label>
-                <a href="#" className="text-primary hover:underline">
-                  পাসওয়ার্ড ভুলে গেছেন?
-                </a>
-              </div>
+                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        লগইন হচ্ছে...
+                      </span>
+                    ) : (
+                      <>
+                        লগইন করুন
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="register">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">পুরো নাম</Label>
+                    <Input
+                      id="fullName"
+                      type="text"
+                      placeholder="আপনার পুরো নাম"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">ইমেইল</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="register-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        className="pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
 
-              <Button type="submit" className="w-full gap-2" disabled={isLoading}>
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                    লগইন হচ্ছে...
-                  </span>
-                ) : (
-                  <>
-                    লগইন করুন
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">পাসওয়ার্ড</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="register-password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="কমপক্ষে ৬ অক্ষর"
+                        className="pl-10 pr-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              অ্যাকাউন্ট নেই?{" "}
-              <Link to="/register" className="text-primary hover:underline font-medium">
-                রেজিস্টার করুন
-              </Link>
-            </div>
+                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        তৈরি হচ্ছে...
+                      </span>
+                    ) : (
+                      <>
+                        অ্যাকাউন্ট তৈরি করুন
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

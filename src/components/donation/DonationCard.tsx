@@ -71,7 +71,7 @@ const paymentGateways: PaymentGateway[] = [
   { id: "manual", name: "ম্যানুয়াল", logo: "💳", enabled: true },
 ];
 
-export function DonationSection() {
+export const DonationSection = () => {
   return (
     <section id="donate" className="py-20 bg-gradient-to-b from-background to-secondary/30">
       <div className="container mx-auto px-4">
