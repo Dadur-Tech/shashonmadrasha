@@ -54,12 +54,12 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">م</span>
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
-                <h1 className="font-bold text-foreground">মাদ্রাসা SaaS</h1>
-                <p className="text-xs text-muted-foreground">ম্যানেজমেন্ট সিস্টেম</p>
+                <h1 className="font-bold text-foreground text-sm leading-tight">আল জামেয়া আরাবিয়া</h1>
+                <p className="text-xs text-muted-foreground">শাশন সিঙ্গাটি মাদ্রাসা</p>
               </div>
             </div>
             
@@ -104,14 +104,14 @@ export default function Index() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6">
-                <Star className="w-4 h-4" />
-                বাংলাদেশের সেরা মাদ্রাসা ম্যানেজমেন্ট সিস্টেম
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 text-center">
+                <Star className="w-4 h-4 shrink-0" />
+                Al Jamea Arabia Shashon Shingati Madrasha
               </span>
               
-              <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-                আপনার মাদ্রাসা পরিচালনা করুন
-                <span className="block text-gradient mt-2">স্মার্ট ও সহজ উপায়ে</span>
+              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
+                আল জামেয়া আরাবিয়া
+                <span className="block text-gradient mt-2">শাশন সিঙ্গাটি মাদ্রাসা</span>
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -294,13 +294,13 @@ export default function Index() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">م</span>
+                <span className="text-primary-foreground font-bold">ج</span>
               </div>
-              <span className="font-semibold">মাদ্রাসা SaaS</span>
+              <span className="font-semibold">আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি</span>
             </div>
             
             <p className="text-sm text-muted-foreground">
-              © ২০২৫ মাদ্রাসা SaaS। সর্বস্বত্ব সংরক্ষিত।
+              © ২০২৫ আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
             </p>
           </div>
         </div>

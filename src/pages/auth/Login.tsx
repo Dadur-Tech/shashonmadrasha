@@ -49,11 +49,11 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3">
             <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl">م</span>
+              <span className="text-primary-foreground font-bold text-2xl">ج</span>
             </div>
           </Link>
-          <h1 className="mt-4 text-2xl font-bold text-foreground">মাদ্রাসা SaaS</h1>
-          <p className="text-muted-foreground">ম্যানেজমেন্ট সিস্টেম</p>
+          <h1 className="mt-4 text-xl font-bold text-foreground leading-tight">আল জামেয়া আরাবিয়া</h1>
+          <p className="text-muted-foreground">শাশন সিঙ্গাটি মাদ্রাসা</p>
         </div>
 
         <Card className="border-border/50 shadow-lg">
@@ -137,7 +137,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © ২০২৫ মাদ্রাসা SaaS। সর্বস্বত্ব সংরক্ষিত।
+          © ২০২৫ আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি মাদ্রাসা
         </p>
       </motion.div>
     </div>

@@ -72,11 +72,11 @@ export function Sidebar() {
               className="flex items-center gap-3"
             >
               <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-bold text-lg">م</span>
+                <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
-                <h1 className="font-bold text-sidebar-foreground">মাদ্রাসা</h1>
-                <p className="text-xs text-sidebar-foreground/60">ম্যানেজমেন্ট সিস্টেম</p>
+                <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">আল জামেয়া আরাবিয়া</h1>
+                <p className="text-xs text-sidebar-foreground/60">শাশন সিঙ্গাটি</p>
               </div>
             </motion.div>
           )}
@@ -84,7 +84,7 @@ export function Sidebar() {
         
         {collapsed && (
           <div className="w-10 h-10 mx-auto rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sidebar-primary-foreground font-bold text-lg">م</span>
+            <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
           </div>
         )}
       </div>
