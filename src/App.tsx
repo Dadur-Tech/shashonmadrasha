@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 
 // Pages
 import Index from "./pages/Index";
@@ -34,6 +35,7 @@ import SettingsPage from "./pages/admin/Settings";
 import HelpPage from "./pages/admin/Help";
 import AlumniManagement from "./pages/admin/AlumniManagement";
 import JamiyatManagement from "./pages/admin/JamiyatManagement";
+import BootstrapAdminPage from "./pages/admin/BootstrapAdmin";
 
 const queryClient = new QueryClient();
 
@@ -53,25 +55,28 @@ const App = () => (
             <Route path="/alumni" element={<AlumniPage />} />
             
             {/* Admin Routes */}
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/students" element={<AdminStudentsPage />} />
-            <Route path="/admin/teachers" element={<TeachersPage />} />
-            <Route path="/admin/classes" element={<ClassesPage />} />
-            <Route path="/admin/attendance" element={<AttendancePage />} />
-            <Route path="/admin/fees" element={<FeesPage />} />
-            <Route path="/admin/lillah" element={<LillahPage />} />
-            <Route path="/admin/exams" element={<ExamsPage />} />
-            <Route path="/admin/reports" element={<ReportsPage />} />
-            <Route path="/admin/online-classes" element={<OnlineClassesPage />} />
-            <Route path="/admin/donations" element={<DonationsPage />} />
-            <Route path="/admin/expenses" element={<ExpensesPage />} />
-            <Route path="/admin/salaries" element={<SalariesPage />} />
-            <Route path="/admin/payment-gateways" element={<PaymentGatewaysPage />} />
-            <Route path="/admin/institution" element={<InstitutionPage />} />
-            <Route path="/admin/settings" element={<SettingsPage />} />
-            <Route path="/admin/help" element={<HelpPage />} />
-            <Route path="/admin/alumni" element={<AlumniManagement />} />
-            <Route path="/admin/jamiyat" element={<JamiyatManagement />} />
+            <Route element={<RequireAuth />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/bootstrap-admin" element={<BootstrapAdminPage />} />
+              <Route path="/admin/students" element={<AdminStudentsPage />} />
+              <Route path="/admin/teachers" element={<TeachersPage />} />
+              <Route path="/admin/classes" element={<ClassesPage />} />
+              <Route path="/admin/attendance" element={<AttendancePage />} />
+              <Route path="/admin/fees" element={<FeesPage />} />
+              <Route path="/admin/lillah" element={<LillahPage />} />
+              <Route path="/admin/exams" element={<ExamsPage />} />
+              <Route path="/admin/reports" element={<ReportsPage />} />
+              <Route path="/admin/online-classes" element={<OnlineClassesPage />} />
+              <Route path="/admin/donations" element={<DonationsPage />} />
+              <Route path="/admin/expenses" element={<ExpensesPage />} />
+              <Route path="/admin/salaries" element={<SalariesPage />} />
+              <Route path="/admin/payment-gateways" element={<PaymentGatewaysPage />} />
+              <Route path="/admin/institution" element={<InstitutionPage />} />
+              <Route path="/admin/settings" element={<SettingsPage />} />
+              <Route path="/admin/help" element={<HelpPage />} />
+              <Route path="/admin/alumni" element={<AlumniManagement />} />
+              <Route path="/admin/jamiyat" element={<JamiyatManagement />} />
+            </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
