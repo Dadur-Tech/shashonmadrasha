@@ -52,8 +52,8 @@ export default function LoginPage() {
               <span className="text-primary-foreground font-bold text-2xl">ج</span>
             </div>
           </Link>
-          <h1 className="mt-4 text-xl font-bold text-foreground leading-tight">আল জামেয়া আরাবিয়া</h1>
-          <p className="text-muted-foreground">শাশন সিঙ্গাটি মাদ্রাসা</p>
+          <h1 className="mt-4 text-xl font-bold text-foreground leading-tight">আল জামিয়াতুল আরাবিয়া</h1>
+          <p className="text-muted-foreground">শাসন সিংগাতি মাদরাসা</p>
         </div>
 
         <Card className="border-border/50 shadow-lg">
@@ -137,7 +137,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © ২০২৫ আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি মাদ্রাসা
+          © ২০২৫ আল জামিয়াতুল আরাবিয়া শাসন সিংগাতি মাদরাসা
         </p>
       </motion.div>
     </div>
