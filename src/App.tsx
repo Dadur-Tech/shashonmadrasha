@@ -18,6 +18,7 @@ import PublicClassesPage from "./pages/Classes";
 import CoursesPage from "./pages/Courses";
 import CourseDetailPage from "./pages/CourseDetail";
 import LessonDetailPage from "./pages/LessonDetail";
+import LillahStudentsPage from "./pages/LillahStudents";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/course/:courseId" element={<CourseDetailPage />} />
             <Route path="/lesson/:lessonId" element={<LessonDetailPage />} />
+            <Route path="/lillah-students" element={<LillahStudentsPage />} />
             
             {/* Admin Routes */}
             <Route element={<RequireAuth />}>

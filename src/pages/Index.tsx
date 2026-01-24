@@ -32,6 +32,7 @@ import { NotableAlumni } from "@/components/landing/NotableAlumni";
 import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
 import { OnlineClassesPreview } from "@/components/landing/OnlineClassesPreview";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { LillahBoardingSection } from "@/components/landing/LillahBoardingSection";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
@@ -165,11 +166,12 @@ export default function Index() {
       {/* Quick Links Section */}
       <section className="py-12 -mt-16 relative z-10">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {[
               { icon: PlayCircle, label: "অনলাইন ক্লাস", href: "/courses", color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/40" },
               { icon: FileText, label: "পরীক্ষার ফলাফল", href: "/results", color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950/40" },
               { icon: Users, label: "ছাত্র তালিকা", href: "/students", color: "text-emerald-600", bgColor: "bg-emerald-50 dark:bg-emerald-950/40" },
+              { icon: Heart, label: "লিল্লাহ বোর্ডিং", href: "/lillah-students", color: "text-rose-600", bgColor: "bg-rose-50 dark:bg-rose-950/40" },
               { icon: Award, label: "প্রাক্তন ছাত্র", href: "/alumni", color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950/40" },
             ].map((item, index) => (
               <motion.div
@@ -223,6 +225,9 @@ export default function Index() {
 
       {/* Notable Alumni */}
       <NotableAlumni />
+
+      {/* Lillah Boarding Section */}
+      <LillahBoardingSection />
 
       {/* Recent Results Section */}
       <div id="results">
@@ -350,6 +355,7 @@ export default function Index() {
                 <li><a href="#donate" className="hover:text-foreground transition-colors">দান করুন</a></li>
                 <li><a href="#admission" className="hover:text-foreground transition-colors">ভর্তি তথ্য</a></li>
                 <li><Link to="/students" className="hover:text-foreground transition-colors">ছাত্র তালিকা</Link></li>
+                <li><Link to="/lillah-students" className="hover:text-foreground transition-colors">লিল্লাহ বোর্ডিং</Link></li>
                 <li><Link to="/alumni" className="hover:text-foreground transition-colors">প্রাক্তন ছাত্র</Link></li>
               </ul>
             </div>
