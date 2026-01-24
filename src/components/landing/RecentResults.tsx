@@ -1,14 +1,13 @@
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Medal, Award, ArrowRight, GraduationCap } from "lucide-react";
+import { Trophy, Medal, Award, ArrowRight, GraduationCap, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function RecentResults() {
-  // Fetch recent published exams
   const { data: recentExams } = useQuery({
     queryKey: ["public-recent-exams"],
     queryFn: async () => {
@@ -22,11 +21,9 @@ export function RecentResults() {
     },
   });
 
-  // Fetch top performers from latest exam
   const { data: topPerformers } = useQuery({
     queryKey: ["public-top-performers"],
     queryFn: async () => {
-      // Get the latest published exam
       const { data: examsData } = await supabase
         .from("exams")
         .select("id, name")
@@ -37,7 +34,6 @@ export function RecentResults() {
       const latestExam = examsData?.[0];
       if (!latestExam) return { exam: null, performers: [] };
 
-      // Get results for this exam with student info
       const { data: results } = await supabase
         .from("exam_results")
         .select(`
@@ -48,7 +44,6 @@ export function RecentResults() {
         .order("obtained_marks", { ascending: false })
         .limit(10);
 
-      // Group by student and calculate total
       const studentTotals: Record<string, { 
         student: any; 
         totalObtained: number; 
@@ -72,7 +67,6 @@ export function RecentResults() {
         studentTotals[studentId].subjects += 1;
       });
 
-      // Sort by percentage and get top 3
       const sorted = Object.values(studentTotals)
         .sort((a, b) => (b.totalObtained / b.totalFull) - (a.totalObtained / a.totalFull))
         .slice(0, 3);
@@ -82,20 +76,24 @@ export function RecentResults() {
   });
 
   const rankIcons = [Trophy, Medal, Award];
-  const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-600"];
-  const rankBgColors = ["bg-yellow-100 dark:bg-yellow-900/30", "bg-gray-100 dark:bg-gray-800", "bg-amber-100 dark:bg-amber-900/30"];
+  const rankColors = ["text-yellow-500", "text-slate-400", "text-amber-600"];
+  const rankBgColors = [
+    "bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-950/40 dark:to-amber-900/40 border-yellow-300 dark:border-yellow-700",
+    "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/40 dark:to-slate-800/40 border-slate-300 dark:border-slate-700",
+    "bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/40 dark:to-amber-900/40 border-orange-300 dark:border-orange-700"
+  ];
 
   return (
-    <section className="py-16 bg-background">
+    <section className="py-20 bg-background relative overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-14">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4"
           >
-            <GraduationCap className="w-4 h-4 inline-block mr-2" />
+            <GraduationCap className="w-4 h-4" />
             পরীক্ষার ফলাফল
           </motion.span>
           <motion.h2
@@ -103,7 +101,7 @@ export function RecentResults() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-bold text-foreground mb-4"
+            className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4"
           >
             সাম্প্রতিক ফলাফল
           </motion.h2>
@@ -112,7 +110,7 @@ export function RecentResults() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-muted-foreground max-w-2xl mx-auto"
+            className="text-muted-foreground max-w-2xl mx-auto text-lg"
           >
             আমাদের ছাত্রদের সাম্প্রতিক পরীক্ষার ফলাফল ও মেধাতালিকা
           </motion.p>
@@ -124,13 +122,13 @@ export function RecentResults() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-12"
+            className="mb-16"
           >
-            <h3 className="text-xl font-semibold text-center mb-6 text-foreground">
+            <h3 className="text-xl font-bold text-center mb-8 text-foreground flex items-center justify-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-500" />
               {topPerformers.exam?.name} - মেধাতালিকা
             </h3>
-            <div className="flex flex-col md:flex-row items-end justify-center gap-4 md:gap-8">
-              {/* Rearrange to show 2nd, 1st, 3rd */}
+            <div className="flex flex-col md:flex-row items-end justify-center gap-6 md:gap-8">
               {[1, 0, 2].map((rank, displayIndex) => {
                 const performer = topPerformers.performers[rank];
                 if (!performer) return null;
@@ -146,15 +144,16 @@ export function RecentResults() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 * displayIndex }}
                     viewport={{ once: true }}
-                    className={`relative ${isFirst ? 'md:-mt-8' : ''}`}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    className={`relative ${isFirst ? 'md:-mt-8 order-first md:order-none' : ''}`}
                   >
-                    <Card className={`text-center border-2 ${isFirst ? 'border-yellow-400 shadow-xl' : 'border-border'} ${rankBgColors[rank]} w-48 md:w-56`}>
-                      <CardContent className="pt-6 pb-4">
-                        <div className={`absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full flex items-center justify-center ${rankBgColors[rank]} border-2 ${isFirst ? 'border-yellow-400' : 'border-border'}`}>
+                    <Card className={`text-center border-2 ${rankBgColors[rank]} ${isFirst ? 'shadow-2xl w-56 md:w-64' : 'shadow-lg w-48 md:w-56'}`}>
+                      <CardContent className="pt-8 pb-6 px-4">
+                        <div className={`absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full flex items-center justify-center bg-white dark:bg-background shadow-md border-2 ${isFirst ? 'border-yellow-400' : 'border-border'}`}>
                           <Icon className={`w-5 h-5 ${rankColors[rank]}`} />
                         </div>
                         
-                        <div className={`w-20 h-20 md:w-24 md:h-24 mx-auto rounded-full overflow-hidden border-4 ${isFirst ? 'border-yellow-400' : 'border-primary/20'} mb-3 ${isFirst ? 'ring-4 ring-yellow-200 dark:ring-yellow-800' : ''}`}>
+                        <div className={`w-20 h-20 md:w-24 md:h-24 mx-auto rounded-full overflow-hidden border-4 ${isFirst ? 'border-yellow-400 ring-4 ring-yellow-200/50 dark:ring-yellow-800/50' : 'border-primary/20'} mb-4 shadow-md`}>
                           {performer.student.photo_url ? (
                             <img 
                               src={performer.student.photo_url}
@@ -168,18 +167,18 @@ export function RecentResults() {
                           )}
                         </div>
 
-                        <p className="font-semibold text-foreground mb-1">
+                        <p className="font-bold text-foreground mb-1 text-lg">
                           {performer.student.full_name}
                         </p>
-                        <p className="text-sm text-muted-foreground mb-2">
+                        <p className="text-sm text-muted-foreground mb-3">
                           {performer.student.classes?.name}
                         </p>
                         
-                        <div className={`inline-block px-3 py-1 rounded-full ${isFirst ? 'bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200' : 'bg-secondary text-secondary-foreground'}`}>
-                          <span className="font-bold">{percentage}%</span>
+                        <div className={`inline-block px-4 py-2 rounded-full ${isFirst ? 'bg-yellow-200 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200' : 'bg-secondary text-secondary-foreground'}`}>
+                          <span className="font-bold text-lg">{percentage}%</span>
                         </div>
                         
-                        <p className="text-xs text-muted-foreground mt-2">
+                        <p className="text-sm text-muted-foreground mt-3">
                           {performer.totalObtained}/{performer.totalFull} নম্বর
                         </p>
                       </CardContent>
@@ -198,24 +197,36 @@ export function RecentResults() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
               {recentExams.map((exam, index) => (
-                <Card key={exam.id} className="border-border hover:shadow-md transition-all">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <GraduationCap className="w-5 h-5 text-primary" />
-                      {exam.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="secondary">{exam.exam_type}</Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(exam.end_date || '').toLocaleDateString('bn-BD')}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  key={exam.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                >
+                  <Card className="border-2 border-border hover:border-primary/30 hover:shadow-lg transition-all h-full">
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <GraduationCap className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-foreground mb-2">{exam.name}</h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="secondary" className="text-xs">{exam.exam_type}</Badge>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(exam.end_date || '').toLocaleDateString('bn-BD')}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </motion.div>
@@ -224,7 +235,7 @@ export function RecentResults() {
         {/* View All Button */}
         <div className="text-center">
           <Link to="/results">
-            <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2 px-8 shadow-lg hover:shadow-xl transition-all">
               সকল ফলাফল দেখুন
               <ArrowRight className="w-4 h-4" />
             </Button>
