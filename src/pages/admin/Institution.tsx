@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { 
   Building2, 
@@ -12,6 +12,8 @@ import {
   Upload,
   Edit,
   Loader2,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -26,6 +28,9 @@ import { supabase } from "@/integrations/supabase/client";
 export default function InstitutionPage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
@@ -87,8 +92,60 @@ export default function InstitutionPage() {
         website: institution.website || "",
         principal: institution.principal_name || "",
       });
+      setLogoUrl(institution.logo_url || null);
     }
   }, [institution]);
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "শুধুমাত্র ছবি আপলোড করুন", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "ছবি ২MB এর কম হতে হবে", variant: "destructive" });
+      return;
+    }
+
+    setUploadingLogo(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `institution/logo-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("photos")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("photos")
+        .getPublicUrl(fileName);
+
+      setLogoUrl(publicUrl);
+      toast({ title: "লোগো আপলোড হয়েছে" });
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast({ 
+        title: "আপলোড সমস্যা", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoUrl(null);
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -102,6 +159,7 @@ export default function InstitutionPage() {
         email: formData.email || null,
         website: formData.website || null,
         principal_name: formData.principal || null,
+        logo_url: logoUrl,
       };
 
       if (institution?.id) {
@@ -334,13 +392,48 @@ export default function InstitutionPage() {
                 <CardTitle className="text-lg">মাদরাসার লোগো</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <div className="w-32 h-32 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                  <span className="text-primary font-bold text-5xl">ج</span>
+                <div className="w-32 h-32 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4 overflow-hidden border-2 border-dashed border-border relative">
+                  {uploadingLogo && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  )}
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-primary font-bold text-5xl">ج</span>
+                  )}
                 </div>
-                <Button variant="outline" className="gap-2" disabled={!isEditing}>
-                  <Upload className="w-4 h-4" />
-                  লোগো আপলোড করুন
-                </Button>
+
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    variant="outline" 
+                    className="gap-2" 
+                    disabled={!isEditing || uploadingLogo}
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    <Camera className="w-4 h-4" />
+                    {logoUrl ? "পরিবর্তন" : "আপলোড"}
+                  </Button>
+                  {logoUrl && isEditing && (
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="text-destructive"
+                      onClick={handleRemoveLogo}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   PNG, JPG (সর্বোচ্চ ২MB)
                 </p>
