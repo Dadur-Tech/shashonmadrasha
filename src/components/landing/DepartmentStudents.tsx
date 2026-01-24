@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BookOpen, Scroll, Mic, Sparkles } from "lucide-react";
+import { Users, BookOpen, Scroll, Mic, Sparkles, ArrowRight } from "lucide-react";
 
 const departmentConfig: Record<string, { label: string; icon: any; color: string; bgColor: string; borderColor: string }> = {
   hifz: { 
@@ -83,7 +85,7 @@ export function DepartmentStudents() {
     queryFn: async () => {
       const { data } = await supabase
         .from("students")
-        .select("id, full_name, photo_url, class_id, classes(name, department)")
+        .select("id, student_id, full_name, photo_url, class_id, classes(name, department)")
         .eq("status", "active")
         .limit(8);
       return data || [];
@@ -186,25 +188,37 @@ export function DepartmentStudents() {
                   whileHover={{ scale: 1.05 }}
                   className="text-center group"
                 >
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full overflow-hidden bg-white dark:bg-background border-3 border-primary/30 mb-3 shadow-md group-hover:shadow-lg group-hover:border-primary/60 transition-all">
-                    {student.photo_url ? (
-                      <img 
-                        src={student.photo_url} 
-                        alt={student.full_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-xl font-bold">
-                        {student.full_name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-sm font-semibold text-foreground truncate">{student.full_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {student.classes?.name || 'N/A'}
-                  </p>
+                  <Link to={`/student/${student.student_id}`}>
+                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full overflow-hidden bg-white dark:bg-background border-3 border-primary/30 mb-3 shadow-md group-hover:shadow-lg group-hover:border-primary/60 transition-all cursor-pointer">
+                      {student.photo_url ? (
+                        <img 
+                          src={student.photo_url} 
+                          alt={student.full_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-xl font-bold">
+                          {student.full_name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{student.full_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {student.classes?.name || 'N/A'}
+                    </p>
+                  </Link>
                 </motion.div>
               ))}
+            </div>
+
+            {/* View All Students Button */}
+            <div className="text-center mt-8">
+              <Link to="/students">
+                <Button size="lg" className="gap-2 px-8 shadow-lg hover:shadow-xl transition-all">
+                  সকল ছাত্র দেখুন
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
             </div>
           </motion.div>
         )}

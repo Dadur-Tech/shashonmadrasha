@@ -10,10 +10,12 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/auth/Login";
 import ResultsPage from "./pages/Results";
+import StudentProfile from "./pages/StudentProfile";
+import PublicStudentsPage from "./pages/Students";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
-import StudentsPage from "./pages/admin/Students";
+import AdminStudentsPage from "./pages/admin/Students";
 import TeachersPage from "./pages/admin/Teachers";
 import ClassesPage from "./pages/admin/Classes";
 import LillahPage from "./pages/admin/Lillah";
@@ -43,10 +45,12 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/results" element={<ResultsPage />} />
+            <Route path="/students" element={<PublicStudentsPage />} />
+            <Route path="/student/:studentId" element={<StudentProfile />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/students" element={<StudentsPage />} />
+            <Route path="/admin/students" element={<AdminStudentsPage />} />
             <Route path="/admin/teachers" element={<TeachersPage />} />
             <Route path="/admin/classes" element={<ClassesPage />} />
             <Route path="/admin/attendance" element={<AttendancePage />} />
