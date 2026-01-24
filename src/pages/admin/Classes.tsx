@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { Plus, BookOpen, Loader2, Edit, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Loader2, Edit, Trash2, Settings } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -20,18 +20,14 @@ const departmentColors: Record<string, string> = {
   kitab: "bg-purple-500/10 text-purple-600 border-purple-500/20",
   nurani: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   tajweed: "bg-rose-500/10 text-rose-600 border-rose-500/20",
-};
-
-const departmentLabels: Record<string, string> = {
-  nazera: "নাযেরা",
-  hifz: "হিফজ",
-  kitab: "কিতাব",
-  nurani: "নূরানী",
-  tajweed: "তাজবীদ",
+  ifta: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  takhassos: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+  najera: "bg-pink-500/10 text-pink-600 border-pink-500/20",
 };
 
 export default function ClassesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isDeptManageOpen, setIsDeptManageOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -43,6 +39,20 @@ export default function ClassesPage() {
         .select("*")
         .order("department")
         .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("departments")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
       
       if (error) throw error;
       return data;
@@ -63,6 +73,12 @@ export default function ClassesPage() {
     },
   });
 
+  // Create department labels from database
+  const departmentLabels = departments.reduce((acc, dept) => {
+    acc[dept.name] = dept.name_bengali;
+    return acc;
+  }, {} as Record<string, string>);
+
   const groupedClasses = classes.reduce((acc, cls) => {
     if (!acc[cls.department]) acc[cls.department] = [];
     acc[cls.department].push(cls);
@@ -78,23 +94,45 @@ export default function ClassesPage() {
             <h1 className="text-2xl font-bold text-foreground">ক্লাস ও বিভাগ</h1>
             <p className="text-muted-foreground">সকল ক্লাস ও বিভাগ পরিচালনা করুন</p>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                নতুন ক্লাস যোগ করুন
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>নতুন ক্লাস যোগ করুন</DialogTitle>
-              </DialogHeader>
-              <ClassForm onSuccess={() => {
-                setIsAddOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["classes"] });
-              }} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={isDeptManageOpen} onOpenChange={setIsDeptManageOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Settings className="w-4 h-4" />
+                  বিভাগ পরিচালনা
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>বিভাগ পরিচালনা</DialogTitle>
+                </DialogHeader>
+                <DepartmentManager onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["departments"] });
+                }} />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  নতুন ক্লাস যোগ করুন
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>নতুন ক্লাস যোগ করুন</DialogTitle>
+                </DialogHeader>
+                <ClassForm 
+                  departments={departments}
+                  onSuccess={() => {
+                    setIsAddOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ["classes"] });
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Edit Dialog */}
@@ -106,6 +144,7 @@ export default function ClassesPage() {
             {editingClass && (
               <ClassForm 
                 initialData={editingClass}
+                departments={departments}
                 onSuccess={() => {
                   setEditingClass(null);
                   queryClient.invalidateQueries({ queryKey: ["classes"] });
@@ -124,7 +163,7 @@ export default function ClassesPage() {
             {Object.entries(groupedClasses).map(([department, deptClasses]) => (
               <div key={department}>
                 <div className="flex items-center gap-3 mb-4">
-                  <Badge className={departmentColors[department] || departmentColors.kitab}>
+                  <Badge className={departmentColors[department] || "bg-gray-500/10 text-gray-600"}>
                     {departmentLabels[department] || department} বিভাগ
                   </Badge>
                   <span className="text-sm text-muted-foreground">
@@ -215,12 +254,12 @@ export default function ClassesPage() {
   );
 }
 
-function ClassForm({ onSuccess, initialData }: { onSuccess: () => void; initialData?: any }) {
+function ClassForm({ onSuccess, initialData, departments }: { onSuccess: () => void; initialData?: any; departments: any[] }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     nameArabic: initialData?.name_arabic || "",
-    department: initialData?.department || "kitab",
+    department: initialData?.department || "",
     monthlyFee: initialData?.monthly_fee?.toString() || "",
     admissionFee: initialData?.admission_fee?.toString() || "",
   });
@@ -284,14 +323,14 @@ function ClassForm({ onSuccess, initialData }: { onSuccess: () => void; initialD
         <Label>বিভাগ *</Label>
         <Select value={formData.department} onValueChange={(v) => setFormData({ ...formData, department: v })}>
           <SelectTrigger>
-            <SelectValue />
+            <SelectValue placeholder="বিভাগ নির্বাচন করুন" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="nurani">নূরানী</SelectItem>
-            <SelectItem value="nazera">নাযেরা</SelectItem>
-            <SelectItem value="hifz">হিফজ</SelectItem>
-            <SelectItem value="kitab">কিতাব</SelectItem>
-            <SelectItem value="tajweed">তাজবীদ</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept.id} value={dept.name}>
+                {dept.name_bengali} {dept.name_arabic && `(${dept.name_arabic})`}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -320,5 +359,125 @@ function ClassForm({ onSuccess, initialData }: { onSuccess: () => void; initialD
         {initialData ? "আপডেট করুন" : "ক্লাস যোগ করুন"}
       </Button>
     </form>
+  );
+}
+
+function DepartmentManager({ onSuccess }: { onSuccess: () => void }) {
+  const [newDept, setNewDept] = useState({ name: "", nameBengali: "", nameArabic: "" });
+  const queryClient = useQueryClient();
+
+  const { data: departments = [], isLoading } = useQuery({
+    queryKey: ["all-departments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("departments")
+        .select("*")
+        .order("display_order");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      if (!newDept.name || !newDept.nameBengali) {
+        throw new Error("নাম দিন");
+      }
+      const { error } = await supabase.from("departments").insert({
+        name: newDept.name.toLowerCase().replace(/\s+/g, "_"),
+        name_bengali: newDept.nameBengali,
+        name_arabic: newDept.nameArabic || null,
+        display_order: departments.length + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setNewDept({ name: "", nameBengali: "", nameArabic: "" });
+      queryClient.invalidateQueries({ queryKey: ["all-departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      toast({ title: "বিভাগ যোগ হয়েছে" });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (deptId: string) => {
+      const { error } = await supabase.from("departments").delete().eq("id", deptId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-departments"] });
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      toast({ title: "বিভাগ মুছে ফেলা হয়েছে" });
+      onSuccess();
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Input
+          placeholder="বিভাগ কোড (ইংরেজি, যেমন: ifta)"
+          value={newDept.name}
+          onChange={(e) => setNewDept({ ...newDept, name: e.target.value })}
+        />
+        <Input
+          placeholder="বিভাগের নাম (বাংলা)"
+          value={newDept.nameBengali}
+          onChange={(e) => setNewDept({ ...newDept, nameBengali: e.target.value })}
+        />
+        <Input
+          placeholder="বিভাগের নাম (আরবী)"
+          value={newDept.nameArabic}
+          onChange={(e) => setNewDept({ ...newDept, nameArabic: e.target.value })}
+          dir="rtl"
+        />
+      </div>
+      <Button 
+        onClick={() => addMutation.mutate()} 
+        disabled={addMutation.isPending}
+        className="w-full"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        নতুন বিভাগ যোগ করুন
+      </Button>
+
+      <div className="border-t pt-4 mt-4">
+        <h4 className="font-semibold mb-3">বিদ্যমান বিভাগ সমূহ</h4>
+        {isLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+        ) : (
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {departments.map((dept) => (
+              <div key={dept.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div>
+                  <p className="font-medium">{dept.name_bengali}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {dept.name}
+                    {dept.name_arabic && ` | ${dept.name_arabic}`}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive h-8 w-8"
+                  onClick={() => {
+                    if (confirm("মুছে ফেলতে চান?")) {
+                      deleteMutation.mutate(dept.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
