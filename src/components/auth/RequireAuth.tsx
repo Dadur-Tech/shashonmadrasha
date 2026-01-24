@@ -20,29 +20,55 @@ export function RequireAuth({
   const { user, loading, roles, refreshRoles, isAdmin, isAccountant, isTeacher } = useAuth();
   const location = useLocation();
 
-  // If roles haven't loaded yet (or got cleared by a timeout), re-fetch once before denying access.
-  const [roleCheckLoading, setRoleCheckLoading] = useState(false);
-  const roleCheckDone = useRef(false);
+  // Track whether we've attempted to fetch roles
+  const [rolesFetching, setRolesFetching] = useState(false);
+  const [rolesReady, setRolesReady] = useState(false);
+  const fetchAttempted = useRef(false);
+
+  const needsRole = requireAdmin || requireAccountant || requireTeacher;
 
   useEffect(() => {
-    const needsRole = requireAdmin || requireAccountant || requireTeacher;
-    if (!needsRole) return;
-    if (loading) return;
-    if (!user) return;
-    if (roleCheckDone.current) return;
-
-    if ((roles?.length || 0) === 0) {
-      roleCheckDone.current = true;
-      setRoleCheckLoading(true);
-      refreshRoles()
-        .catch(() => {})
-        .finally(() => setRoleCheckLoading(false));
-    } else {
-      roleCheckDone.current = true;
+    // If no role check needed, mark ready immediately
+    if (!needsRole) {
+      setRolesReady(true);
+      return;
     }
-  }, [loading, user, roles, refreshRoles, requireAdmin, requireAccountant, requireTeacher]);
 
-  if (loading || roleCheckLoading) {
+    // Wait for auth loading to complete
+    if (loading) return;
+
+    // If no user, no need to fetch roles
+    if (!user) {
+      setRolesReady(true);
+      return;
+    }
+
+    // If roles already exist, mark ready
+    if (roles && roles.length > 0) {
+      setRolesReady(true);
+      return;
+    }
+
+    // Only attempt fetch once
+    if (fetchAttempted.current) {
+      setRolesReady(true);
+      return;
+    }
+
+    // Fetch roles
+    fetchAttempted.current = true;
+    setRolesFetching(true);
+    
+    refreshRoles()
+      .catch(() => {})
+      .finally(() => {
+        setRolesFetching(false);
+        setRolesReady(true);
+      });
+  }, [loading, user, roles, refreshRoles, needsRole]);
+
+  // Show loading spinner while checking auth or fetching roles
+  if (loading || rolesFetching || (needsRole && user && !rolesReady)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -55,7 +81,7 @@ export function RequireAuth({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // Check role-based authorization
+  // Check role-based authorization (only after roles are ready)
   if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
   }
