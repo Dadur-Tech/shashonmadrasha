@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError, getSecureErrorMessage } from "@/lib/error-handler";
 import type { Database } from "@/integrations/supabase/types";
 
 type PaymentGatewayType = Database["public"]["Enums"]["payment_gateway_type"];
@@ -311,13 +312,8 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
       });
       
       onSuccess();
-    } catch (error: any) {
-      console.error("Donation error:", error);
-      toast({
-        title: "সমস্যা হয়েছে",
-        description: error.message || "দান প্রক্রিয়ায় সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      handleDatabaseError(error, "donation-processing");
     } finally {
       setLoading(false);
     }
