@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          display_order: number | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          link_text: string | null
+          link_url: string | null
+          message: string
+          start_date: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message: string
+          start_date?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_text?: string | null
+          link_url?: string | null
+          message?: string
+          start_date?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       classes: {
         Row: {
           admission_fee: number
@@ -352,6 +400,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      events: {
+        Row: {
+          banner_image_url: string | null
+          chief_guest: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_date: string
+          event_time: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          registration_link: string | null
+          special_guests: string[] | null
+          title: string
+          title_arabic: string | null
+          updated_at: string
+        }
+        Insert: {
+          banner_image_url?: string | null
+          chief_guest?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          registration_link?: string | null
+          special_guests?: string[] | null
+          title: string
+          title_arabic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banner_image_url?: string | null
+          chief_guest?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          registration_link?: string | null
+          special_guests?: string[] | null
+          title?: string
+          title_arabic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       exam_results: {
         Row: {

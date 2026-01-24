@@ -1,4 +1,5 @@
-import { Bell, Search, Plus } from "lucide-react";
+import { Bell, Search, Plus, ExternalLink, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,8 +10,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 export function TopBar() {
+  const navigate = useNavigate();
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  const handleNewAdmission = () => {
+    navigate("/admin/students?action=add");
+  };
+
   return (
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="flex items-center justify-between px-6 py-4">
@@ -25,9 +42,24 @@ export function TopBar() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="gap-2">
+          {/* View Website Button */}
+          <Link to="/" target="_blank">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">হোমপেজ দেখুন</span>
+              <ExternalLink className="w-3 h-3" />
+            </Button>
+          </Link>
+
+          {/* Add New Student Button */}
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="gap-2"
+            onClick={handleNewAdmission}
+          >
             <Plus className="w-4 h-4" />
-            নতুন ভর্তি
+            নতুন ছাত্র যোগ করুন
           </Button>
 
           <DropdownMenu>
@@ -39,22 +71,22 @@ export function TopBar() {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 bg-popover">
               <DropdownMenuLabel>নোটিফিকেশন</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3 cursor-pointer">
                 <span className="font-medium">নতুন ভর্তি আবেদন</span>
                 <span className="text-xs text-muted-foreground">
                   আহমদ হাসান ক্লাস ৫-এ ভর্তির আবেদন করেছে
                 </span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3 cursor-pointer">
                 <span className="font-medium">ফি বকেয়া</span>
                 <span className="text-xs text-muted-foreground">
                   ১৫ জন ছাত্রের এই মাসের ফি বকেয়া আছে
                 </span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
+              <DropdownMenuItem className="flex flex-col items-start gap-1 py-3 cursor-pointer">
                 <span className="font-medium">পরীক্ষার ফলাফল</span>
                 <span className="text-xs text-muted-foreground">
                   প্রথম সাময়িক পরীক্ষার ফলাফল প্রস্তুত
