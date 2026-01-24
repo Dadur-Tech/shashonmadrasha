@@ -91,7 +91,7 @@ export default function UserManagementPage() {
 
         return {
           id: profile.user_id,
-          email: profile.phone || "N/A", // Using phone as email placeholder if needed
+          email: profile.email || profile.phone || "N/A",
           full_name: profile.full_name,
           created_at: profile.created_at,
           roles: userRoles,
