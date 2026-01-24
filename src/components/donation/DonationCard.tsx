@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Heart, Users, Building2, Loader2, Check, HandHeart, Baby } from "lucide-react";
+import { Heart, Users, Building2, Loader2, Check, HandHeart, Baby, Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type PaymentGatewayType = Database["public"]["Enums"]["payment_gateway_type"];
 
 interface DonationCategory {
   id: string;
@@ -57,19 +60,24 @@ const donationCategories: DonationCategory[] = [
 
 const quickAmounts = [500, 1000, 2000, 5000, 10000, 25000];
 
+const gatewayIcons: Record<string, string> = {
+  bkash: "🅱️",
+  nagad: "🔶",
+  rocket: "🚀",
+  upay: "📱",
+  sslcommerz: "🔒",
+  amarpay: "💳",
+  manual: "✋",
+};
+
 interface PaymentGateway {
   id: string;
-  name: string;
-  logo: string;
-  enabled: boolean;
+  gateway_type: PaymentGatewayType;
+  display_name: string;
+  is_enabled: boolean;
+  merchant_id: string | null;
+  sandbox_mode: boolean;
 }
-
-const paymentGateways: PaymentGateway[] = [
-  { id: "bkash", name: "বিকাশ", logo: "🅱️", enabled: true },
-  { id: "nagad", name: "নগদ", logo: "🔶", enabled: true },
-  { id: "rocket", name: "রকেট", logo: "🚀", enabled: true },
-  { id: "manual", name: "ম্যানুয়াল", logo: "💳", enabled: true },
-];
 
 export const DonationSection = () => {
   return (
@@ -165,16 +173,44 @@ interface DonationFormProps {
 function DonationForm({ category, onSuccess }: DonationFormProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [gateways, setGateways] = useState<PaymentGateway[]>([]);
+  const [loadingGateways, setLoadingGateways] = useState(true);
+  const [paymentData, setPaymentData] = useState<any>(null);
   const [formData, setFormData] = useState({
     donorName: "",
     donorPhone: "",
     donorEmail: "",
     amount: 0,
     customAmount: "",
-    paymentMethod: "bkash",
+    paymentMethod: "",
     isAnonymous: false,
     message: "",
   });
+
+  // Load enabled payment gateways from database
+  useEffect(() => {
+    async function loadGateways() {
+      try {
+        const { data, error } = await supabase
+          .from("payment_gateways")
+          .select("*")
+          .eq("is_enabled", true)
+          .order("display_order");
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setGateways(data);
+          setFormData(prev => ({ ...prev, paymentMethod: data[0].gateway_type }));
+        }
+      } catch (error) {
+        console.error("Failed to load gateways:", error);
+      } finally {
+        setLoadingGateways(false);
+      }
+    }
+    loadGateways();
+  }, []);
 
   const selectedAmount = formData.customAmount ? parseInt(formData.customAmount) : formData.amount;
 
@@ -199,7 +235,8 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
     try {
       const donationId = generateDonationId();
       
-      const { error } = await supabase.from("donations").insert({
+      // First create the donation record
+      const { error: donationError } = await supabase.from("donations").insert({
         donation_id: donationId,
         donor_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
         donor_phone: formData.donorPhone,
@@ -212,15 +249,70 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
         notes: formData.message || null,
       });
 
-      if (error) throw error;
+      if (donationError) throw donationError;
 
+      const selectedGateway = gateways.find(g => g.gateway_type === formData.paymentMethod);
+      
+      // For online gateways (SSLCommerz, AmarPay), initiate redirect payment
+      if (['sslcommerz', 'amarpay'].includes(formData.paymentMethod)) {
+        const response = await supabase.functions.invoke('initiate-payment', {
+          body: {
+            gateway: formData.paymentMethod,
+            amount: selectedAmount,
+            reference_id: donationId,
+            reference_type: 'donation',
+            payer_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
+            payer_phone: formData.donorPhone,
+            payer_email: formData.donorEmail || 'donor@example.com',
+            return_url: window.location.origin + '/#donate',
+          },
+        });
+
+        if (response.error) throw new Error(response.error.message);
+        
+        const result = response.data;
+        
+        if (result.paymentUrl) {
+          // Redirect to payment gateway
+          window.location.href = result.paymentUrl;
+          return;
+        }
+      }
+      
+      // For mobile wallets, show payment instructions
+      if (['bkash', 'nagad', 'rocket', 'upay'].includes(formData.paymentMethod)) {
+        const response = await supabase.functions.invoke('initiate-payment', {
+          body: {
+            gateway: formData.paymentMethod,
+            amount: selectedAmount,
+            reference_id: donationId,
+            reference_type: 'donation',
+            payer_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
+            payer_phone: formData.donorPhone,
+            return_url: window.location.origin + '/#donate',
+          },
+        });
+
+        if (response.error) throw new Error(response.error.message);
+        
+        setPaymentData({
+          ...response.data.paymentData,
+          donationId,
+          merchantNumber: selectedGateway?.merchant_id,
+        });
+        setStep(4);
+        return;
+      }
+
+      // For manual payment
       toast({
         title: "আলহামদুলিল্লাহ!",
-        description: `আপনার দান গৃহীত হয়েছে। দান আইডি: ${donationId}`,
+        description: `আপনার দান গৃহীত হয়েছে। দান আইডি: ${donationId}। অনুগ্রহ করে সরাসরি মাদরাসায় যোগাযোগ করুন।`,
       });
       
       onSuccess();
     } catch (error: any) {
+      console.error("Donation error:", error);
       toast({
         title: "সমস্যা হয়েছে",
         description: error.message || "দান প্রক্রিয়ায় সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।",
@@ -229,6 +321,14 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "কপি হয়েছে",
+      description: "ক্লিপবোর্ডে কপি করা হয়েছে",
+    });
   };
 
   return (
@@ -379,30 +479,42 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
 
           <div>
             <Label className="text-base font-medium mb-3 block">পেমেন্ট মাধ্যম নির্বাচন করুন</Label>
-            <RadioGroup
-              value={formData.paymentMethod}
-              onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
-              className="grid grid-cols-2 gap-3"
-            >
-              {paymentGateways.filter(g => g.enabled).map((gateway) => (
-                <Label
-                  key={gateway.id}
-                  htmlFor={gateway.id}
-                  className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    formData.paymentMethod === gateway.id 
-                      ? "border-primary bg-primary/5" 
-                      : "border-border hover:border-primary/30"
-                  }`}
-                >
-                  <RadioGroupItem value={gateway.id} id={gateway.id} className="sr-only" />
-                  <span className="text-2xl">{gateway.logo}</span>
-                  <span className="font-medium">{gateway.name}</span>
-                  {formData.paymentMethod === gateway.id && (
-                    <Check className="w-4 h-4 text-primary ml-auto" />
-                  )}
-                </Label>
-              ))}
-            </RadioGroup>
+            {loadingGateways ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : gateways.length === 0 ? (
+              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+                <p className="text-amber-700 dark:text-amber-400">
+                  কোনো পেমেন্ট মাধ্যম সক্রিয় নেই। অনুগ্রহ করে মাদরাসায় সরাসরি যোগাযোগ করুন।
+                </p>
+              </div>
+            ) : (
+              <RadioGroup
+                value={formData.paymentMethod}
+                onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
+                className="grid grid-cols-2 gap-3"
+              >
+                {gateways.map((gateway) => (
+                  <Label
+                    key={gateway.id}
+                    htmlFor={gateway.gateway_type}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      formData.paymentMethod === gateway.gateway_type 
+                        ? "border-primary bg-primary/5" 
+                        : "border-border hover:border-primary/30"
+                    }`}
+                  >
+                    <RadioGroupItem value={gateway.gateway_type} id={gateway.gateway_type} className="sr-only" />
+                    <span className="text-2xl">{gatewayIcons[gateway.gateway_type] || "💰"}</span>
+                    <span className="font-medium">{gateway.display_name}</span>
+                    {formData.paymentMethod === gateway.gateway_type && (
+                      <Check className="w-4 h-4 text-primary ml-auto" />
+                    )}
+                  </Label>
+                ))}
+              </RadioGroup>
+            )}
           </div>
 
           {formData.paymentMethod === "manual" && (
@@ -414,11 +526,20 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             </div>
           )}
 
+          {['sslcommerz', 'amarpay'].includes(formData.paymentMethod) && (
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <p className="text-sm text-blue-700 dark:text-blue-400">
+                <strong>অনলাইন পেমেন্ট:</strong> আপনাকে নিরাপদ পেমেন্ট পেইজে নিয়ে যাওয়া হবে। 
+                সেখানে আপনি কার্ড/মোবাইল ব্যাংকিং/নেট ব্যাংকিং যেকোনো মাধ্যমে পেমেন্ট করতে পারবেন।
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
               পেছনে
             </Button>
-            <Button onClick={handleSubmit} className="flex-1 gap-2" disabled={loading}>
+            <Button onClick={handleSubmit} className="flex-1 gap-2" disabled={loading || !formData.paymentMethod}>
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -430,6 +551,74 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
                   দান সম্পন্ন করুন
                 </>
               )}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Step 4: Mobile Payment Instructions */}
+      {step === 4 && paymentData && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-4"
+        >
+          <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 text-center">
+            <p className="text-sm text-muted-foreground mb-1">Transaction ID</p>
+            <div className="flex items-center justify-center gap-2">
+              <code className="text-lg font-mono font-bold text-primary">
+                {paymentData.transactionId}
+              </code>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(paymentData.transactionId)}
+              >
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-secondary border">
+            <h4 className="font-bold mb-3 flex items-center gap-2">
+              <span className="text-2xl">{gatewayIcons[paymentData.gateway]}</span>
+              পেমেন্ট নির্দেশনা
+            </h4>
+            <div className="whitespace-pre-line text-sm text-muted-foreground">
+              {paymentData.instructions}
+            </div>
+          </div>
+
+          {paymentData.merchantNumber && (
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+              <p className="text-sm text-green-700 dark:text-green-400">
+                <strong>মার্চেন্ট নম্বর:</strong> {paymentData.merchantNumber}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-2 h-6"
+                  onClick={() => copyToClipboard(paymentData.merchantNumber)}
+                >
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </p>
+            </div>
+          )}
+
+          <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              <strong>গুরুত্বপূর্ণ:</strong> পেমেন্ট করার সময় রেফারেন্স/নোট এ উপরের Transaction ID দিন। 
+              পেমেন্ট সম্পন্ন হলে আমরা যাচাই করে আপনাকে জানাবো।
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setStep(3)} className="flex-1">
+              পেছনে
+            </Button>
+            <Button onClick={onSuccess} className="flex-1 gap-2">
+              <Check className="w-4 h-4" />
+              বুঝেছি, বন্ধ করুন
             </Button>
           </div>
         </motion.div>
