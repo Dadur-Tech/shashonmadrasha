@@ -140,7 +140,14 @@ export default function Index() {
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Button size="lg" variant="outline" className="gap-2">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => {
+                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
                   <Phone className="w-4 h-4" />
                   ডেমো দেখুন
                 </Button>
