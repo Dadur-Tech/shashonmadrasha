@@ -187,14 +187,14 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
     message: "",
   });
 
-  // Load enabled payment gateways from database
+  // Load enabled payment gateways from public view (excludes sensitive API keys)
   useEffect(() => {
     async function loadGateways() {
       try {
+        // Use the public view that excludes API credentials
         const { data, error } = await supabase
-          .from("payment_gateways")
+          .from("payment_gateways_public")
           .select("*")
-          .eq("is_enabled", true)
           .order("display_order");
         
         if (error) throw error;
@@ -214,13 +214,6 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
 
   const selectedAmount = formData.customAmount ? parseInt(formData.customAmount) : formData.amount;
 
-  const generateDonationId = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `DON-${year}-${random}`;
-  };
-
   const handleSubmit = async () => {
     if (!formData.donorName || !formData.donorPhone || selectedAmount <= 0) {
       toast({
@@ -233,24 +226,31 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
 
     setLoading(true);
     try {
-      const donationId = generateDonationId();
-      
-      // First create the donation record
-      const { error: donationError } = await supabase.from("donations").insert({
-        donation_id: donationId,
-        donor_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
-        donor_phone: formData.donorPhone,
-        donor_email: formData.donorEmail || null,
-        amount: selectedAmount,
-        category: category as any,
-        payment_gateway: formData.paymentMethod as any,
-        payment_status: "pending",
-        is_anonymous: formData.isAnonymous,
-        notes: formData.message || null,
+      // Create donation via secure edge function (with validation and rate limiting)
+      const donationResponse = await supabase.functions.invoke('process-donation', {
+        body: {
+          donor_name: formData.donorName,
+          donor_phone: formData.donorPhone,
+          donor_email: formData.donorEmail || null,
+          amount: selectedAmount,
+          category: category,
+          payment_gateway: formData.paymentMethod,
+          is_anonymous: formData.isAnonymous,
+          notes: formData.message || null,
+        },
       });
 
-      if (donationError) throw donationError;
+      if (donationResponse.error) {
+        throw new Error(donationResponse.error.message);
+      }
 
+      const donationResult = donationResponse.data;
+      
+      if (!donationResult.success) {
+        throw new Error(donationResult.message || "দান তৈরিতে সমস্যা হয়েছে");
+      }
+
+      const donationId = donationResult.donation_id;
       const selectedGateway = gateways.find(g => g.gateway_type === formData.paymentMethod);
       
       // For online gateways (SSLCommerz, AmarPay), initiate redirect payment
