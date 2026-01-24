@@ -111,11 +111,19 @@ export default function LoginPage() {
             <CardDescription className="break-all">{user.email}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            {/* Always show Dashboard button for admin */}
             <Button
               className="w-full"
-              onClick={() => navigate(isAdmin ? "/admin" : "/", { replace: true })}
+              onClick={() => navigate("/admin", { replace: true })}
             >
-              {isAdmin ? "অ্যাডমিন ড্যাশবোর্ডে যান" : "হোম পেজে যান"}
+              অ্যাডমিন ড্যাশবোর্ডে যান
+            </Button>
+            <Button
+              variant="secondary"
+              className="w-full"
+              onClick={() => navigate("/", { replace: true })}
+            >
+              হোম পেজে যান
             </Button>
             <Button
               variant="outline"
