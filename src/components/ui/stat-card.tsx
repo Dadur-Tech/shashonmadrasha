@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { LucideIcon } from "lucide-react";
+import { ReactNode } from "react";
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: ReactNode;
   trend?: {
     value: number;
-    isPositive: boolean;
+    isPositive?: boolean;
+    label?: string;
   };
   variant?: "default" | "primary" | "gold" | "success" | "info";
   className?: string;
@@ -33,7 +34,7 @@ const iconVariants = {
 export function StatCard({ 
   title, 
   value, 
-  icon: Icon, 
+  icon, 
   trend, 
   variant = "default",
   className 
@@ -65,10 +66,10 @@ export function StatCard({
           <p className="text-3xl font-bold tracking-tight">{value}</p>
           {trend && (
             <div className="flex items-center gap-1 text-sm">
-              <span className={trend.isPositive ? "text-success" : "text-destructive"}>
-                {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}%
+              <span className={trend.isPositive !== false ? "text-primary" : "text-destructive"}>
+                {trend.isPositive !== false ? "↑" : "↓"} {Math.abs(trend.value)}{trend.label || "%"}
               </span>
-              <span className="opacity-60">গত মাসের তুলনায়</span>
+              {!trend.label && <span className="opacity-60">গত মাসের তুলনায়</span>}
             </div>
           )}
         </div>
@@ -77,7 +78,7 @@ export function StatCard({
           "p-3 rounded-xl",
           iconVariants[variant]
         )}>
-          <Icon className="w-6 h-6" />
+          {icon}
         </div>
       </div>
     </motion.div>
