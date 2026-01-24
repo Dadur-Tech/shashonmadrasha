@@ -41,25 +41,30 @@ export default function LoginPage() {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    const { error } = await signIn(email, password);
-    
-    if (error) {
+    try {
+      const { error } = await signIn(email, password);
+
+      if (error) {
+        toast({
+          title: "লগইন সমস্যা",
+          description: error.message || "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
-        title: "লগইন সমস্যা",
-        description: error.message || "ইমেইল বা পাসওয়ার্ড ভুল হয়েছে",
-        variant: "destructive",
+        title: "সফলভাবে লগইন হয়েছে",
+        description: "ড্যাশবোর্ডে স্বাগতম!",
       });
+
+      // Navigate immediately (RequireAdmin will protect /admin if needed)
+      navigate(from, { replace: true });
+    } finally {
       setIsLoading(false);
-      return;
     }
-    
-    toast({
-      title: "সফলভাবে লগইন হয়েছে",
-      description: "ড্যাশবোর্ডে স্বাগতম!",
-    });
-    // Navigation will happen automatically via useEffect when user state updates
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
