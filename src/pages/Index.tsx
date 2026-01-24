@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 import { DonationSection } from "@/components/donation/DonationCard";
 import { OnlineAdmissionSection } from "@/components/admission/OnlineAdmissionForm";
 import { MadrasaStats } from "@/components/landing/MadrasaStats";
@@ -47,6 +48,7 @@ const navLinks = [
 
 export default function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   return (
     <div className="min-h-screen bg-background islamic-pattern">
@@ -94,11 +96,19 @@ export default function Index() {
                   ফলাফল দেখুন
                 </Button>
               </Link>
-              <Link to="/login" className="hidden sm:block">
-                <Button size="sm" className="shadow-lg">
-                  অ্যাডমিন লগইন
-                </Button>
-              </Link>
+              {user && isAdmin ? (
+                <Link to="/admin" className="hidden sm:block">
+                  <Button size="sm" className="shadow-lg">
+                    ড্যাশবোর্ড
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/login" className="hidden sm:block">
+                  <Button size="sm" className="shadow-lg">
+                    {user ? "অ্যাকাউন্ট" : "অ্যাডমিন লগইন"}
+                  </Button>
+                </Link>
+              )}
               
               {/* Mobile Menu Button */}
               <Button 
@@ -149,11 +159,19 @@ export default function Index() {
                     ফলাফল
                   </Button>
                 </Link>
-                <Link to="/login" className="flex-1">
-                  <Button size="sm" className="w-full">
-                    লগইন
-                  </Button>
-                </Link>
+                {user && isAdmin ? (
+                  <Link to="/admin" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                    <Button size="sm" className="w-full">
+                      ড্যাশবোর্ড
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/login" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                    <Button size="sm" className="w-full">
+                      {user ? "অ্যাকাউন্ট" : "লগইন"}
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
@@ -384,11 +402,19 @@ export default function Index() {
               © {new Date().getFullYear()} আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="flex items-center gap-2">
-              <Link to="/login">
-                <Button variant="ghost" size="sm">
-                  অ্যাডমিন
-                </Button>
-              </Link>
+              {user && isAdmin ? (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm">
+                    ড্যাশবোর্ড
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    অ্যাডমিন
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>

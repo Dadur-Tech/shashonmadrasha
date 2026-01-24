@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -16,10 +17,32 @@ export function RequireAuth({
   requireAccountant = false,
   requireTeacher = false,
 }: RequireAuthProps) {
-  const { user, loading, isAdmin, isAccountant, isTeacher } = useAuth();
+  const { user, loading, roles, refreshRoles, isAdmin, isAccountant, isTeacher } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // If roles haven't loaded yet (or got cleared by a timeout), re-fetch once before denying access.
+  const [roleCheckLoading, setRoleCheckLoading] = useState(false);
+  const roleCheckDone = useRef(false);
+
+  useEffect(() => {
+    const needsRole = requireAdmin || requireAccountant || requireTeacher;
+    if (!needsRole) return;
+    if (loading) return;
+    if (!user) return;
+    if (roleCheckDone.current) return;
+
+    if ((roles?.length || 0) === 0) {
+      roleCheckDone.current = true;
+      setRoleCheckLoading(true);
+      refreshRoles()
+        .catch(() => {})
+        .finally(() => setRoleCheckLoading(false));
+    } else {
+      roleCheckDone.current = true;
+    }
+  }, [loading, user, roles, refreshRoles, requireAdmin, requireAccountant, requireTeacher]);
+
+  if (loading || roleCheckLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
