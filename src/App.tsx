@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
-import { RequireAuth } from "@/components/auth/RequireAuth";
+import { RequireAuth, RequireAdmin } from "@/components/auth/RequireAuth";
 
 // Pages
 import Index from "./pages/Index";
@@ -65,10 +65,14 @@ const App = () => (
             <Route path="/lesson/:lessonId" element={<LessonDetailPage />} />
             <Route path="/lillah-students" element={<LillahStudentsPage />} />
             
-            {/* Admin Routes */}
+            {/* Bootstrap Admin - requires auth but not admin role (for initial setup) */}
             <Route element={<RequireAuth />}>
-              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/bootstrap-admin" element={<BootstrapAdminPage />} />
+            </Route>
+            
+            {/* Admin Routes - requires admin role */}
+            <Route element={<RequireAdmin />}>
+              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/students" element={<AdminStudentsPage />} />
               <Route path="/admin/teachers" element={<TeachersPage />} />
               <Route path="/admin/classes" element={<ClassesPage />} />
