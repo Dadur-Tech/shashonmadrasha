@@ -436,14 +436,14 @@ function TeacherForm({ onSuccess, initialData, titles }: { onSuccess: () => void
         <div>
           <Label>বিশেষত্ব/হাইলাইট</Label>
           <Select 
-            value={formData.titleId} 
-            onValueChange={(v) => setFormData({ ...formData, titleId: v })}
+            value={formData.titleId || "none"} 
+            onValueChange={(v) => setFormData({ ...formData, titleId: v === "none" ? "" : v })}
           >
             <SelectTrigger>
               <SelectValue placeholder="নির্বাচন করুন" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">কোনোটি নয়</SelectItem>
+              <SelectItem value="none">কোনোটি নয়</SelectItem>
               {titles.map((title) => (
                 <SelectItem key={title.id} value={title.id}>
                   {title.name} {title.name_arabic && `(${title.name_arabic})`}
