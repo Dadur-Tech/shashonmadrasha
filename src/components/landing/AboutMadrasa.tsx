@@ -1,0 +1,128 @@
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { MapPin, Phone, Mail, Calendar, User, Building } from "lucide-react";
+
+export function AboutMadrasa() {
+  const { data: institution } = useQuery({
+    queryKey: ["public-institution-info"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("*")
+        .limit(1)
+        .single();
+      return data;
+    },
+  });
+
+  const infoItems = [
+    {
+      icon: Building,
+      label: "প্রতিষ্ঠানের নাম",
+      value: institution?.name || "আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা",
+    },
+    {
+      icon: Calendar,
+      label: "প্রতিষ্ঠাকাল",
+      value: institution?.established_year ? `${institution.established_year} খ্রিস্টাব্দ` : "১৯৯০ খ্রিস্টাব্দ",
+    },
+    {
+      icon: User,
+      label: "মুহতামিম/পরিচালক",
+      value: institution?.principal_name || "মাওলানা মোহাম্মদ আবদুল্লাহ",
+    },
+    {
+      icon: MapPin,
+      label: "ঠিকানা",
+      value: institution?.address || "শাসন সিংগাতী, জেলা",
+    },
+    {
+      icon: Phone,
+      label: "যোগাযোগ",
+      value: institution?.phone || "+৮৮০ ১৭XX-XXXXXX",
+    },
+    {
+      icon: Mail,
+      label: "ইমেইল",
+      value: institution?.email || "info@madrasa.com",
+    },
+  ];
+
+  return (
+    <section id="about" className="py-16 bg-background">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left: About Text */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              আমাদের সম্পর্কে
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+              ইসলামী শিক্ষার আলোকবর্তিকা
+            </h2>
+            <div className="space-y-4 text-muted-foreground">
+              <p>
+                <strong className="text-foreground">আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা</strong> দীর্ঘ 
+                তিন দশকেরও বেশি সময় ধরে ইসলামী শিক্ষার আলো ছড়িয়ে যাচ্ছে। আমাদের লক্ষ্য হলো 
+                প্রতিটি ছাত্রকে দ্বীনি ইলম ও আধুনিক জ্ঞানে সুশিক্ষিত করে গড়ে তোলা।
+              </p>
+              <p>
+                আমরা বিশ্বাস করি যে, সত্যিকারের শিক্ষা শুধু বই পড়া নয়, বরং চরিত্র গঠন ও 
+                আখলাক উন্নয়নও শিক্ষার অবিচ্ছেদ্য অংশ। তাই আমাদের পাঠ্যক্রমে কুরআন, হাদীস, 
+                ফিকহ-এর পাশাপাশি নৈতিক শিক্ষার উপরও জোর দেওয়া হয়।
+              </p>
+              <p>
+                এতিম ও অসহায় ছাত্রদের জন্য আমাদের বিশেষ <strong className="text-foreground">লিল্লাহ বোর্ডিং</strong> ব্যবস্থা 
+                রয়েছে, যেখানে তাদের সম্পূর্ণ বিনা খরচে থাকা, খাওয়া ও শিক্ষার ব্যবস্থা করা হয়।
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Right: Info Cards */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card className="border-border shadow-lg">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold text-foreground mb-6 text-center">
+                  প্রতিষ্ঠানের তথ্য
+                </h3>
+                <div className="space-y-4">
+                  {infoItems.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        viewport={{ once: true }}
+                        className="flex items-start gap-4 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{item.label}</p>
+                          <p className="font-medium text-foreground">{item.value}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
