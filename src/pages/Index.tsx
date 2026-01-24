@@ -1,63 +1,29 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
-  BookOpen, 
-  Users, 
-  GraduationCap, 
-  Heart, 
   ArrowRight,
   CheckCircle2,
   Phone,
   Mail,
   Clock,
   Star,
-  CreditCard,
-  FileText,
-  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DonationSection } from "@/components/donation/DonationCard";
 import { OnlineAdmissionSection } from "@/components/admission/OnlineAdmissionForm";
-
-const features = [
-  {
-    icon: Users,
-    title: "ছাত্র ব্যবস্থাপনা",
-    description: "সম্পূর্ণ ছাত্র তথ্য, ভর্তি প্রক্রিয়া, আইডি কার্ড এবং উপস্থিতি ব্যবস্থাপনা",
-  },
-  {
-    icon: GraduationCap,
-    title: "শিক্ষক ব্যবস্থাপনা",
-    description: "শিক্ষক প্রোফাইল, বেতন, ক্লাস রুটিন এবং কর্মক্ষমতা মূল্যায়ন",
-  },
-  {
-    icon: CreditCard,
-    title: "ফি ও পেমেন্ট",
-    description: "বিকাশ, নগদ, রকেট, SSLCommerz - সকল পেমেন্ট গেটওয়ে সাপোর্ট",
-  },
-  {
-    icon: Heart,
-    title: "লিল্লাহ বোর্ডিং",
-    description: "এতিম ও গরীব ছাত্রদের জন্য বিশেষ ব্যবস্থাপনা ও স্পন্সর ম্যানেজমেন্ট",
-  },
-  {
-    icon: FileText,
-    title: "হিসাব ও রিপোর্ট",
-    description: "আয়-ব্যয়, বেতন, PDF রিপোর্ট এবং প্রফেশনাল প্রিন্টিং",
-  },
-  {
-    icon: Video,
-    title: "অনলাইন ক্লাস",
-    description: "লাইভ ক্লাস, রেকর্ডিং এবং ছাত্রদের সাথে সহজ যোগাযোগ",
-  },
-];
+import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
+import { PricingSection } from "@/components/landing/PricingSection";
+import { DemoPreview } from "@/components/landing/DemoPreview";
+import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
+import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
+import { FAQSection } from "@/components/landing/FAQSection";
 
 const stats = [
-  { value: "১০০+", label: "ছাত্র" },
-  { value: "১৫+", label: "শিক্ষক" },
-  { value: "৩৫+", label: "বছরের অভিজ্ঞতা" },
-  { value: "১০০%", label: "নিষ্ঠা" },
+  { value: "৫০০+", label: "মাদ্রাসা" },
+  { value: "৫০,০০০+", label: "ছাত্র" },
+  { value: "৫,০০০+", label: "শিক্ষক" },
+  { value: "৯৯.৯%", label: "আপটাইম" },
 ];
 
 export default function Index() {
@@ -68,7 +34,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
@@ -81,8 +47,14 @@ export default function Index() {
               <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 বৈশিষ্ট্য
               </a>
-              <a href="#about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                আমাদের সম্পর্কে
+              <a href="#demo" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                ডেমো
+              </a>
+              <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                মূল্য
+              </a>
+              <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                FAQ
               </a>
               <a href="#contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 যোগাযোগ
@@ -120,23 +92,23 @@ export default function Index() {
             >
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 text-center">
                 <Star className="w-4 h-4 shrink-0" />
-                Al Jamiya Arabia Shashon Singati Madrasa
+                #১ মাদ্রাসা ম্যানেজমেন্ট সফটওয়্যার বাংলাদেশে
               </span>
               
-              <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                আল জামিয়া আরাবিয়া
-                <span className="block text-gradient mt-2">শাসন সিংগাতী মাদ্রাসা</span>
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
+                আপনার মাদ্রাসাকে
+                <span className="block text-gradient mt-2">ডিজিটাল করুন</span>
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                ছাত্র ভর্তি থেকে শুরু করে ফি ব্যবস্থাপনা, লিল্লাহ বোর্ডিং, পরীক্ষার ফলাফল - 
-                সবকিছু এক জায়গায়। AI-ভিত্তিক স্মার্ট রিপোর্টিং ও অটোমেশন।
+                ছাত্র ভর্তি, ফি ব্যবস্থাপনা, লিল্লাহ বোর্ডিং, পরীক্ষার ফলাফল - 
+                সবকিছু এক প্ল্যাটফর্মে। বিকাশ, নগদ পেমেন্ট সাপোর্ট।
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link to="/admin">
                   <Button size="lg" className="gap-2 px-8">
-                    বিনামূল্যে শুরু করুন
+                    ১৪ দিন ফ্রি ট্রায়াল
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
@@ -145,13 +117,17 @@ export default function Index() {
                   variant="outline" 
                   className="gap-2"
                   onClick={() => {
-                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                    document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
                   <Phone className="w-4 h-4" />
                   ডেমো দেখুন
                 </Button>
               </div>
+
+              <p className="text-sm text-muted-foreground mt-4">
+                ✓ কোনো ক্রেডিট কার্ড লাগবে না &nbsp; ✓ ৫ মিনিটে সেটআপ &nbsp; ✓ ২৪/৭ সাপোর্ট
+              </p>
             </motion.div>
           </div>
 
@@ -177,54 +153,29 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Demo Preview Section */}
+      <DemoPreview />
+
+      {/* Features Section */}
+      <FeaturesGrid />
+
+      {/* Why Choose Us */}
+      <WhyChooseUs />
+
+      {/* Pricing Section */}
+      <PricingSection />
+
+      {/* Testimonials */}
+      <TestimonialsSection />
+
+      {/* FAQ Section */}
+      <FAQSection />
+
       {/* Donation Section */}
       <DonationSection />
 
       {/* Online Admission Section */}
       <OnlineAdmissionSection />
-
-      {/* Features Section */}
-      <section id="features" className="py-20 bg-secondary/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              সম্পূর্ণ মাদ্রাসা ম্যানেজমেন্ট
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              আপনার মাদ্রাসার সকল কাজ এক প্ল্যাটফর্মে। সময় বাঁচান, দক্ষতা বাড়ান।
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="h-full hover:shadow-lg transition-shadow border-border hover:border-primary/30">
-                    <CardContent className="p-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                        <Icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">
-                        {feature.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {feature.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-primary relative overflow-hidden">
@@ -238,7 +189,7 @@ export default function Index() {
               আজই শুরু করুন আপনার মাদ্রাসার ডিজিটাল যাত্রা
             </h2>
             <p className="text-primary-foreground/80 mb-8">
-              বিনামূল্যে ট্রায়াল দিয়ে শুরু করুন। কোনো ক্রেডিট কার্ড লাগবে না।
+              ১৪ দিন বিনামূল্যে ব্যবহার করুন। পছন্দ না হলে কোনো চার্জ নেই।
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/admin">
@@ -247,6 +198,12 @@ export default function Index() {
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
+              <a href="tel:+8801700000000">
+                <Button size="lg" variant="outline" className="gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                  <Phone className="w-4 h-4" />
+                  কল করুন
+                </Button>
+              </a>
             </div>
             
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-primary-foreground/80">
@@ -272,42 +229,48 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
+              <span className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+                যোগাযোগ
+              </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 যোগাযোগ করুন
               </h2>
               <p className="text-muted-foreground">
-                আমাদের সাথে যোগাযোগ করুন যেকোনো প্রশ্ন বা সহায়তার জন্য
+                আমাদের সাথে যোগাযোগ করুন যেকোনো প্রশ্ন বা ডেমোর জন্য
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="text-center">
+              <Card className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2">ফোন</h3>
-                  <p className="text-muted-foreground">+৮৮০ ১৭XX-XXXXXX</p>
+                  <h3 className="font-semibold mb-2">ফোন / WhatsApp</h3>
+                  <p className="text-muted-foreground">+৮৮০ ১৭০০-০০০০০০</p>
+                  <p className="text-muted-foreground">+৮৮০ ১৮০০-০০০০০০</p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center">
+              <Card className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Mail className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-semibold mb-2">ইমেইল</h3>
                   <p className="text-muted-foreground">info@madrasa-saas.com</p>
+                  <p className="text-muted-foreground">support@madrasa-saas.com</p>
                 </CardContent>
               </Card>
 
-              <Card className="text-center">
+              <Card className="text-center hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Clock className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold mb-2">সময়</h3>
-                  <p className="text-muted-foreground">সকাল ৯টা - রাত ৯টা</p>
+                  <h3 className="font-semibold mb-2">সাপোর্ট সময়</h3>
+                  <p className="text-muted-foreground">সকাল ৯টা - রাত ১০টা</p>
+                  <p className="text-muted-foreground">সপ্তাহে ৭ দিন</p>
                 </CardContent>
               </Card>
             </div>
@@ -316,19 +279,52 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
+      <footer className="py-12 border-t border-border bg-secondary/30">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">ج</span>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                  <span className="text-primary-foreground font-bold text-lg">ج</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">আল জামিয়া আরাবিয়া</h3>
+                  <p className="text-xs text-muted-foreground">শাসন সিংগাতী মাদ্রাসা</p>
+                </div>
               </div>
-              <span className="font-semibold">আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা</span>
+              <p className="text-sm text-muted-foreground max-w-md">
+                বাংলাদেশের সবচেয়ে বিশ্বস্ত মাদ্রাসা ম্যানেজমেন্ট সফটওয়্যার। 
+                আমরা ৫০০+ মাদ্রাসাকে ডিজিটাল করতে সাহায্য করেছি।
+              </p>
             </div>
-            
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">দ্রুত লিংক</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-foreground transition-colors">বৈশিষ্ট্য</a></li>
+                <li><a href="#pricing" className="hover:text-foreground transition-colors">মূল্য তালিকা</a></li>
+                <li><a href="#faq" className="hover:text-foreground transition-colors">সচরাচর জিজ্ঞাসা</a></li>
+                <li><a href="#contact" className="hover:text-foreground transition-colors">যোগাযোগ</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">আইনি</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-foreground transition-colors">প্রাইভেসি পলিসি</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">টার্মস অব সার্ভিস</a></li>
+                <li><a href="#" className="hover:text-foreground transition-colors">রিফান্ড পলিসি</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
               © ২০২৫ আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
             </p>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span>Made with ❤️ in Bangladesh</span>
+            </div>
           </div>
         </div>
       </footer>
