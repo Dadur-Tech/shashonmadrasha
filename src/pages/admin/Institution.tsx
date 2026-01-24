@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Building2, 
@@ -11,6 +11,7 @@ import {
   Save,
   Upload,
   Edit,
+  Loader2,
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -18,35 +19,130 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function InstitutionPage() {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
-    name: "আল জামিয়াতুল আরাবিয়া শাসন সিংগাতি মাদরাসা",
-    nameEn: "Al Jamiyatul Arabia Shashon Singati Madrasa",
-    established: "১৯৯০",
-    registrationNo: "১২৩৪৫৬",
-    address: "শাসন সিংগাতি, উপজেলা, জেলা",
-    phone: "+৮৮০ ১৭XX-XXXXXX",
-    email: "info@aljamiyatul.edu.bd",
-    website: "www.aljamiyatul.edu.bd",
-    principal: "মাওলানা মুহাম্মদ আব্দুল্লাহ",
-    totalStudents: "৪৫৬",
-    totalTeachers: "২৮",
-    description: "আল জামিয়াতুল আরাবিয়া শাসন সিংগাতি মাদরাসা একটি ঐতিহ্যবাহী ইসলামী শিক্ষা প্রতিষ্ঠান। এখানে হিফজ, কিতাব, মক্তব এবং তাখাসসুস বিভাগে শিক্ষা প্রদান করা হয়।",
+    name: "",
+    nameEnglish: "",
+    established: "",
+    registrationNo: "",
+    address: "",
+    phone: "",
+    email: "",
+    website: "",
+    principal: "",
   });
 
-  const handleSave = () => {
-    toast({
-      title: "সংরক্ষিত হয়েছে",
-      description: "প্রতিষ্ঠানের তথ্য সফলভাবে আপডেট করা হয়েছে।",
-    });
-    setIsEditing(false);
-  };
+  const { data: institution, isLoading } = useQuery({
+    queryKey: ["institution"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institution_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ["institution-stats"],
+    queryFn: async () => {
+      const { count: studentCount } = await supabase
+        .from("students")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
+      const { count: teacherCount } = await supabase
+        .from("teachers")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
+      return {
+        studentCount: studentCount || 0,
+        teacherCount: teacherCount || 0,
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (institution) {
+      setFormData({
+        name: institution.name || "",
+        nameEnglish: institution.name_english || "",
+        established: institution.established_year?.toString() || "",
+        registrationNo: institution.registration_number || "",
+        address: institution.address || "",
+        phone: institution.phone || "",
+        email: institution.email || "",
+        website: institution.website || "",
+        principal: institution.principal_name || "",
+      });
+    }
+  }, [institution]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        name: formData.name,
+        name_english: formData.nameEnglish || null,
+        established_year: formData.established ? parseInt(formData.established) : null,
+        registration_number: formData.registrationNo || null,
+        address: formData.address || null,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        website: formData.website || null,
+        principal_name: formData.principal || null,
+      };
+
+      if (institution?.id) {
+        const { error } = await supabase
+          .from("institution_settings")
+          .update(payload)
+          .eq("id", institution.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("institution_settings")
+          .insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["institution"] });
+      toast({
+        title: "সংরক্ষিত হয়েছে",
+        description: "প্রতিষ্ঠানের তথ্য সফলভাবে আপডেট করা হয়েছে।",
+      });
+      setIsEditing(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "সমস্যা হয়েছে",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -62,8 +158,16 @@ export default function InstitutionPage() {
               <Button variant="outline" onClick={() => setIsEditing(false)}>
                 বাতিল
               </Button>
-              <Button onClick={handleSave} className="gap-2">
-                <Save className="w-4 h-4" />
+              <Button 
+                onClick={() => saveMutation.mutate()} 
+                className="gap-2"
+                disabled={saveMutation.isPending}
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
                 সংরক্ষণ করুন
               </Button>
             </div>
@@ -99,25 +203,29 @@ export default function InstitutionPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="আল জামিয়াতুল আরাবিয়া..."
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>মাদরাসার নাম (ইংরেজি)</Label>
                     <Input
-                      value={formData.nameEn}
-                      onChange={(e) => setFormData({ ...formData, nameEn: e.target.value })}
+                      value={formData.nameEnglish}
+                      onChange={(e) => setFormData({ ...formData, nameEnglish: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="Al Jamiyatul Arabia..."
                     />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>প্রতিষ্ঠাকাল</Label>
+                    <Label>প্রতিষ্ঠাকাল (সন)</Label>
                     <Input
+                      type="number"
                       value={formData.established}
                       onChange={(e) => setFormData({ ...formData, established: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="১৯৯০"
                     />
                   </div>
                   <div className="space-y-2">
@@ -126,18 +234,9 @@ export default function InstitutionPage() {
                       value={formData.registrationNo}
                       onChange={(e) => setFormData({ ...formData, registrationNo: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="১২৩৪৫৬"
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>প্রতিষ্ঠান সম্পর্কে</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    disabled={!isEditing}
-                    rows={4}
-                  />
                 </div>
               </CardContent>
             </Card>
@@ -156,10 +255,12 @@ export default function InstitutionPage() {
                   <Label className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" /> ঠিকানা
                   </Label>
-                  <Input
+                  <Textarea
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     disabled={!isEditing}
+                    placeholder="গ্রাম, উপজেলা, জেলা"
+                    rows={2}
                   />
                 </div>
 
@@ -172,6 +273,7 @@ export default function InstitutionPage() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="+৮৮০ ১৭XX-XXXXXX"
                     />
                   </div>
                   <div className="space-y-2">
@@ -182,6 +284,7 @@ export default function InstitutionPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       disabled={!isEditing}
+                      placeholder="info@example.com"
                     />
                   </div>
                 </div>
@@ -194,6 +297,7 @@ export default function InstitutionPage() {
                     value={formData.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     disabled={!isEditing}
+                    placeholder="www.example.com"
                   />
                 </div>
               </CardContent>
@@ -215,6 +319,7 @@ export default function InstitutionPage() {
                     value={formData.principal}
                     onChange={(e) => setFormData({ ...formData, principal: e.target.value })}
                     disabled={!isEditing}
+                    placeholder="মাওলানা মুহাম্মদ..."
                   />
                 </div>
               </CardContent>
@@ -253,21 +358,21 @@ export default function InstitutionPage() {
                     <Calendar className="w-5 h-5 text-primary" />
                     <span>প্রতিষ্ঠাকাল</span>
                   </div>
-                  <span className="font-bold">{formData.established}</span>
+                  <span className="font-bold">{formData.established || "-"}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-primary" />
                     <span>মোট ছাত্র</span>
                   </div>
-                  <span className="font-bold">{formData.totalStudents}</span>
+                  <span className="font-bold">{stats?.studentCount || 0}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-accent" />
                     <span>মোট শিক্ষক</span>
                   </div>
-                  <span className="font-bold">{formData.totalTeachers}</span>
+                  <span className="font-bold">{stats?.teacherCount || 0}</span>
                 </div>
               </CardContent>
             </Card>
@@ -279,7 +384,7 @@ export default function InstitutionPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {["হিফজ বিভাগ", "কিতাব বিভাগ", "মক্তব বিভাগ", "তাখাসসুস বিভাগ"].map((dept) => (
+                  {["হিফজ বিভাগ", "কিতাব বিভাগ", "নাযেরা বিভাগ", "তাখাসসুস বিভাগ"].map((dept) => (
                     <div 
                       key={dept}
                       className="flex items-center gap-2 p-2 rounded-lg bg-success/10 text-success"

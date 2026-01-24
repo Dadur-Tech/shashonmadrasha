@@ -3,19 +3,22 @@ import { motion } from "framer-motion";
 import { 
   Plus, 
   Search, 
-  Filter, 
   Download,
   MoreHorizontal,
   Eye,
   Edit,
   Trash2,
   UserPlus,
+  Loader2,
+  Phone,
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -37,31 +40,107 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { StatCard } from "@/components/ui/stat-card";
+import { Users, Heart, AlertCircle, GraduationCap } from "lucide-react";
 
-const students = [
-  { id: "STD001", name: "আহমদ হাসান", father: "মো. হাসান আলী", class: "হিফজ ৩য় বর্ষ", phone: "০১৭১২৩৪৫৬৭৮", status: "active", fee: "paid" },
-  { id: "STD002", name: "মুহাম্মদ আলী", father: "আব্দুল করিম", class: "কিতাব ২য় বর্ষ", phone: "০১৮১২৩৪৫৬৭৮", status: "active", fee: "due" },
-  { id: "STD003", name: "আব্দুর রহমান", father: "মো. রফিকুল ইসলাম", class: "মক্তব", phone: "০১৯১২৩৪৫৬৭৮", status: "lillah", fee: "exempt" },
-  { id: "STD004", name: "ইব্রাহিম খান", father: "খান মো. আকবর", class: "হিফজ ১ম বর্ষ", phone: "০১৫১২৩৪৫৬৭৮", status: "active", fee: "paid" },
-  { id: "STD005", name: "ইউসুফ আহমেদ", father: "আহমেদ হোসাইন", class: "তাখাসসুস", phone: "০১৬১২৩৪৫৬৭৮", status: "active", fee: "paid" },
-  { id: "STD006", name: "হাফেজ মোস্তফা", father: "মো. কামাল", class: "হিফজ ২য় বর্ষ", phone: "০১৩১২৩৪৫৬৭৮", status: "lillah", fee: "exempt" },
-  { id: "STD007", name: "আরিফ হোসেন", father: "হোসেন আলী", class: "কিতাব ১ম বর্ষ", phone: "০১৪১২৩৪৫৬৭৮", status: "active", fee: "due" },
-];
-
-const statusColors = {
-  active: "bg-success/10 text-success border-success/20",
-  lillah: "bg-accent/10 text-accent border-accent/20",
-  inactive: "bg-muted text-muted-foreground",
+const statusColors: Record<string, string> = {
+  active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  lillah: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  inactive: "bg-gray-500/10 text-gray-600 border-gray-500/20",
+  graduated: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  transferred: "bg-amber-500/10 text-amber-600 border-amber-500/20",
 };
 
-const feeColors = {
-  paid: "bg-success/10 text-success",
-  due: "bg-destructive/10 text-destructive",
-  exempt: "bg-muted text-muted-foreground",
+const statusLabels: Record<string, string> = {
+  active: "সক্রিয়",
+  lillah: "লিল্লাহ",
+  inactive: "নিষ্ক্রিয়",
+  graduated: "পাস",
+  transferred: "বদলি",
 };
 
 export default function StudentsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: students = [], isLoading } = useQuery({
+    queryKey: ["students"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select(`
+          *,
+          class:classes(name, department)
+        `)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: classes = [] } = useQuery({
+    queryKey: ["classes-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("classes")
+        .select("id, name, department")
+        .eq("is_active", true)
+        .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase
+        .from("students")
+        .delete()
+        .eq("id", studentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      toast({ title: "সফল!", description: "ছাত্র মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = 
+      student.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.guardian_phone.includes(searchTerm);
+    
+    const matchesDepartment = selectedDepartment === "all" || 
+      student.class?.department === selectedDepartment;
+    
+    const matchesStatus = selectedStatus === "all" || student.status === selectedStatus;
+    
+    return matchesSearch && matchesDepartment && matchesStatus;
+  });
+
+  const totalStudents = students.length;
+  const activeStudents = students.filter(s => s.status === "active").length;
+  const lillahStudents = students.filter(s => s.is_lillah || s.status === "lillah").length;
+  const pendingFees = students.filter(s => s.status === "active" && !s.is_lillah).length;
 
   return (
     <AdminLayout>
@@ -72,38 +151,50 @@ export default function StudentsPage() {
             <h1 className="text-2xl font-bold text-foreground">ছাত্র ব্যবস্থাপনা</h1>
             <p className="text-muted-foreground">সকল ছাত্রের তথ্য দেখুন ও পরিচালনা করুন</p>
           </div>
-          <Button className="gap-2">
-            <UserPlus className="w-4 h-4" />
-            নতুন ছাত্র যোগ করুন
-          </Button>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <UserPlus className="w-4 h-4" />
+                নতুন ছাত্র যোগ করুন
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>নতুন ছাত্র ভর্তি করুন</DialogTitle>
+              </DialogHeader>
+              <AddStudentForm 
+                classes={classes}
+                onSuccess={() => {
+                  setIsAddOpen(false);
+                  queryClient.invalidateQueries({ queryKey: ["students"] });
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold">৪৫৬</p>
-              <p className="text-sm text-muted-foreground">মোট ছাত্র</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-success">৩৯৮</p>
-              <p className="text-sm text-muted-foreground">সক্রিয় ছাত্র</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-accent">৪২</p>
-              <p className="text-sm text-muted-foreground">লিল্লাহ ছাত্র</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <p className="text-2xl font-bold text-destructive">১৬</p>
-              <p className="text-sm text-muted-foreground">ফি বকেয়া</p>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="মোট ছাত্র"
+            value={totalStudents.toString()}
+            icon={<Users className="w-5 h-5" />}
+          />
+          <StatCard
+            title="সক্রিয় ছাত্র"
+            value={activeStudents.toString()}
+            icon={<GraduationCap className="w-5 h-5" />}
+          />
+          <StatCard
+            title="লিল্লাহ ছাত্র"
+            value={lillahStudents.toString()}
+            icon={<Heart className="w-5 h-5" />}
+          />
+          <StatCard
+            title="ফি প্রযোজ্য"
+            value={pendingFees.toString()}
+            icon={<AlertCircle className="w-5 h-5" />}
+          />
         </div>
 
         {/* Filters & Search */}
@@ -119,7 +210,7 @@ export default function StudentsPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select defaultValue="all">
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="বিভাগ নির্বাচন" />
                 </SelectTrigger>
@@ -127,11 +218,10 @@ export default function StudentsPage() {
                   <SelectItem value="all">সকল বিভাগ</SelectItem>
                   <SelectItem value="hifz">হিফজ বিভাগ</SelectItem>
                   <SelectItem value="kitab">কিতাব বিভাগ</SelectItem>
-                  <SelectItem value="maktab">মক্তব</SelectItem>
-                  <SelectItem value="takhassos">তাখাসসুস</SelectItem>
+                  <SelectItem value="nazera">নাযেরা বিভাগ</SelectItem>
                 </SelectContent>
               </Select>
-              <Select defaultValue="all">
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="স্ট্যাটাস" />
                 </SelectTrigger>
@@ -153,83 +243,327 @@ export default function StudentsPage() {
         {/* Students Table */}
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>আইডি</TableHead>
-                  <TableHead>ছাত্রের নাম</TableHead>
-                  <TableHead>অভিভাবক</TableHead>
-                  <TableHead>ক্লাস/বিভাগ</TableHead>
-                  <TableHead>ফোন</TableHead>
-                  <TableHead>স্ট্যাটাস</TableHead>
-                  <TableHead>ফি</TableHead>
-                  <TableHead className="text-right">অ্যাকশন</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student, index) => (
-                  <motion.tr
-                    key={student.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="group"
-                  >
-                    <TableCell className="font-medium">{student.id}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-primary text-sm font-medium">
-                            {student.name.charAt(0)}
-                          </span>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>আইডি</TableHead>
+                    <TableHead>ছাত্রের নাম</TableHead>
+                    <TableHead>অভিভাবক</TableHead>
+                    <TableHead>ক্লাস/বিভাগ</TableHead>
+                    <TableHead>ফোন</TableHead>
+                    <TableHead>স্ট্যাটাস</TableHead>
+                    <TableHead className="text-right">অ্যাকশন</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.map((student, index) => (
+                    <motion.tr
+                      key={student.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      className="group"
+                    >
+                      <TableCell className="font-mono text-xs">{student.student_id}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-primary text-sm font-medium">
+                              {student.full_name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium">{student.full_name}</p>
+                            {student.full_name_arabic && (
+                              <p className="text-xs text-muted-foreground" dir="rtl">
+                                {student.full_name_arabic}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <span>{student.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{student.father}</TableCell>
-                    <TableCell>{student.class}</TableCell>
-                    <TableCell>{student.phone}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={statusColors[student.status as keyof typeof statusColors]}>
-                        {student.status === "active" && "সক্রিয়"}
-                        {student.status === "lillah" && "লিল্লাহ"}
-                        {student.status === "inactive" && "নিষ্ক্রিয়"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={feeColors[student.fee as keyof typeof feeColors]}>
-                        {student.fee === "paid" && "পরিশোধিত"}
-                        {student.fee === "due" && "বকেয়া"}
-                        {student.fee === "exempt" && "মওকুফ"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="gap-2">
-                            <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2">
-                            <Edit className="w-4 h-4" /> সম্পাদনা
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="gap-2 text-destructive">
-                            <Trash2 className="w-4 h-4" /> মুছে ফেলুন
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </motion.tr>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{student.father_name}</p>
+                          <p className="text-xs text-muted-foreground">{student.guardian_name || "পিতা"}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p>{student.class?.name || "-"}</p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {student.class?.department || "-"}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <Phone className="w-3 h-3 text-muted-foreground" />
+                          {student.guardian_phone}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusColors[student.status] || statusColors.active}>
+                          {statusLabels[student.status] || student.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem className="gap-2">
+                              <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Edit className="w-4 h-4" /> সম্পাদনা
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="gap-2 text-destructive"
+                              onClick={() => deleteMutation.mutate(student.id)}
+                            >
+                              <Trash2 className="w-4 h-4" /> মুছে ফেলুন
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                  {filteredStudents.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                        কোনো ছাত্র পাওয়া যায়নি
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
     </AdminLayout>
+  );
+}
+
+function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    fullNameArabic: "",
+    fatherName: "",
+    motherName: "",
+    guardianPhone: "",
+    classId: "",
+    dateOfBirth: "",
+    village: "",
+    postOffice: "",
+    upazila: "",
+    district: "",
+    isLillah: false,
+    lillahReason: "",
+    previousInstitution: "",
+    notes: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.fullName || !formData.fatherName || !formData.guardianPhone) {
+      toast({ title: "প্রয়োজনীয় তথ্য দিন", description: "নাম, পিতার নাম এবং ফোন নম্বর আবশ্যক", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    const studentId = `STD-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+
+    const { error } = await supabase.from("students").insert({
+      student_id: studentId,
+      full_name: formData.fullName,
+      full_name_arabic: formData.fullNameArabic || null,
+      father_name: formData.fatherName,
+      mother_name: formData.motherName || null,
+      guardian_phone: formData.guardianPhone,
+      class_id: formData.classId || null,
+      date_of_birth: formData.dateOfBirth || null,
+      village: formData.village || null,
+      post_office: formData.postOffice || null,
+      upazila: formData.upazila || null,
+      district: formData.district || null,
+      is_lillah: formData.isLillah,
+      lillah_reason: formData.lillahReason || null,
+      previous_institution: formData.previousInstitution || null,
+      notes: formData.notes || null,
+      status: formData.isLillah ? "lillah" : "active",
+    });
+
+    setLoading(false);
+    if (error) {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "সফল!", description: "ছাত্র ভর্তি হয়েছে" });
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label>ছাত্রের নাম (বাংলা) *</Label>
+          <Input
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            placeholder="মুহাম্মদ আহমদ"
+          />
+        </div>
+        <div>
+          <Label>ছাত্রের নাম (আরবী)</Label>
+          <Input
+            value={formData.fullNameArabic}
+            onChange={(e) => setFormData({ ...formData, fullNameArabic: e.target.value })}
+            placeholder="محمد أحمد"
+            dir="rtl"
+          />
+        </div>
+        <div>
+          <Label>পিতার নাম *</Label>
+          <Input
+            value={formData.fatherName}
+            onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+            placeholder="মো. করিম উদ্দিন"
+          />
+        </div>
+        <div>
+          <Label>মাতার নাম</Label>
+          <Input
+            value={formData.motherName}
+            onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
+            placeholder="ফাতেমা খাতুন"
+          />
+        </div>
+        <div>
+          <Label>অভিভাবকের ফোন *</Label>
+          <Input
+            value={formData.guardianPhone}
+            onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
+            placeholder="01XXXXXXXXX"
+          />
+        </div>
+        <div>
+          <Label>জন্ম তারিখ</Label>
+          <Input
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>ক্লাস নির্বাচন</Label>
+          <Select value={formData.classId} onValueChange={(v) => setFormData({ ...formData, classId: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="ক্লাস নির্বাচন করুন" />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map((cls) => (
+                <SelectItem key={cls.id} value={cls.id}>
+                  {cls.name} ({cls.department})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>পূর্ববর্তী প্রতিষ্ঠান</Label>
+          <Input
+            value={formData.previousInstitution}
+            onChange={(e) => setFormData({ ...formData, previousInstitution: e.target.value })}
+            placeholder="মক্তব/মাদরাসার নাম"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div>
+          <Label>গ্রাম</Label>
+          <Input
+            value={formData.village}
+            onChange={(e) => setFormData({ ...formData, village: e.target.value })}
+            placeholder="গ্রামের নাম"
+          />
+        </div>
+        <div>
+          <Label>ডাকঘর</Label>
+          <Input
+            value={formData.postOffice}
+            onChange={(e) => setFormData({ ...formData, postOffice: e.target.value })}
+            placeholder="ডাকঘর"
+          />
+        </div>
+        <div>
+          <Label>উপজেলা</Label>
+          <Input
+            value={formData.upazila}
+            onChange={(e) => setFormData({ ...formData, upazila: e.target.value })}
+            placeholder="উপজেলা"
+          />
+        </div>
+        <div>
+          <Label>জেলা</Label>
+          <Input
+            value={formData.district}
+            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+            placeholder="জেলা"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30">
+        <input
+          type="checkbox"
+          id="isLillah"
+          checked={formData.isLillah}
+          onChange={(e) => setFormData({ ...formData, isLillah: e.target.checked })}
+          className="w-4 h-4"
+        />
+        <Label htmlFor="isLillah" className="cursor-pointer">
+          লিল্লাহ ছাত্র (ফি মওকুফ)
+        </Label>
+      </div>
+
+      {formData.isLillah && (
+        <div>
+          <Label>লিল্লাহর কারণ</Label>
+          <Textarea
+            value={formData.lillahReason}
+            onChange={(e) => setFormData({ ...formData, lillahReason: e.target.value })}
+            placeholder="এতিম / গরীব / অন্যান্য কারণ..."
+            rows={2}
+          />
+        </div>
+      )}
+
+      <div>
+        <Label>বিশেষ নোট</Label>
+        <Textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="অতিরিক্ত তথ্য..."
+          rows={2}
+        />
+      </div>
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        ছাত্র ভর্তি করুন
+      </Button>
+    </form>
   );
 }
