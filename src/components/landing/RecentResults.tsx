@@ -27,14 +27,14 @@ export function RecentResults() {
     queryKey: ["public-top-performers"],
     queryFn: async () => {
       // Get the latest published exam
-      const { data: latestExam } = await supabase
+      const { data: examsData } = await supabase
         .from("exams")
         .select("id, name")
         .eq("is_published", true)
         .order("end_date", { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
+      const latestExam = examsData?.[0];
       if (!latestExam) return { exam: null, performers: [] };
 
       // Get results for this exam with student info
