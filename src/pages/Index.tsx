@@ -34,6 +34,7 @@ import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
 import { OnlineClassesPreview } from "@/components/landing/OnlineClassesPreview";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { LillahBoardingSection } from "@/components/landing/LillahBoardingSection";
+import { UserDropdown } from "@/components/shared/UserDropdown";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
@@ -48,7 +49,7 @@ const navLinks = [
 
 export default function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   return (
     <div className="min-h-screen bg-background islamic-pattern">
@@ -96,19 +97,12 @@ export default function Index() {
                   ফলাফল দেখুন
                 </Button>
               </Link>
-              {user && isAdmin ? (
-                <Link to="/admin" className="hidden sm:block">
-                  <Button size="sm" className="shadow-lg">
-                    ড্যাশবোর্ড
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/login" className="hidden sm:block">
-                  <Button size="sm" className="shadow-lg">
-                    {user ? "অ্যাকাউন্ট" : "অ্যাডমিন লগইন"}
-                  </Button>
-                </Link>
-              )}
+              
+              {/* User Dropdown or Login Button */}
+              <div className="hidden sm:block">
+                <UserDropdown />
+              </div>
+              
               
               {/* Mobile Menu Button */}
               <Button 
@@ -159,16 +153,29 @@ export default function Index() {
                     ফলাফল
                   </Button>
                 </Link>
-                {user && isAdmin ? (
-                  <Link to="/admin" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
-                    <Button size="sm" className="w-full">
-                      ড্যাশবোর্ড
+                {user ? (
+                  <>
+                    <Link to={isAdmin ? "/admin" : "/"} className="flex-1" onClick={() => setMobileMenuOpen(false)}>
+                      <Button size="sm" className="w-full">
+                        ড্যাশবোর্ড
+                      </Button>
+                    </Link>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={async () => {
+                        setMobileMenuOpen(false);
+                        await signOut();
+                      }}
+                    >
+                      লগআউট
                     </Button>
-                  </Link>
+                  </>
                 ) : (
                   <Link to="/login" className="flex-1" onClick={() => setMobileMenuOpen(false)}>
                     <Button size="sm" className="w-full">
-                      {user ? "অ্যাকাউন্ট" : "লগইন"}
+                      লগইন
                     </Button>
                   </Link>
                 )}
@@ -402,19 +409,7 @@ export default function Index() {
               © {new Date().getFullYear()} আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="flex items-center gap-2">
-              {user && isAdmin ? (
-                <Link to="/admin">
-                  <Button variant="ghost" size="sm">
-                    ড্যাশবোর্ড
-                  </Button>
-                </Link>
-              ) : (
-                <Link to="/login">
-                  <Button variant="ghost" size="sm">
-                    অ্যাডমিন
-                  </Button>
-                </Link>
-              )}
+              <UserDropdown variant="ghost" />
             </div>
           </div>
         </div>
