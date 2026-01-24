@@ -81,7 +81,7 @@ export default function StudentsPage() {
   const [editingStudent, setEditingStudent] = useState<any>(null);
   const queryClient = useQueryClient();
 
-  const { data: students = [], isLoading } = useQuery({
+  const { data: students = [], isLoading, error: studentsError } = useQuery({
     queryKey: ["students"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -92,8 +92,11 @@ export default function StudentsPage() {
         `)
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Students fetch error:", error);
+        throw error;
+      }
+      return data || [];
     },
   });
 
