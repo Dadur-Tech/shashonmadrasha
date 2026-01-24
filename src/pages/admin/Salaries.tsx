@@ -25,8 +25,17 @@ import {
   CheckCircle2,
   Clock,
   Download,
+  MoreVertical,
+  Trash2,
+  CreditCard,
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/ui/stat-card";
@@ -54,6 +63,41 @@ export default function SalariesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (salaryId: string) => {
+      const { error } = await supabase.from("teacher_salaries").delete().eq("id", salaryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-salaries"] });
+      toast({ title: "সফল!", description: "বেতন রেকর্ড মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const payMutation = useMutation({
+    mutationFn: async (salaryId: string) => {
+      const salary = salaries.find(s => s.id === salaryId);
+      if (!salary) throw new Error("Salary not found");
+      
+      const { error } = await supabase.from("teacher_salaries").update({
+        status: "paid",
+        paid_amount: salary.net_salary,
+        payment_date: new Date().toISOString().split('T')[0],
+      }).eq("id", salaryId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-salaries"] });
+      toast({ title: "সফল!", description: "বেতন পরিশোধিত হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: salaries = [], isLoading } = useQuery({
     queryKey: ["teacher-salaries"],
@@ -190,6 +234,7 @@ export default function SalariesPage() {
                     <TableHead className="text-right">কর্তন</TableHead>
                     <TableHead className="text-right">নেট বেতন</TableHead>
                     <TableHead>স্ট্যাটাস</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -227,11 +272,40 @@ export default function SalariesPage() {
                           {statusLabels[salary.status] || salary.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {salary.status !== "paid" && (
+                              <DropdownMenuItem 
+                                className="gap-2"
+                                onClick={() => payMutation.mutate(salary.id)}
+                              >
+                                <CreditCard className="w-4 h-4" /> পরিশোধ করুন
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              className="gap-2 text-destructive"
+                              onClick={() => {
+                                if (confirm("আপনি কি এই বেতন রেকর্ড মুছে ফেলতে চান?")) {
+                                  deleteMutation.mutate(salary.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" /> মুছে ফেলুন
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </motion.tr>
                   ))}
                   {filteredSalaries.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                      <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                         কোনো বেতন রেকর্ড পাওয়া যায়নি
                       </TableCell>
                     </TableRow>

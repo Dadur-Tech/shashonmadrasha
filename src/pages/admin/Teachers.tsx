@@ -56,6 +56,7 @@ const statusLabels: Record<string, string> = {
 export default function TeachersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: teachers = [], isLoading } = useQuery({
@@ -68,6 +69,20 @@ export default function TeachersPage() {
       
       if (error) throw error;
       return data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (teacherId: string) => {
+      const { error } = await supabase.from("teachers").delete().eq("id", teacherId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+      toast({ title: "সফল!", description: "শিক্ষক মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
     },
   });
 
@@ -100,13 +115,31 @@ export default function TeachersPage() {
               <DialogHeader>
                 <DialogTitle>নতুন শিক্ষক যোগ করুন</DialogTitle>
               </DialogHeader>
-              <AddTeacherForm onSuccess={() => {
+              <TeacherForm onSuccess={() => {
                 setIsAddOpen(false);
                 queryClient.invalidateQueries({ queryKey: ["teachers"] });
               }} />
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingTeacher} onOpenChange={(open) => !open && setEditingTeacher(null)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>শিক্ষক সম্পাদনা করুন</DialogTitle>
+            </DialogHeader>
+            {editingTeacher && (
+              <TeacherForm 
+                initialData={editingTeacher}
+                onSuccess={() => {
+                  setEditingTeacher(null);
+                  queryClient.invalidateQueries({ queryKey: ["teachers"] });
+                }} 
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -208,13 +241,20 @@ export default function TeachersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => setEditingTeacher(teacher)}
+                            >
                               <Edit className="w-4 h-4" /> এডিট করুন
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 text-destructive">
+                            <DropdownMenuItem 
+                              className="gap-2 text-destructive"
+                              onClick={() => {
+                                if (confirm("আপনি কি এই শিক্ষক মুছে ফেলতে চান?")) {
+                                  deleteMutation.mutate(teacher.id);
+                                }
+                              }}
+                            >
                               <Trash2 className="w-4 h-4" /> মুছে ফেলুন
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -239,14 +279,14 @@ export default function TeachersPage() {
   );
 }
 
-function AddTeacherForm({ onSuccess }: { onSuccess: () => void }) {
+function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initialData?: any }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "",
-    phone: "",
-    qualification: "",
-    specialization: "",
-    monthlySalary: "",
+    fullName: initialData?.full_name || "",
+    phone: initialData?.phone || "",
+    qualification: initialData?.qualification || "",
+    specialization: initialData?.specialization || "",
+    monthlySalary: initialData?.monthly_salary?.toString() || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -257,23 +297,34 @@ function AddTeacherForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setLoading(true);
-    const teacherId = `TCH-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
 
-    const { error } = await supabase.from("teachers").insert({
-      teacher_id: teacherId,
+    const teacherData = {
       full_name: formData.fullName,
       phone: formData.phone,
       qualification: formData.qualification || null,
       specialization: formData.specialization || null,
       monthly_salary: parseFloat(formData.monthlySalary) || 0,
-      status: "active",
-    });
+    };
+
+    let error;
+    if (initialData?.id) {
+      const result = await supabase.from("teachers").update(teacherData).eq("id", initialData.id);
+      error = result.error;
+    } else {
+      const teacherId = `TCH-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const result = await supabase.from("teachers").insert({
+        ...teacherData,
+        teacher_id: teacherId,
+        status: "active",
+      });
+      error = result.error;
+    }
 
     setLoading(false);
     if (error) {
       toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "সফল!", description: "শিক্ষক যোগ হয়েছে" });
+      toast({ title: "সফল!", description: initialData ? "শিক্ষক আপডেট হয়েছে" : "শিক্ষক যোগ হয়েছে" });
       onSuccess();
     }
   };
@@ -325,7 +376,7 @@ function AddTeacherForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-        শিক্ষক যোগ করুন
+        {initialData ? "আপডেট করুন" : "শিক্ষক যোগ করুন"}
       </Button>
     </form>
   );

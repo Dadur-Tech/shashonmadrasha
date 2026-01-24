@@ -24,8 +24,16 @@ import {
   Loader2,
   TrendingDown,
   Calendar,
+  Trash2,
+  MoreVertical,
 } from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/ui/stat-card";
@@ -34,6 +42,20 @@ export default function ExpensesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (expenseId: string) => {
+      const { error } = await supabase.from("expenses").delete().eq("id", expenseId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      toast({ title: "সফল!", description: "খরচ মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ["expenses"],
@@ -160,6 +182,7 @@ export default function ExpensesPage() {
                     <TableHead>ক্যাটাগরি</TableHead>
                     <TableHead>পেমেন্ট</TableHead>
                     <TableHead className="text-right">পরিমাণ</TableHead>
+                    <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -193,11 +216,32 @@ export default function ExpensesPage() {
                       <TableCell className="text-right font-semibold text-destructive">
                         ৳{Number(expense.amount).toLocaleString('bn-BD')}
                       </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              className="gap-2 text-destructive"
+                              onClick={() => {
+                                if (confirm("আপনি কি এই খরচ মুছে ফেলতে চান?")) {
+                                  deleteMutation.mutate(expense.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" /> মুছে ফেলুন
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </motion.tr>
                   ))}
                   {filteredExpenses.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                         কোনো খরচ রেকর্ড পাওয়া যায়নি
                       </TableCell>
                     </TableRow>
