@@ -210,6 +210,13 @@ export type Database = {
             referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "courses_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       departments: {
@@ -330,6 +337,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "donations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       exam_results: {
@@ -382,6 +396,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_results_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
             referencedColumns: ["id"]
           },
         ]
@@ -872,6 +893,13 @@ export type Database = {
             referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "online_classes_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payment_gateways: {
@@ -1100,6 +1128,13 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "student_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       student_fees: {
@@ -1167,6 +1202,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fees_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1314,6 +1356,13 @@ export type Database = {
             referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "teacher_attendance_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       teacher_salaries: {
@@ -1377,6 +1426,13 @@ export type Database = {
             columns: ["teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_salaries_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1573,13 +1629,161 @@ export type Database = {
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "weekly_jamiyat_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      payment_gateways_public: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          display_order: number | null
+          gateway_type:
+            | Database["public"]["Enums"]["payment_gateway_type"]
+            | null
+          id: string | null
+          is_enabled: boolean | null
+          logo_url: string | null
+          merchant_id: string | null
+          sandbox_mode: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          display_order?: number | null
+          gateway_type?:
+            | Database["public"]["Enums"]["payment_gateway_type"]
+            | null
+          id?: string | null
+          is_enabled?: boolean | null
+          logo_url?: string | null
+          merchant_id?: string | null
+          sandbox_mode?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          display_order?: number | null
+          gateway_type?:
+            | Database["public"]["Enums"]["payment_gateway_type"]
+            | null
+          id?: string | null
+          is_enabled?: boolean | null
+          logo_url?: string | null
+          merchant_id?: string | null
+          sandbox_mode?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      students_public: {
+        Row: {
+          class_id: string | null
+          full_name: string | null
+          full_name_arabic: string | null
+          id: string | null
+          photo_url: string | null
+          status: Database["public"]["Enums"]["student_status"] | null
+          student_id: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          full_name?: string | null
+          full_name_arabic?: string | null
+          id?: string | null
+          photo_url?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          student_id?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          full_name?: string | null
+          full_name_arabic?: string | null
+          id?: string | null
+          photo_url?: string | null
+          status?: Database["public"]["Enums"]["student_status"] | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers_public: {
+        Row: {
+          full_name: string | null
+          full_name_arabic: string | null
+          id: string | null
+          joining_date: string | null
+          phone: string | null
+          photo_url: string | null
+          qualification: string | null
+          specialization: string | null
+          status: Database["public"]["Enums"]["teacher_status"] | null
+          teacher_id: string | null
+          title_id: string | null
+        }
+        Insert: {
+          full_name?: string | null
+          full_name_arabic?: string | null
+          id?: string | null
+          joining_date?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          qualification?: string | null
+          specialization?: string | null
+          status?: Database["public"]["Enums"]["teacher_status"] | null
+          teacher_id?: string | null
+          title_id?: string | null
+        }
+        Update: {
+          full_name?: string | null
+          full_name_arabic?: string | null
+          id?: string | null
+          joining_date?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          qualification?: string | null
+          specialization?: string | null
+          status?: Database["public"]["Enums"]["teacher_status"] | null
+          teacher_id?: string | null
+          title_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teachers_title_id_fkey"
+            columns: ["title_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_titles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_donation_stats: {
+        Args: never
+        Returns: {
+          completed_amount: number
+          completed_count: number
+          total_amount: number
+          total_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
