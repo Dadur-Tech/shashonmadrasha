@@ -65,7 +65,7 @@ export default function TeachersPage() {
   const [editingTeacher, setEditingTeacher] = useState<any>(null);
   const queryClient = useQueryClient();
 
-  const { data: teachers = [], isLoading } = useQuery({
+  const { data: teachers = [], isLoading, error: teachersError } = useQuery({
     queryKey: ["teachers"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -76,8 +76,11 @@ export default function TeachersPage() {
         `)
         .order("created_at", { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Teachers fetch error:", error);
+        throw error;
+      }
+      return data || [];
     },
   });
 
