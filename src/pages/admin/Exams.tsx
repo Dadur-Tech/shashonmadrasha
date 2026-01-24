@@ -613,25 +613,52 @@ function ResultEntryForm({ examId, onSuccess }: { examId: string; onSuccess: () 
       return;
     }
 
+    // Validate marks
+    for (const [studentId, marks] of entries) {
+      const obtained = parseInt(marks.obtained);
+      const full = parseInt(marks.full);
+      if (isNaN(obtained) || isNaN(full) || obtained < 0 || full <= 0 || obtained > full) {
+        toast({ 
+          title: "অবৈধ নম্বর", 
+          description: "প্রাপ্ত নম্বর পূর্ণ নম্বরের চেয়ে বেশি বা ঋণাত্মক হতে পারে না", 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+
     setLoading(true);
 
-    const insertData = entries.map(([studentId, marks]) => ({
-      exam_id: examId,
-      student_id: studentId,
-      subject: selectedSubject,
-      obtained_marks: parseInt(marks.obtained),
-      full_marks: parseInt(marks.full),
-    }));
+    try {
+      // First delete existing results for this exam-subject-student combination
+      const studentIds = entries.map(([studentId]) => studentId);
+      await supabase
+        .from("exam_results")
+        .delete()
+        .eq("exam_id", examId)
+        .eq("subject", selectedSubject)
+        .in("student_id", studentIds);
 
-    const { error } = await supabase.from("exam_results").insert(insertData);
+      // Then insert new results
+      const insertData = entries.map(([studentId, marks]) => ({
+        exam_id: examId,
+        student_id: studentId,
+        subject: selectedSubject,
+        obtained_marks: parseInt(marks.obtained),
+        full_marks: parseInt(marks.full),
+      }));
 
-    setLoading(false);
-    if (error) {
-      handleDatabaseError(error, "exam-results-save");
-    } else {
+      const { error } = await supabase.from("exam_results").insert(insertData);
+      
+      if (error) throw error;
+
       toast({ title: "সফল!", description: `${entries.length} জন ছাত্রের ফলাফল সংরক্ষিত হয়েছে` });
       setResults({});
       setSelectedSubject("");
+    } catch (error) {
+      handleDatabaseError(error, "exam-results-save");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -773,11 +800,12 @@ function ViewResultsTable({ examId }: { examId: string }) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (resultId: string) => {
+    mutationFn: async (resultIds: string[]) => {
+      // Bulk delete all results at once
       const { error } = await supabase
         .from("exam_results")
         .delete()
-        .eq("id", resultId);
+        .in("id", resultIds);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -808,7 +836,12 @@ function ViewResultsTable({ examId }: { examId: string }) {
   });
 
   const sortedStudents = Object.values(groupedResults)
-    .sort((a, b) => (b.total / b.fullTotal) - (a.total / a.fullTotal));
+    .sort((a, b) => {
+      // Prevent division by zero
+      const aPercent = a.fullTotal > 0 ? (a.total / a.fullTotal) : 0;
+      const bPercent = b.fullTotal > 0 ? (b.total / b.fullTotal) : 0;
+      return bPercent - aPercent;
+    });
 
   if (isLoading) {
     return (
@@ -881,9 +914,11 @@ function ViewResultsTable({ examId }: { examId: string }) {
                   <Button 
                     variant="ghost" 
                     size="icon"
+                    disabled={deleteMutation.isPending}
                     onClick={() => {
                       if (confirm("এই ছাত্রের সব ফলাফল মুছে ফেলতে চান?")) {
-                        item.subjects.forEach(sub => deleteMutation.mutate(sub.id));
+                        const resultIds = item.subjects.map(sub => sub.id);
+                        deleteMutation.mutate(resultIds);
                       }
                     }}
                   >

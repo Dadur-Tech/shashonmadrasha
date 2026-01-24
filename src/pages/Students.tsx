@@ -53,28 +53,50 @@ export default function StudentsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedClass, setSelectedClass] = useState("all");
 
-  // Fetch students
+  // Fetch students using the public view (excludes sensitive data)
   const { data: students, isLoading } = useQuery({
     queryKey: ["public-students"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("students")
+        .from("students_public")
         .select(`
           id,
           student_id,
           full_name,
           photo_url,
           status,
-          is_lillah,
-          guardian_phone,
-          class_id,
-          classes(id, name, department)
+          class_id
         `)
         .eq("status", "active")
         .order("full_name");
       
       if (error) throw error;
-      return data;
+      
+      // Fetch class info separately since views don't support joins
+      const classIds = [...new Set(data?.map(s => s.class_id).filter(Boolean))];
+      
+      if (classIds.length > 0) {
+        const { data: classData } = await supabase
+          .from("classes")
+          .select("id, name, department")
+          .in("id", classIds);
+        
+        const classMap = new Map(classData?.map(c => [c.id, c]) || []);
+        
+        return data?.map(student => ({
+          ...student,
+          is_lillah: false, // Not exposed in public view
+          guardian_phone: null, // Not exposed in public view
+          classes: classMap.get(student.class_id) || null,
+        })) || [];
+      }
+      
+      return data?.map(student => ({
+        ...student,
+        is_lillah: false,
+        guardian_phone: null,
+        classes: null,
+      })) || [];
     },
   });
 
