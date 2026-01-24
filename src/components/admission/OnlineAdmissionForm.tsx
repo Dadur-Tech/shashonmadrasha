@@ -19,7 +19,7 @@ interface ClassOption {
   admission_fee: number;
 }
 
-export function OnlineAdmissionSection() {
+export const OnlineAdmissionSection = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

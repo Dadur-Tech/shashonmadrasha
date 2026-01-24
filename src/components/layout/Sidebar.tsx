@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/use-auth";
 import {
   LayoutDashboard,
   Users,
@@ -15,10 +16,12 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Bell,
   BarChart3,
   Building2,
-  MessageSquare,
+  Wallet,
+  Video,
+  HandHeart,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,14 +41,17 @@ const mainNavItems: NavItem[] = [
   { title: "ক্লাস ও বিভাগ", href: "/admin/classes", icon: BookOpen },
   { title: "উপস্থিতি", href: "/admin/attendance", icon: Calendar },
   { title: "ফি ব্যবস্থাপনা", href: "/admin/fees", icon: CreditCard },
+  { title: "খরচ ব্যবস্থাপনা", href: "/admin/expenses", icon: Wallet },
+  { title: "বেতন ব্যবস্থাপনা", href: "/admin/salaries", icon: DollarSign },
   { title: "লিল্লাহ বোর্ডিং", href: "/admin/lillah", icon: Heart },
+  { title: "দান ব্যবস্থাপনা", href: "/admin/donations", icon: HandHeart },
   { title: "পরীক্ষা ও ফলাফল", href: "/admin/exams", icon: FileText },
+  { title: "অনলাইন ক্লাস", href: "/admin/online-classes", icon: Video },
   { title: "রিপোর্ট", href: "/admin/reports", icon: BarChart3 },
 ];
 
 const secondaryNavItems: NavItem[] = [
-  { title: "নোটিফিকেশন", href: "/admin/notifications", icon: Bell, badge: 12 },
-  { title: "মেসেজ", href: "/admin/messages", icon: MessageSquare, badge: 3 },
+  { title: "পেমেন্ট গেটওয়ে", href: "/admin/payment-gateways", icon: CreditCard },
   { title: "প্রতিষ্ঠান সেটিংস", href: "/admin/institution", icon: Building2 },
   { title: "সেটিংস", href: "/admin/settings", icon: Settings },
 ];
@@ -53,6 +59,13 @@ const secondaryNavItems: NavItem[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <motion.aside
@@ -123,7 +136,9 @@ export function Sidebar() {
           collapsed && "justify-center"
         )}>
           <div className="w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <span className="text-sidebar-foreground font-semibold">অ</span>
+            <span className="text-sidebar-foreground font-semibold">
+              {user?.email?.charAt(0).toUpperCase() || "অ"}
+            </span>
           </div>
           <AnimatePresence mode="wait">
             {!collapsed && (
@@ -133,8 +148,12 @@ export function Sidebar() {
                 exit={{ opacity: 0 }}
                 className="flex-1"
               >
-                <p className="font-medium text-sidebar-foreground text-sm">অ্যাডমিন</p>
-                <p className="text-xs text-sidebar-foreground/60">admin@madrasa.edu</p>
+                <p className="font-medium text-sidebar-foreground text-sm">
+                  {user ? "অ্যাডমিন" : "গেস্ট"}
+                </p>
+                <p className="text-xs text-sidebar-foreground/60 truncate max-w-[150px]">
+                  {user?.email || "লগইন করুন"}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -143,6 +162,7 @@ export function Sidebar() {
         {!collapsed && (
           <Button
             variant="ghost"
+            onClick={handleLogout}
             className="w-full mt-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <LogOut className="w-4 h-4 mr-2" />
