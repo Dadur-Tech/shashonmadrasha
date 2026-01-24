@@ -7,6 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 import { 
   Plus, 
@@ -17,6 +23,10 @@ import {
   Clock,
   ClipboardList,
   Eye,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Users,
 } from "lucide-react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +49,9 @@ const examTypeLabels: Record<string, string> = {
 
 export default function ExamsPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isResultOpen, setIsResultOpen] = useState(false);
+  const [isViewResultsOpen, setIsViewResultsOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -56,6 +68,24 @@ export default function ExamsPage() {
     },
   });
 
+  // Delete exam mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (examId: string) => {
+      // First delete all results for this exam
+      await supabase.from("exam_results").delete().eq("exam_id", examId);
+      // Then delete the exam
+      const { error } = await supabase.from("exams").delete().eq("id", examId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+      toast({ title: "সফল!", description: "পরীক্ষা মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: any) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
+
   // Publish exam mutation
   const publishMutation = useMutation({
     mutationFn: async (examId: string) => {
@@ -68,6 +98,24 @@ export default function ExamsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       toast({ title: "সফল!", description: "ফলাফল প্রকাশিত হয়েছে" });
+    },
+    onError: (error: any) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Unpublish mutation
+  const unpublishMutation = useMutation({
+    mutationFn: async (examId: string) => {
+      const { error } = await supabase
+        .from("exams")
+        .update({ is_published: false })
+        .eq("id", examId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exams"] });
+      toast({ title: "সফল!", description: "ফলাফল আনপাবলিশ হয়েছে" });
     },
     onError: (error: any) => {
       toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
@@ -166,9 +214,68 @@ export default function ExamsPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <CardTitle className="text-lg">{exam.name}</CardTitle>
-                      <Badge variant={exam.is_published ? "default" : "outline"}>
-                        {exam.is_published ? "প্রকাশিত" : "অপ্রকাশিত"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={exam.is_published ? "default" : "outline"}>
+                          {exam.is_published ? "প্রকাশিত" : "অপ্রকাশিত"}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedExam(exam);
+                                setIsEditOpen(true);
+                              }}
+                              className="gap-2"
+                            >
+                              <Edit className="w-4 h-4" />
+                              সম্পাদনা
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedExam(exam);
+                                setIsViewResultsOpen(true);
+                              }}
+                              className="gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              ফলাফল দেখুন
+                            </DropdownMenuItem>
+                            {exam.is_published ? (
+                              <DropdownMenuItem 
+                                onClick={() => unpublishMutation.mutate(exam.id)}
+                                className="gap-2"
+                              >
+                                <Clock className="w-4 h-4" />
+                                আনপাবলিশ
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem 
+                                onClick={() => publishMutation.mutate(exam.id)}
+                                className="gap-2"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                প্রকাশ করুন
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                if (confirm("আপনি কি এই পরীক্ষা ও তার সব ফলাফল মুছে ফেলতে চান?")) {
+                                  deleteMutation.mutate(exam.id);
+                                }
+                              }}
+                              className="gap-2 text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              মুছে ফেলুন
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -196,26 +303,18 @@ export default function ExamsPage() {
                           <ClipboardList className="w-4 h-4" />
                           ফলাফল দিন
                         </Button>
-                        {!exam.is_published && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => publishMutation.mutate(exam.id)}
-                            disabled={publishMutation.isPending}
-                          >
-                            {publishMutation.isPending ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              "প্রকাশ"
-                            )}
-                          </Button>
-                        )}
-                        {exam.is_published && (
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Eye className="w-4 h-4" />
-                            দেখুন
-                          </Button>
-                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-1"
+                          onClick={() => {
+                            setSelectedExam(exam);
+                            setIsViewResultsOpen(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                          দেখুন
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -229,6 +328,25 @@ export default function ExamsPage() {
             )}
           </div>
         )}
+
+        {/* Edit Exam Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>পরীক্ষা সম্পাদনা করুন</DialogTitle>
+            </DialogHeader>
+            {selectedExam && (
+              <EditExamForm 
+                exam={selectedExam}
+                onSuccess={() => {
+                  setIsEditOpen(false);
+                  setSelectedExam(null);
+                  queryClient.invalidateQueries({ queryKey: ["exams"] });
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Result Entry Dialog */}
         <Dialog open={isResultOpen} onOpenChange={setIsResultOpen}>
@@ -246,6 +364,20 @@ export default function ExamsPage() {
                   queryClient.invalidateQueries({ queryKey: ["exams"] });
                 }}
               />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* View Results Dialog */}
+        <Dialog open={isViewResultsOpen} onOpenChange={setIsViewResultsOpen}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                ফলাফল - {selectedExam?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedExam && (
+              <ViewResultsTable examId={selectedExam.id} />
             )}
           </DialogContent>
         </Dialog>
@@ -333,6 +465,88 @@ function AddExamForm({ onSuccess }: { onSuccess: () => void }) {
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
         পরীক্ষা যোগ করুন
+      </Button>
+    </form>
+  );
+}
+
+function EditExamForm({ exam, onSuccess }: { exam: any; onSuccess: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: exam.name || "",
+    examType: exam.exam_type || "monthly",
+    startDate: exam.start_date || "",
+    endDate: exam.end_date || "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name) {
+      toast({ title: "পরীক্ষার নাম দিন", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.from("exams").update({
+      name: formData.name,
+      exam_type: formData.examType,
+      start_date: formData.startDate || null,
+      end_date: formData.endDate || null,
+    }).eq("id", exam.id);
+
+    setLoading(false);
+    if (error) {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "সফল!", description: "পরীক্ষা আপডেট হয়েছে" });
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label>পরীক্ষার নাম *</Label>
+        <Input
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+      </div>
+      <div>
+        <Label>পরীক্ষার ধরন</Label>
+        <Select value={formData.examType} onValueChange={(v) => setFormData({ ...formData, examType: v })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="monthly">মাসিক</SelectItem>
+            <SelectItem value="quarterly">ত্রৈমাসিক</SelectItem>
+            <SelectItem value="half_yearly">অর্ধবার্ষিক</SelectItem>
+            <SelectItem value="annual">বার্ষিক</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>শুরুর তারিখ</Label>
+          <Input
+            type="date"
+            value={formData.startDate}
+            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>শেষের তারিখ</Label>
+          <Input
+            type="date"
+            value={formData.endDate}
+            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+          />
+        </div>
+      </div>
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        আপডেট করুন
       </Button>
     </form>
   );
@@ -533,6 +747,153 @@ function ResultEntryForm({ examId, onSuccess }: { examId: string; onSuccess: () 
           ফলাফল সংরক্ষণ করুন
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ViewResultsTable({ examId }: { examId: string }) {
+  const queryClient = useQueryClient();
+
+  const { data: results = [], isLoading } = useQuery({
+    queryKey: ["exam-results", examId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("exam_results")
+        .select(`
+          *,
+          students(id, student_id, full_name, class_id, classes(name))
+        `)
+        .eq("exam_id", examId)
+        .order("subject");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (resultId: string) => {
+      const { error } = await supabase
+        .from("exam_results")
+        .delete()
+        .eq("id", resultId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["exam-results", examId] });
+      toast({ title: "সফল!", description: "ফলাফল মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Group results by student
+  const groupedResults: Record<string, { student: any; subjects: any[]; total: number; fullTotal: number }> = {};
+  results.forEach(r => {
+    if (!r.students) return;
+    const studentId = r.students.id;
+    if (!groupedResults[studentId]) {
+      groupedResults[studentId] = {
+        student: r.students,
+        subjects: [],
+        total: 0,
+        fullTotal: 0,
+      };
+    }
+    groupedResults[studentId].subjects.push(r);
+    groupedResults[studentId].total += r.obtained_marks;
+    groupedResults[studentId].fullTotal += r.full_marks;
+  });
+
+  const sortedStudents = Object.values(groupedResults)
+    .sort((a, b) => (b.total / b.fullTotal) - (a.total / a.fullTotal));
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-10">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (results.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        <Users className="w-12 h-12 mx-auto mb-4" />
+        <p>এই পরীক্ষায় কোনো ফলাফল দেওয়া হয়নি</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          মোট {Object.keys(groupedResults).length} জন ছাত্রের ফলাফল পাওয়া গেছে
+        </p>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ক্রম</TableHead>
+            <TableHead>ছাত্র</TableHead>
+            <TableHead>ক্লাস</TableHead>
+            <TableHead>বিষয় সমূহ</TableHead>
+            <TableHead className="text-center">মোট নম্বর</TableHead>
+            <TableHead className="text-center">শতাংশ</TableHead>
+            <TableHead className="text-right">অ্যাকশন</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedStudents.map((item, index) => {
+            const percentage = Math.round((item.total / item.fullTotal) * 100);
+            return (
+              <TableRow key={item.student.id}>
+                <TableCell className="font-medium">{(index + 1).toLocaleString('bn-BD')}</TableCell>
+                <TableCell>
+                  <div>
+                    <p className="font-medium">{item.student.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{item.student.student_id}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{item.student.classes?.name || "-"}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {item.subjects.map((sub, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">
+                        {sub.subject}: {sub.obtained_marks}/{sub.full_marks}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center font-medium">
+                  {item.total}/{item.fullTotal}
+                </TableCell>
+                <TableCell className="text-center">
+                  <Badge className={percentage >= 60 ? "bg-emerald-500/10 text-emerald-600" : percentage >= 33 ? "bg-amber-500/10 text-amber-600" : "bg-red-500/10 text-red-600"}>
+                    {percentage}%
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      if (confirm("এই ছাত্রের সব ফলাফল মুছে ফেলতে চান?")) {
+                        item.subjects.forEach(sub => deleteMutation.mutate(sub.id));
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
