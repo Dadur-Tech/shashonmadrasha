@@ -26,43 +26,59 @@ import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 
 export default function Dashboard() {
   // Fetch real stats from database
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const [studentsRes, teachersRes, donationsRes, feesRes, classesRes, examsRes] = await Promise.all([
-        supabase.from("students").select("id, status, is_lillah", { count: "exact" }),
-        supabase.from("teachers").select("id, status", { count: "exact" }).eq("status", "active"),
-        supabase.from("donations").select("amount").eq("payment_status", "completed"),
-        supabase.from("student_fees").select("amount, paid_amount, status"),
-        supabase.from("online_classes").select("id", { count: "exact" }),
-        supabase.from("exams").select("id", { count: "exact" }).eq("is_published", true),
-      ]);
+      try {
+        const [studentsRes, teachersRes, donationsRes, feesRes, classesRes, examsRes] = await Promise.all([
+          supabase.from("students").select("id, status, is_lillah", { count: "exact" }),
+          supabase.from("teachers").select("id, status", { count: "exact" }).eq("status", "active"),
+          supabase.from("donations").select("amount").eq("payment_status", "completed"),
+          supabase.from("student_fees").select("amount, paid_amount, status"),
+          supabase.from("online_classes").select("id", { count: "exact" }),
+          supabase.from("exams").select("id", { count: "exact" }).eq("is_published", true),
+        ]);
 
-      const totalStudents = studentsRes.data?.length || 0;
-      const lillahStudents = studentsRes.data?.filter(s => s.is_lillah || s.status === "lillah").length || 0;
-      const activeTeachers = teachersRes.data?.length || 0;
-      const totalClasses = classesRes.data?.length || 0;
-      const publishedExams = examsRes.data?.length || 0;
-      
-      const totalDonations = donationsRes.data?.reduce((sum, d) => sum + Number(d.amount || 0), 0) || 0;
-      const totalFees = feesRes.data?.reduce((sum, f) => sum + Number(f.amount || 0), 0) || 0;
-      const paidFees = feesRes.data?.reduce((sum, f) => sum + Number(f.paid_amount || 0), 0) || 0;
-      const paidCount = feesRes.data?.filter(f => f.status === "paid").length || 0;
-      const dueCount = feesRes.data?.filter(f => f.status === "pending" || f.status === "overdue").length || 0;
-      const feePercentage = totalFees > 0 ? Math.round((paidFees / totalFees) * 100) : 0;
+        const totalStudents = studentsRes.data?.length || 0;
+        const lillahStudents = studentsRes.data?.filter(s => s.is_lillah || s.status === "lillah").length || 0;
+        const activeTeachers = teachersRes.data?.length || 0;
+        const totalClasses = classesRes.data?.length || 0;
+        const publishedExams = examsRes.data?.length || 0;
+        
+        const totalDonations = donationsRes.data?.reduce((sum, d) => sum + Number(d.amount || 0), 0) || 0;
+        const totalFees = feesRes.data?.reduce((sum, f) => sum + Number(f.amount || 0), 0) || 0;
+        const paidFees = feesRes.data?.reduce((sum, f) => sum + Number(f.paid_amount || 0), 0) || 0;
+        const paidCount = feesRes.data?.filter(f => f.status === "paid").length || 0;
+        const dueCount = feesRes.data?.filter(f => f.status === "pending" || f.status === "overdue").length || 0;
+        const feePercentage = totalFees > 0 ? Math.round((paidFees / totalFees) * 100) : 0;
 
-      return {
-        totalStudents,
-        lillahStudents,
-        activeTeachers,
-        totalDonations,
-        totalIncome: totalDonations + paidFees,
-        paidCount,
-        dueCount,
-        feePercentage,
-        totalClasses,
-        publishedExams,
-      };
+        return {
+          totalStudents,
+          lillahStudents,
+          activeTeachers,
+          totalDonations,
+          totalIncome: totalDonations + paidFees,
+          paidCount,
+          dueCount,
+          feePercentage,
+          totalClasses,
+          publishedExams,
+        };
+      } catch (error) {
+        console.error("Dashboard stats error:", error);
+        return {
+          totalStudents: 0,
+          lillahStudents: 0,
+          activeTeachers: 0,
+          totalDonations: 0,
+          totalIncome: 0,
+          paidCount: 0,
+          dueCount: 0,
+          feePercentage: 0,
+          totalClasses: 0,
+          publishedExams: 0,
+        };
+      }
     },
   });
 
@@ -70,14 +86,22 @@ export default function Dashboard() {
   const { data: recentStudents = [] } = useQuery({
     queryKey: ["recent-students"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id, full_name, status, class:classes(name)")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from("students")
+          .select("id, full_name, status, class:classes(name)")
+          .order("created_at", { ascending: false })
+          .limit(5);
+        
+        if (error) {
+          console.error("Recent students error:", error);
+          return [];
+        }
+        return data || [];
+      } catch (error) {
+        console.error("Recent students error:", error);
+        return [];
+      }
     },
   });
 
@@ -85,15 +109,23 @@ export default function Dashboard() {
   const { data: upcomingEvents = [] } = useQuery({
     queryKey: ["upcoming-exams"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("exams")
-        .select("id, name, exam_type, start_date")
-        .gte("start_date", new Date().toISOString())
-        .order("start_date")
-        .limit(3);
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from("exams")
+          .select("id, name, exam_type, start_date")
+          .gte("start_date", new Date().toISOString())
+          .order("start_date")
+          .limit(3);
+        
+        if (error) {
+          console.error("Upcoming exams error:", error);
+          return [];
+        }
+        return data || [];
+      } catch (error) {
+        console.error("Upcoming exams error:", error);
+        return [];
+      }
     },
   });
 
@@ -101,46 +133,54 @@ export default function Dashboard() {
   const { data: classCounts = [] } = useQuery({
     queryKey: ["class-counts"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("classes")
-        .select(`
-          id,
-          name,
-          department,
-          students:students(count)
-        `)
-        .eq("is_active", true);
-      
-      if (error) throw error;
-      
-      // Group by department
-      const departments: Record<string, { name: string; count: number; color: string }> = {};
-      const colors: Record<string, string> = {
-        hifz: "bg-primary",
-        kitab: "bg-accent",
-        nazera: "bg-success",
-        takhassos: "bg-info",
-      };
-      const labels: Record<string, string> = {
-        hifz: "হিফজ বিভাগ",
-        kitab: "কিতাব বিভাগ",
-        nazera: "নাযেরা বিভাগ",
-        takhassos: "তাখাসসুস",
-      };
-
-      data?.forEach(cls => {
-        const dept = cls.department || "other";
-        if (!departments[dept]) {
-          departments[dept] = {
-            name: labels[dept] || dept,
-            count: 0,
-            color: colors[dept] || "bg-muted",
-          };
+      try {
+        const { data, error } = await supabase
+          .from("classes")
+          .select(`
+            id,
+            name,
+            department,
+            students:students(count)
+          `)
+          .eq("is_active", true);
+        
+        if (error) {
+          console.error("Class counts error:", error);
+          return [];
         }
-        departments[dept].count += (cls.students as any)?.[0]?.count || 0;
-      });
+        
+        // Group by department
+        const departments: Record<string, { name: string; count: number; color: string }> = {};
+        const colors: Record<string, string> = {
+          hifz: "bg-primary",
+          kitab: "bg-accent",
+          nazera: "bg-success",
+          takhassos: "bg-info",
+        };
+        const labels: Record<string, string> = {
+          hifz: "হিফজ বিভাগ",
+          kitab: "কিতাব বিভাগ",
+          nazera: "নাযেরা বিভাগ",
+          takhassos: "তাখাসসুস",
+        };
 
-      return Object.values(departments);
+        data?.forEach(cls => {
+          const dept = cls.department || "other";
+          if (!departments[dept]) {
+            departments[dept] = {
+              name: labels[dept] || dept,
+              count: 0,
+              color: colors[dept] || "bg-muted",
+            };
+          }
+          departments[dept].count += (cls.students as any)?.[0]?.count || 0;
+        });
+
+        return Object.values(departments);
+      } catch (error) {
+        console.error("Class counts error:", error);
+        return [];
+      }
     },
   });
 

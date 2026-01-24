@@ -64,7 +64,11 @@ const secondaryNavItems: NavItem[] = [
   { title: "সাহায্য", href: "/admin/help", icon: HelpCircle },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void;
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -73,6 +77,10 @@ export function Sidebar() {
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
+  };
+
+  const handleNavClick = () => {
+    onNavigate?.();
   };
 
   return (
@@ -119,6 +127,7 @@ export function Sidebar() {
               item={item}
               collapsed={collapsed}
               isActive={location.pathname === item.href}
+              onClick={handleNavClick}
             />
           ))}
         </nav>
@@ -132,6 +141,7 @@ export function Sidebar() {
               item={item}
               collapsed={collapsed}
               isActive={location.pathname === item.href}
+              onClick={handleNavClick}
             />
           ))}
         </nav>
@@ -199,17 +209,20 @@ export function Sidebar() {
 function NavLink({ 
   item, 
   collapsed, 
-  isActive 
+  isActive,
+  onClick,
 }: { 
   item: NavItem; 
   collapsed: boolean; 
   isActive: boolean;
+  onClick?: () => void;
 }) {
   const Icon = item.icon;
 
   return (
     <Link
       to={item.href}
+      onClick={onClick}
       className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative",
         isActive
