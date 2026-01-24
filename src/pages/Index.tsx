@@ -323,7 +323,7 @@ export default function Index() {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#about" className="hover:text-foreground transition-colors">পরিচিতি</a></li>
                 <li><a href="#departments" className="hover:text-foreground transition-colors">বিভাগ সমূহ</a></li>
-                <li><Link to="/classes" className="hover:text-foreground transition-colors">অনলাইন ক্লাস</Link></li>
+                <li><Link to="/courses" className="hover:text-foreground transition-colors">কোর্স ও ক্লাস</Link></li>
                 <li><Link to="/results" className="hover:text-foreground transition-colors">ফলাফল</Link></li>
                 <li><a href="#donate" className="hover:text-foreground transition-colors">দান করুন</a></li>
                 <li><a href="#admission" className="hover:text-foreground transition-colors">ভর্তি তথ্য</a></li>

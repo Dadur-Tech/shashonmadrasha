@@ -15,6 +15,9 @@ import StudentProfile from "./pages/StudentProfile";
 import PublicStudentsPage from "./pages/Students";
 import AlumniPage from "./pages/Alumni";
 import PublicClassesPage from "./pages/Classes";
+import CoursesPage from "./pages/Courses";
+import CourseDetailPage from "./pages/CourseDetail";
+import LessonDetailPage from "./pages/LessonDetail";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
@@ -56,6 +59,9 @@ const App = () => (
             <Route path="/student/:studentId" element={<StudentProfile />} />
             <Route path="/alumni" element={<AlumniPage />} />
             <Route path="/classes" element={<PublicClassesPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/course/:courseId" element={<CourseDetailPage />} />
+            <Route path="/lesson/:lessonId" element={<LessonDetailPage />} />
             
             {/* Admin Routes */}
             <Route element={<RequireAuth />}>

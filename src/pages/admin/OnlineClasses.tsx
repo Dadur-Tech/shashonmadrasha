@@ -250,6 +250,10 @@ function AddOnlineClassForm({ classes, teachers, onSuccess }: {
     duration: "60",
     meetingLink: "",
     platform: "zoom",
+    youtubeUrl: "",
+    videoType: "youtube",
+    price: "0",
+    isFree: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -269,6 +273,10 @@ function AddOnlineClassForm({ classes, teachers, onSuccess }: {
       duration_minutes: parseInt(formData.duration),
       meeting_link: formData.meetingLink || null,
       meeting_platform: formData.platform,
+      youtube_url: formData.youtubeUrl || null,
+      video_type: formData.videoType,
+      price: parseFloat(formData.price) || 0,
+      is_free: formData.isFree,
       status: "scheduled",
     });
 
@@ -347,7 +355,15 @@ function AddOnlineClassForm({ classes, teachers, onSuccess }: {
         </div>
       </div>
       <div>
-        <Label>মিটিং লিংক</Label>
+        <Label>YouTube লিংক</Label>
+        <Input
+          value={formData.youtubeUrl}
+          onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+          placeholder="https://youtube.com/watch?v=..."
+        />
+      </div>
+      <div>
+        <Label>মিটিং লিংক (লাইভ ক্লাসের জন্য)</Label>
         <Input
           value={formData.meetingLink}
           onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
