@@ -154,14 +154,23 @@ export default function PaymentGatewaysPage() {
     },
   });
 
+  // Mask credentials - never show full values, only allow setting new ones
+  const maskCredential = (value: string | null): string => {
+    if (!value) return "";
+    if (value.length <= 8) return "••••••••";
+    return `••••••••${value.slice(-4)}`;
+  };
+
   const startEditing = (gateway: PaymentGateway) => {
     setEditingGateway(gateway.id);
+    // When editing, start with empty fields - user must enter new values
+    // Never pre-populate with actual credentials for security
     setFormData({
       ...formData,
       [gateway.id]: {
         merchantId: gateway.merchant_id || "",
-        apiKey: gateway.api_key_encrypted || "",
-        apiSecret: gateway.api_secret_encrypted || "",
+        apiKey: "", // Never show actual API key
+        apiSecret: "", // Never show actual API secret
       },
     });
   };

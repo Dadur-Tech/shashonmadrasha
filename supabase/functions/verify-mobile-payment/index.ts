@@ -22,12 +22,51 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get auth header for admin verification
+    // Get auth header for authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Authorization required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Extract and verify the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authorization token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if user has admin or accountant role
+    const { data: userRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      console.error('Roles error:', rolesError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify user permissions' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const roles = userRoles?.map(r => r.role) || [];
+    const isAuthorized = roles.includes('super_admin') || 
+                         roles.includes('admin') || 
+                         roles.includes('accountant');
+
+    if (!isAuthorized) {
+      console.warn(`Unauthorized payment verification attempt by user: ${user.id}`);
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions. Only admins and accountants can verify payments.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -56,7 +95,7 @@ serve(async (req) => {
       );
     }
 
-    // Update transaction as completed
+    // Update transaction as completed with verified_by tracking
     const { error: updateError } = await supabase
       .from('payment_transactions')
       .update({
@@ -64,6 +103,7 @@ serve(async (req) => {
         gateway_transaction_id: gateway_txn_id,
         payment_date: new Date().toISOString(),
         notes: sender_number ? `প্রেরকের নম্বর: ${sender_number}` : null,
+        verified_by: user.id,
       })
       .eq('transaction_id', transaction_id);
 
@@ -110,6 +150,8 @@ serve(async (req) => {
           .eq('id', transaction.reference_id);
       }
     }
+
+    console.log(`Payment verified: ${transaction_id} by user: ${user.id}`);
 
     return new Response(
       JSON.stringify({ 
