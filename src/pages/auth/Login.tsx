@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,19 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, loading } = useAuth();
+
+  // Get the redirect path from location state, or default to /admin
+  const from = (location.state as { from?: string })?.from || "/admin";
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, loading, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +59,7 @@ export default function LoginPage() {
       title: "সফলভাবে লগইন হয়েছে",
       description: "ড্যাশবোর্ডে স্বাগতম!",
     });
-    navigate("/admin");
-    setIsLoading(false);
+    // Navigation will happen automatically via useEffect when user state updates
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -82,6 +92,15 @@ export default function LoginPage() {
     });
     setIsLoading(false);
   };
+
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background islamic-pattern flex items-center justify-center p-4">
