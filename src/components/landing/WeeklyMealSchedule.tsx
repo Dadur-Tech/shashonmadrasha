@@ -6,42 +6,49 @@ import { Utensils, Coffee, Moon, Sun } from "lucide-react";
 const mealSchedule = [
   {
     day: "শনিবার",
+    dayIndex: 6, // Saturday = 6
     breakfast: "রুটি, ডাল, সবজি",
     lunch: "ভাত, মাছ, ডাল, সবজি",
     dinner: "ভাত, মুরগি, সালাদ",
   },
   {
     day: "রবিবার",
+    dayIndex: 0, // Sunday = 0
     breakfast: "পরোটা, ডিম, চা",
     lunch: "ভাত, গরুর মাংস, ডাল",
     dinner: "খিচুড়ি, সালাদ",
   },
   {
     day: "সোমবার",
+    dayIndex: 1, // Monday = 1
     breakfast: "রুটি, সবজি, চা",
     lunch: "ভাত, মাছ, আলু ভর্তা",
     dinner: "ভাত, ডাল, সবজি",
   },
   {
     day: "মঙ্গলবার",
+    dayIndex: 2, // Tuesday = 2
     breakfast: "পরোটা, হালুয়া",
     lunch: "ভাত, খাসির মাংস",
     dinner: "ভাত, ডিম, সালাদ",
   },
   {
     day: "বুধবার",
+    dayIndex: 3, // Wednesday = 3
     breakfast: "রুটি, সবজি, চা",
     lunch: "ভাত, মুরগি, ডাল",
     dinner: "খিচুড়ি, পায়েস",
   },
   {
     day: "বৃহস্পতিবার",
+    dayIndex: 4, // Thursday = 4
     breakfast: "পরোটা, ডাল, চা",
     lunch: "বিরিয়ানি",
     dinner: "ভাত, মাছ ভাজি",
   },
   {
     day: "শুক্রবার",
+    dayIndex: 5, // Friday = 5
     breakfast: "রুটি, সবজি, চা",
     lunch: "পোলাও, মুরগি, সালাদ",
     dinner: "ভাত, ডাল, সবজি",
@@ -49,8 +56,11 @@ const mealSchedule = [
 ];
 
 export function WeeklyMealSchedule() {
+  // Get current day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
   const today = new Date().getDay();
-  const todayIndex = today === 0 ? 6 : today - 1;
+  
+  // Find the index in our meal schedule array that matches today
+  const todayMealIndex = mealSchedule.findIndex(meal => meal.dayIndex === today);
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-secondary/40 relative overflow-hidden">
@@ -99,14 +109,14 @@ export function WeeklyMealSchedule() {
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
               <Card className={`h-full border-2 transition-all duration-300 ${
-                index === todayIndex 
+                index === todayMealIndex 
                   ? 'border-primary shadow-xl bg-primary/5 ring-2 ring-primary/20' 
                   : 'border-border hover:border-primary/30 hover:shadow-lg'
               }`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-center gap-2 mb-4 pb-3 border-b border-border">
                     <h4 className="font-bold text-foreground">{meal.day}</h4>
-                    {index === todayIndex && (
+                    {index === todayMealIndex && (
                       <Badge className="bg-primary text-primary-foreground text-xs">আজ</Badge>
                     )}
                   </div>

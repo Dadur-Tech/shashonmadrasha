@@ -34,6 +34,8 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { LillahBoardingSection } from "@/components/landing/LillahBoardingSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { Footer } from "@/components/landing/Footer";
+import { AnnouncementBanner } from "@/components/landing/AnnouncementBanner";
+import { UpcomingEvents } from "@/components/landing/UpcomingEvents";
 import { UserDropdown } from "@/components/shared/UserDropdown";
 
 const navLinks = [
@@ -185,6 +187,9 @@ export default function Index() {
         )}
       </nav>
 
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
+
       {/* Hero Section */}
       <HeroSection />
 
@@ -250,6 +255,11 @@ export default function Index() {
 
       {/* Notable Alumni */}
       <NotableAlumni />
+
+      {/* Upcoming Events / Waz Mahfil */}
+      <div id="events">
+        <UpcomingEvents />
+      </div>
 
       {/* Lillah Boarding Section */}
       <LillahBoardingSection />
