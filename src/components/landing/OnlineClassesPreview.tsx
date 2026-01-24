@@ -323,9 +323,9 @@ export function OnlineClassesPreview() {
           viewport={{ once: true }}
           className="text-center"
         >
-          <Link to="/classes">
+          <Link to="/courses">
             <Button size="lg" className="gap-2 px-8">
-              সকল ক্লাস দেখুন
+              সকল কোর্স ও ক্লাস দেখুন
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
