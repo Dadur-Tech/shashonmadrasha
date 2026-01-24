@@ -2,10 +2,6 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { 
   ArrowRight,
-  Phone,
-  Mail,
-  MapPin,
-  Clock,
   GraduationCap,
   Heart,
   Book,
@@ -20,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { DonationSection } from "@/components/donation/DonationCard";
 import { OnlineAdmissionSection } from "@/components/admission/OnlineAdmissionForm";
 import { MadrasaStats } from "@/components/landing/MadrasaStats";
@@ -34,6 +32,8 @@ import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
 import { OnlineClassesPreview } from "@/components/landing/OnlineClassesPreview";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { LillahBoardingSection } from "@/components/landing/LillahBoardingSection";
+import { ContactSection } from "@/components/landing/ContactSection";
+import { Footer } from "@/components/landing/Footer";
 import { UserDropdown } from "@/components/shared/UserDropdown";
 
 const navLinks = [
@@ -275,145 +275,10 @@ export default function Index() {
       </div>
 
       {/* Contact Section */}
-      <section id="contact" className="py-24 bg-gradient-to-b from-secondary/50 to-background relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl" />
-        
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-14">
-              <motion.span
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4"
-              >
-                <Phone className="w-4 h-4" />
-                যোগাযোগ
-              </motion.span>
-              <motion.h2
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                viewport={{ once: true }}
-                className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4"
-              >
-                আমাদের সাথে যোগাযোগ করুন
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                viewport={{ once: true }}
-                className="text-muted-foreground text-lg"
-              >
-                ভর্তি, দান বা যেকোনো তথ্যের জন্য যোগাযোগ করুন
-              </motion.p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                { icon: Phone, title: "ফোন", lines: ["+৮৮০ ১৭XX-XXXXXX", "+৮৮০ ১৮XX-XXXXXX"], color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/40", borderColor: "border-blue-200 dark:border-blue-800" },
-                { icon: Mail, title: "ইমেইল", lines: ["info@madrasa.com"], color: "text-emerald-600", bgColor: "bg-emerald-50 dark:bg-emerald-950/40", borderColor: "border-emerald-200 dark:border-emerald-800" },
-                { icon: MapPin, title: "ঠিকানা", lines: ["শাসন সিংগাতী", "বাংলাদেশ"], color: "text-rose-600", bgColor: "bg-rose-50 dark:bg-rose-950/40", borderColor: "border-rose-200 dark:border-rose-800" },
-                { icon: Clock, title: "অফিস সময়", lines: ["সকাল ৯টা - বিকাল ৫টা", "শুক্রবার বন্ধ"], color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950/40", borderColor: "border-amber-200 dark:border-amber-800" },
-              ].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                >
-                  <Card className={`text-center border-2 ${item.borderColor} ${item.bgColor} hover:shadow-xl transition-all duration-300 h-full`}>
-                    <CardContent className="p-6">
-                      <div className="w-14 h-14 rounded-2xl bg-white dark:bg-background flex items-center justify-center mx-auto mb-4 shadow-sm">
-                        <item.icon className={`w-7 h-7 ${item.color}`} />
-                      </div>
-                      <h3 className="font-bold mb-3 text-foreground text-lg">{item.title}</h3>
-                      {item.lines.map((line, i) => (
-                        <p key={i} className="text-muted-foreground">{line}</p>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      <ContactSection />
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border bg-card">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                  <span className="text-primary-foreground font-bold text-lg">ج</span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-foreground">আল জামিয়া আরাবিয়া</h3>
-                  <p className="text-xs text-muted-foreground">শাসন সিংগাতী মাদ্রাসা</p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি 
-                চরিত্র গঠন ও নৈতিক শিক্ষায় আলোকিত প্রতিষ্ঠান।
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">দ্রুত লিংক</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#about" className="hover:text-foreground transition-colors">পরিচিতি</a></li>
-                <li><a href="#departments" className="hover:text-foreground transition-colors">বিভাগ সমূহ</a></li>
-                <li><Link to="/courses" className="hover:text-foreground transition-colors">কোর্স ও ক্লাস</Link></li>
-                <li><Link to="/results" className="hover:text-foreground transition-colors">ফলাফল</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">পরিষেবা</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#donate" className="hover:text-foreground transition-colors">দান করুন</a></li>
-                <li><a href="#admission" className="hover:text-foreground transition-colors">ভর্তি তথ্য</a></li>
-                <li><Link to="/students" className="hover:text-foreground transition-colors">ছাত্র তালিকা</Link></li>
-                <li><Link to="/lillah-students" className="hover:text-foreground transition-colors">লিল্লাহ বোর্ডিং</Link></li>
-                <li><Link to="/alumni" className="hover:text-foreground transition-colors">প্রাক্তন ছাত্র</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-foreground mb-4">যোগাযোগ</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  +৮৮০ ১৭XX-XXXXXX
-                </li>
-                <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  info@madrasa.com
-                </li>
-                <li className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  শাসন সিংগাতী, বাংলাদেশ
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} আল জামিয়া আরাবিয়া শাসন সিংগাতী মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
-            </p>
-            <div className="flex items-center gap-2">
-              <UserDropdown variant="ghost" />
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
