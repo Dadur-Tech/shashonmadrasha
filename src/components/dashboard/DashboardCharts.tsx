@@ -29,9 +29,21 @@ const chartConfig = {
     label: "ব্যয়",
     color: "hsl(var(--destructive))",
   },
+  count: {
+    label: "সংখ্যা",
+    color: "hsl(var(--primary))",
+  },
+  present: {
+    label: "উপস্থিত",
+    color: "hsl(142.1 76.2% 36.3%)",
+  },
+  absent: {
+    label: "অনুপস্থিত",
+    color: "hsl(var(--destructive))",
+  },
 } satisfies ChartConfig;
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--success))', 'hsl(var(--info))'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(142.1 76.2% 36.3%)', 'hsl(221.2 83.2% 53.3%)'];
 
 export function DepartmentPieChart({ data }: { data: DepartmentData[] }) {
   if (!data || data.length === 0) {
@@ -58,27 +70,25 @@ export function DepartmentPieChart({ data }: { data: DepartmentData[] }) {
           <CardTitle className="text-lg">বিভাগ ভিত্তিক ছাত্র</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={3}
-                  dataKey="count"
-                  nameKey="name"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <ChartContainer config={chartConfig} className="h-[250px]">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={3}
+                dataKey="count"
+                nameKey="name"
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+            </PieChart>
+          </ChartContainer>
           <div className="flex flex-wrap justify-center gap-3 mt-4">
             {data.map((item, index) => (
               <div key={item.name} className="flex items-center gap-2 text-sm">
@@ -188,17 +198,15 @@ export function AttendanceBarChart() {
           <CardTitle className="text-lg">সাপ্তাহিক উপস্থিতি</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} className="text-xs" />
-                <YAxis axisLine={false} tickLine={false} className="text-xs" tickFormatter={(value) => `${value}%`} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="present" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="absent" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ChartContainer config={chartConfig} className="h-[250px]">
+            <BarChart data={data}>
+              <XAxis dataKey="day" axisLine={false} tickLine={false} className="text-xs" />
+              <YAxis axisLine={false} tickLine={false} className="text-xs" tickFormatter={(value) => `${value}%`} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="present" fill="hsl(142.1 76.2% 36.3%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="absent" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ChartContainer>
           <div className="flex justify-center gap-6 mt-4">
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-success" />
