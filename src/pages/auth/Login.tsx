@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
@@ -19,17 +19,11 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signUp, signOut, user, loading, isAdmin } = useAuth();
 
   // Get the redirect path from location state, or default to /admin
-  const from = (location.state as { from?: string })?.from || "/admin";
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (!loading && user) {
-      navigate(from, { replace: true });
-    }
-  }, [user, loading, navigate, from]);
+  const defaultAfterLogin = isAdmin ? "/admin" : "/";
+  const from = (location.state as { from?: string })?.from || defaultAfterLogin;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +97,38 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If already logged in, don't auto-redirect (prevents loops). Offer actions instead.
+  if (user) {
+    return (
+      <div className="min-h-screen bg-background islamic-pattern flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-border/50 shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl">আপনি ইতিমধ্যে লগইন আছেন</CardTitle>
+            <CardDescription className="break-all">{user.email}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              className="w-full"
+              onClick={() => navigate(isAdmin ? "/admin" : "/", { replace: true })}
+            >
+              {isAdmin ? "অ্যাডমিন ড্যাশবোর্ডে যান" : "হোম পেজে যান"}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={async () => {
+                await signOut();
+                // stay on /login and show the login form
+              }}
+            >
+              অন্য অ্যাকাউন্টে লগইন করুন (লগআউট)
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
