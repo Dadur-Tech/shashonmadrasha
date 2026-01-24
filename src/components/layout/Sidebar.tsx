@@ -22,6 +22,7 @@ import {
   Video,
   HandHeart,
   DollarSign,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,6 +55,7 @@ const secondaryNavItems: NavItem[] = [
   { title: "পেমেন্ট গেটওয়ে", href: "/admin/payment-gateways", icon: CreditCard },
   { title: "প্রতিষ্ঠান সেটিংস", href: "/admin/institution", icon: Building2 },
   { title: "সেটিংস", href: "/admin/settings", icon: Settings },
+  { title: "সাহায্য", href: "/admin/help", icon: HelpCircle },
 ];
 
 export function Sidebar() {

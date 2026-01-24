@@ -27,6 +27,7 @@ import DonationsPage from "./pages/admin/Donations";
 import PaymentGatewaysPage from "./pages/admin/PaymentGateways";
 import InstitutionPage from "./pages/admin/Institution";
 import SettingsPage from "./pages/admin/Settings";
+import HelpPage from "./pages/admin/Help";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/admin/payment-gateways" element={<PaymentGatewaysPage />} />
             <Route path="/admin/institution" element={<InstitutionPage />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
+            <Route path="/admin/help" element={<HelpPage />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
