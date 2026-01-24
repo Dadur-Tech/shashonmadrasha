@@ -12,6 +12,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAccountant: boolean;
   isTeacher: boolean;
+  refreshRoles: () => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -26,6 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
 
+  const fetchRoles = async (userId: string) => {
+    const { data: userRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    if (userRoles) {
+      setRoles(userRoles.map((r) => r.role as AppRole));
+    } else {
+      setRoles([]);
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -34,15 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user roles
-          const { data: userRoles } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id);
-          
-          if (userRoles) {
-            setRoles(userRoles.map(r => r.role as AppRole));
-          }
+          await fetchRoles(session.user.id);
         } else {
           setRoles([]);
         }
@@ -57,16 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .then(({ data: userRoles }) => {
-            if (userRoles) {
-              setRoles(userRoles.map(r => r.role as AppRole));
-            }
-            setLoading(false);
-          });
+        fetchRoles(session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -104,6 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
+  const refreshRoles = async () => {
+    const { data } = await supabase.auth.getSession();
+    const currentUser = data.session?.user;
+    if (!currentUser) {
+      setRoles([]);
+      return;
+    }
+    await fetchRoles(currentUser.id);
+  };
+
   const isAdmin = roles.includes("super_admin") || roles.includes("admin");
   const isAccountant = roles.includes("accountant") || isAdmin;
   const isTeacher = roles.includes("teacher") || isAdmin;
@@ -118,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin,
         isAccountant,
         isTeacher,
+        refreshRoles,
         signUp,
         signIn,
         signOut,
