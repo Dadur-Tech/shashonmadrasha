@@ -150,13 +150,6 @@ function AdmissionForm({ onSuccess }: { onSuccess: () => void }) {
     },
   });
 
-  const generateStudentId = () => {
-    const date = new Date();
-    const year = date.getFullYear();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `STU-${year}-${random}`;
-  };
-
   const handleSubmit = async () => {
     if (!formData.fullName || !formData.fatherName || !formData.guardianPhone || !formData.classId) {
       toast({
@@ -169,36 +162,43 @@ function AdmissionForm({ onSuccess }: { onSuccess: () => void }) {
 
     setLoading(true);
     try {
-      const studentId = generateStudentId();
-      
-      const { error } = await supabase.from("students").insert({
-        student_id: studentId,
-        full_name: formData.fullName,
-        father_name: formData.fatherName,
-        mother_name: formData.motherName || null,
-        guardian_name: formData.guardianName || null,
-        guardian_phone: formData.guardianPhone,
-        guardian_relation: formData.guardianRelation || null,
-        date_of_birth: formData.dateOfBirth || null,
-        address: formData.address || null,
-        village: formData.village || null,
-        post_office: formData.postOffice || null,
-        upazila: formData.upazila || null,
-        district: formData.district || null,
-        class_id: formData.classId,
-        previous_institution: formData.previousInstitution || null,
-        is_orphan: formData.isOrphan,
-        is_lillah: formData.isLillah,
-        lillah_reason: formData.lillahReason || null,
-        blood_group: formData.bloodGroup || null,
-        status: "active",
+      // Use edge function for public admission (bypasses RLS)
+      const response = await supabase.functions.invoke('submit-admission', {
+        body: {
+          fullName: formData.fullName,
+          fatherName: formData.fatherName,
+          motherName: formData.motherName,
+          guardianName: formData.guardianName,
+          guardianPhone: formData.guardianPhone,
+          guardianRelation: formData.guardianRelation,
+          dateOfBirth: formData.dateOfBirth,
+          address: formData.address,
+          village: formData.village,
+          postOffice: formData.postOffice,
+          upazila: formData.upazila,
+          district: formData.district,
+          classId: formData.classId,
+          previousInstitution: formData.previousInstitution,
+          isOrphan: formData.isOrphan,
+          isLillah: formData.isLillah,
+          lillahReason: formData.lillahReason,
+          bloodGroup: formData.bloodGroup,
+        },
       });
 
-      if (error) throw error;
+      if (response.error) {
+        throw new Error(response.error.message || 'আবেদন প্রক্রিয়ায় সমস্যা হয়েছে');
+      }
+
+      const data = response.data;
+      
+      if (!data.success) {
+        throw new Error(data.error || 'আবেদন প্রক্রিয়ায় সমস্যা হয়েছে');
+      }
 
       toast({
         title: "আলহামদুলিল্লাহ!",
-        description: `ভর্তি আবেদন সফল হয়েছে। ছাত্র আইডি: ${studentId}`,
+        description: data.message || `ভর্তি আবেদন সফল হয়েছে। ছাত্র আইডি: ${data.studentId}`,
       });
       
       onSuccess();
