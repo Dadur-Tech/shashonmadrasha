@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
-import { Plus, BookOpen, Users, Loader2, Edit, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Loader2, Edit, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -17,16 +18,21 @@ const departmentColors: Record<string, string> = {
   nazera: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   hifz: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
   kitab: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  nurani: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  tajweed: "bg-rose-500/10 text-rose-600 border-rose-500/20",
 };
 
 const departmentLabels: Record<string, string> = {
   nazera: "নাযেরা",
   hifz: "হিফজ",
   kitab: "কিতাব",
+  nurani: "নূরানী",
+  tajweed: "তাজবীদ",
 };
 
 export default function ClassesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: classes = [], isLoading } = useQuery({
@@ -40,6 +46,20 @@ export default function ClassesPage() {
       
       if (error) throw error;
       return data;
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (classId: string) => {
+      const { error } = await supabase.from("classes").delete().eq("id", classId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      toast({ title: "সফল!", description: "ক্লাস মুছে ফেলা হয়েছে" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
     },
   });
 
@@ -69,13 +89,31 @@ export default function ClassesPage() {
               <DialogHeader>
                 <DialogTitle>নতুন ক্লাস যোগ করুন</DialogTitle>
               </DialogHeader>
-              <AddClassForm onSuccess={() => {
+              <ClassForm onSuccess={() => {
                 setIsAddOpen(false);
                 queryClient.invalidateQueries({ queryKey: ["classes"] });
               }} />
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingClass} onOpenChange={(open) => !open && setEditingClass(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>ক্লাস সম্পাদনা করুন</DialogTitle>
+            </DialogHeader>
+            {editingClass && (
+              <ClassForm 
+                initialData={editingClass}
+                onSuccess={() => {
+                  setEditingClass(null);
+                  queryClient.invalidateQueries({ queryKey: ["classes"] });
+                }} 
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
@@ -86,7 +124,7 @@ export default function ClassesPage() {
             {Object.entries(groupedClasses).map(([department, deptClasses]) => (
               <div key={department}>
                 <div className="flex items-center gap-3 mb-4">
-                  <Badge className={departmentColors[department]}>
+                  <Badge className={departmentColors[department] || departmentColors.kitab}>
                     {departmentLabels[department] || department} বিভাগ
                   </Badge>
                   <span className="text-sm text-muted-foreground">
@@ -108,12 +146,38 @@ export default function ClassesPage() {
                               <BookOpen className="w-6 h-6 text-primary" />
                             </div>
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => setEditingClass(cls)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      এই ক্লাস মুছে ফেললে এর সাথে সম্পর্কিত ছাত্রদের ক্লাস খালি হয়ে যাবে।
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>বাতিল</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => deleteMutation.mutate(cls.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      মুছে ফেলুন
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                           <h3 className="font-semibold text-foreground mb-1">{cls.name}</h3>
@@ -139,6 +203,11 @@ export default function ClassesPage() {
                 </div>
               </div>
             ))}
+            {Object.keys(groupedClasses).length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                কোনো ক্লাস নেই। উপরের বাটনে ক্লিক করে নতুন ক্লাস যোগ করুন।
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -146,14 +215,14 @@ export default function ClassesPage() {
   );
 }
 
-function AddClassForm({ onSuccess }: { onSuccess: () => void }) {
+function ClassForm({ onSuccess, initialData }: { onSuccess: () => void; initialData?: any }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
-    nameArabic: "",
-    department: "kitab",
-    monthlyFee: "",
-    admissionFee: "",
+    name: initialData?.name || "",
+    nameArabic: initialData?.name_arabic || "",
+    department: initialData?.department || "kitab",
+    monthlyFee: initialData?.monthly_fee?.toString() || "",
+    admissionFee: initialData?.admission_fee?.toString() || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,20 +233,30 @@ function AddClassForm({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setLoading(true);
-    const { error } = await supabase.from("classes").insert({
+
+    const classData = {
       name: formData.name,
       name_arabic: formData.nameArabic || null,
       department: formData.department,
       monthly_fee: parseFloat(formData.monthlyFee) || 0,
       admission_fee: parseFloat(formData.admissionFee) || 0,
       is_active: true,
-    });
+    };
+
+    let error;
+    if (initialData?.id) {
+      const result = await supabase.from("classes").update(classData).eq("id", initialData.id);
+      error = result.error;
+    } else {
+      const result = await supabase.from("classes").insert(classData);
+      error = result.error;
+    }
 
     setLoading(false);
     if (error) {
       toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "সফল!", description: "ক্লাস যোগ হয়েছে" });
+      toast({ title: "সফল!", description: initialData ? "ক্লাস আপডেট হয়েছে" : "ক্লাস যোগ হয়েছে" });
       onSuccess();
     }
   };
@@ -208,9 +287,11 @@ function AddClassForm({ onSuccess }: { onSuccess: () => void }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="nurani">নূরানী</SelectItem>
             <SelectItem value="nazera">নাযেরা</SelectItem>
             <SelectItem value="hifz">হিফজ</SelectItem>
             <SelectItem value="kitab">কিতাব</SelectItem>
+            <SelectItem value="tajweed">তাজবীদ</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -236,7 +317,7 @@ function AddClassForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-        ক্লাস যোগ করুন
+        {initialData ? "আপডেট করুন" : "ক্লাস যোগ করুন"}
       </Button>
     </form>
   );

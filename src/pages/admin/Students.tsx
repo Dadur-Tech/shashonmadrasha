@@ -74,6 +74,7 @@ export default function StudentsPage() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: students = [], isLoading } = useQuery({
@@ -169,6 +170,25 @@ export default function StudentsPage() {
                   queryClient.invalidateQueries({ queryKey: ["students"] });
                 }} 
               />
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Dialog */}
+          <Dialog open={!!editingStudent} onOpenChange={(open) => !open && setEditingStudent(null)}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>ছাত্র সম্পাদনা করুন</DialogTitle>
+              </DialogHeader>
+              {editingStudent && (
+                <EditStudentForm 
+                  student={editingStudent}
+                  classes={classes}
+                  onSuccess={() => {
+                    setEditingStudent(null);
+                    queryClient.invalidateQueries({ queryKey: ["students"] });
+                  }} 
+                />
+              )}
             </DialogContent>
           </Dialog>
         </div>
@@ -320,15 +340,19 @@ export default function StudentsPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem 
+                              className="gap-2"
+                              onClick={() => setEditingStudent(student)}
+                            >
                               <Edit className="w-4 h-4" /> সম্পাদনা
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="gap-2 text-destructive"
-                              onClick={() => deleteMutation.mutate(student.id)}
+                              onClick={() => {
+                                if (confirm("আপনি কি এই ছাত্র মুছে ফেলতে চান?")) {
+                                  deleteMutation.mutate(student.id);
+                                }
+                              }}
                             >
                               <Trash2 className="w-4 h-4" /> মুছে ফেলুন
                             </DropdownMenuItem>
@@ -563,6 +587,144 @@ function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () 
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
         ছাত্র ভর্তি করুন
+      </Button>
+    </form>
+  );
+}
+
+function EditStudentForm({ student, classes, onSuccess }: { student: any; classes: any[]; onSuccess: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: student.full_name || "",
+    fullNameArabic: student.full_name_arabic || "",
+    fatherName: student.father_name || "",
+    motherName: student.mother_name || "",
+    guardianPhone: student.guardian_phone || "",
+    classId: student.class_id || "",
+    dateOfBirth: student.date_of_birth || "",
+    village: student.village || "",
+    postOffice: student.post_office || "",
+    upazila: student.upazila || "",
+    district: student.district || "",
+    isLillah: student.is_lillah || false,
+    lillahReason: student.lillah_reason || "",
+    notes: student.notes || "",
+    status: student.status || "active",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.fullName || !formData.fatherName || !formData.guardianPhone) {
+      toast({ title: "প্রয়োজনীয় তথ্য দিন", variant: "destructive" });
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.from("students").update({
+      full_name: formData.fullName,
+      full_name_arabic: formData.fullNameArabic || null,
+      father_name: formData.fatherName,
+      mother_name: formData.motherName || null,
+      guardian_phone: formData.guardianPhone,
+      class_id: formData.classId || null,
+      date_of_birth: formData.dateOfBirth || null,
+      village: formData.village || null,
+      post_office: formData.postOffice || null,
+      upazila: formData.upazila || null,
+      district: formData.district || null,
+      is_lillah: formData.isLillah,
+      lillah_reason: formData.lillahReason || null,
+      notes: formData.notes || null,
+      status: formData.isLillah ? "lillah" : formData.status,
+    }).eq("id", student.id);
+
+    setLoading(false);
+    if (error) {
+      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "সফল!", description: "ছাত্রের তথ্য আপডেট হয়েছে" });
+      onSuccess();
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label>ছাত্রের নাম (বাংলা) *</Label>
+          <Input
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>পিতার নাম *</Label>
+          <Input
+            value={formData.fatherName}
+            onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>ফোন নম্বর *</Label>
+          <Input
+            value={formData.guardianPhone}
+            onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>ক্লাস</Label>
+          <Select value={formData.classId} onValueChange={(v) => setFormData({ ...formData, classId: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="ক্লাস নির্বাচন করুন" />
+            </SelectTrigger>
+            <SelectContent>
+              {classes.map((cls) => (
+                <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>স্ট্যাটাস</Label>
+          <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">সক্রিয়</SelectItem>
+              <SelectItem value="lillah">লিল্লাহ</SelectItem>
+              <SelectItem value="inactive">নিষ্ক্রিয়</SelectItem>
+              <SelectItem value="graduated">পাস</SelectItem>
+              <SelectItem value="transferred">বদলি</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>জন্ম তারিখ</Label>
+          <Input
+            type="date"
+            value={formData.dateOfBirth}
+            onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 p-4 rounded-lg bg-secondary/30">
+        <input
+          type="checkbox"
+          id="editIsLillah"
+          checked={formData.isLillah}
+          onChange={(e) => setFormData({ ...formData, isLillah: e.target.checked })}
+          className="w-4 h-4"
+        />
+        <Label htmlFor="editIsLillah" className="cursor-pointer">
+          লিল্লাহ ছাত্র (ফি মওকুফ)
+        </Label>
+      </div>
+
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+        আপডেট করুন
       </Button>
     </form>
   );
