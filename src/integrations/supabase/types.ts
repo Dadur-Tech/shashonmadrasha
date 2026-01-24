@@ -450,6 +450,117 @@ export type Database = {
         }
         Relationships: []
       }
+      jamiyat_categories: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+        }
+        Relationships: []
+      }
+      jamiyat_settings: {
+        Row: {
+          auto_disable_days: number | null
+          id: string
+          is_enabled: boolean | null
+          last_updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          auto_disable_days?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          last_updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          auto_disable_days?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          last_updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      notable_alumni: {
+        Row: {
+          achievement: string | null
+          created_at: string
+          current_institution: string | null
+          current_position: string
+          display_order: number | null
+          email: string | null
+          full_name: string
+          full_name_arabic: string | null
+          graduation_year: number | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          phone: string | null
+          photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          achievement?: string | null
+          created_at?: string
+          current_institution?: string | null
+          current_position: string
+          display_order?: number | null
+          email?: string | null
+          full_name: string
+          full_name_arabic?: string | null
+          graduation_year?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          achievement?: string | null
+          created_at?: string
+          current_institution?: string | null
+          current_position?: string
+          display_order?: number | null
+          email?: string | null
+          full_name?: string
+          full_name_arabic?: string | null
+          graduation_year?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1195,6 +1306,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      weekly_jamiyat: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          student_id: string | null
+          updated_at: string
+          week_start_date: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          student_id?: string | null
+          updated_at?: string
+          week_start_date: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          student_id?: string | null
+          updated_at?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_jamiyat_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "jamiyat_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_jamiyat_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

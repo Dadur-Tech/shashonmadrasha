@@ -24,6 +24,8 @@ import { RecentResults } from "@/components/landing/RecentResults";
 import { MadrasaGallery } from "@/components/landing/MadrasaGallery";
 import { AboutMadrasa } from "@/components/landing/AboutMadrasa";
 import { TeacherHighlights } from "@/components/landing/TeacherHighlights";
+import { NotableAlumni } from "@/components/landing/NotableAlumni";
+import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
@@ -194,6 +196,12 @@ export default function Index() {
 
       {/* Weekly Meal Schedule */}
       <WeeklyMealSchedule />
+
+      {/* Weekly Jamiyat */}
+      <WeeklyJamiyat />
+
+      {/* Notable Alumni */}
+      <NotableAlumni />
 
       {/* Recent Results Section */}
       <div id="results">
