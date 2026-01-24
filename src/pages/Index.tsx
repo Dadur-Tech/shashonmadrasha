@@ -58,8 +58,8 @@ export default function Index() {
                 <span className="text-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
-                <h1 className="font-bold text-foreground text-sm leading-tight">আল জামেয়া আরাবিয়া</h1>
-                <p className="text-xs text-muted-foreground">শাশন সিঙ্গাটি মাদ্রাসা</p>
+                <h1 className="font-bold text-foreground text-sm leading-tight">আল জামিয়াতুল আরাবিয়া</h1>
+                <p className="text-xs text-muted-foreground">শাসন সিংগাতি মাদরাসা</p>
               </div>
             </div>
             
@@ -106,12 +106,12 @@ export default function Index() {
             >
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium mb-6 text-center">
                 <Star className="w-4 h-4 shrink-0" />
-                Al Jamea Arabia Shashon Shingati Madrasha
+                Al Jamiyatul Arabia Shashon Singati Madrasa
               </span>
               
               <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
-                আল জামেয়া আরাবিয়া
-                <span className="block text-gradient mt-2">শাশন সিঙ্গাটি মাদ্রাসা</span>
+                আল জামিয়াতুল আরাবিয়া
+                <span className="block text-gradient mt-2">শাসন সিংগাতি মাদরাসা</span>
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -296,11 +296,11 @@ export default function Index() {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-primary-foreground font-bold">ج</span>
               </div>
-              <span className="font-semibold">আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি</span>
+              <span className="font-semibold">আল জামিয়াতুল আরাবিয়া শাসন সিংগাতি</span>
             </div>
             
             <p className="text-sm text-muted-foreground">
-              © ২০২৫ আল জামেয়া আরাবিয়া শাশন সিঙ্গাটি মাদ্রাসা। সর্বস্বত্ব সংরক্ষিত।
+              © ২০২৫ আল জামিয়াতুল আরাবিয়া শাসন সিংগাতি মাদরাসা। সর্বস্বত্ব সংরক্ষিত।
             </p>
           </div>
         </div>

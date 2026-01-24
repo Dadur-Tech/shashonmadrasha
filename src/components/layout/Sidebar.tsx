@@ -75,8 +75,8 @@ export function Sidebar() {
                 <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
-                <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">আল জামেয়া আরাবিয়া</h1>
-                <p className="text-xs text-sidebar-foreground/60">শাশন সিঙ্গাটি</p>
+                <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">আল জামিয়াতুল আরাবিয়া</h1>
+                <p className="text-xs text-sidebar-foreground/60">শাসন সিংগাতি</p>
               </div>
             </motion.div>
           )}
