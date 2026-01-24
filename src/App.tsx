@@ -12,6 +12,7 @@ import LoginPage from "./pages/auth/Login";
 import ResultsPage from "./pages/Results";
 import StudentProfile from "./pages/StudentProfile";
 import PublicStudentsPage from "./pages/Students";
+import AlumniPage from "./pages/Alumni";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin";
@@ -31,6 +32,8 @@ import PaymentGatewaysPage from "./pages/admin/PaymentGateways";
 import InstitutionPage from "./pages/admin/Institution";
 import SettingsPage from "./pages/admin/Settings";
 import HelpPage from "./pages/admin/Help";
+import AlumniManagement from "./pages/admin/AlumniManagement";
+import JamiyatManagement from "./pages/admin/JamiyatManagement";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +50,7 @@ const App = () => (
             <Route path="/results" element={<ResultsPage />} />
             <Route path="/students" element={<PublicStudentsPage />} />
             <Route path="/student/:studentId" element={<StudentProfile />} />
+            <Route path="/alumni" element={<AlumniPage />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboard />} />
@@ -66,6 +70,8 @@ const App = () => (
             <Route path="/admin/institution" element={<InstitutionPage />} />
             <Route path="/admin/settings" element={<SettingsPage />} />
             <Route path="/admin/help" element={<HelpPage />} />
+            <Route path="/admin/alumni" element={<AlumniManagement />} />
+            <Route path="/admin/jamiyat" element={<JamiyatManagement />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

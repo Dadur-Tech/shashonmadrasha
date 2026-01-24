@@ -23,6 +23,8 @@ import {
   HandHeart,
   DollarSign,
   HelpCircle,
+  Mic2,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -48,6 +50,8 @@ const mainNavItems: NavItem[] = [
   { title: "দান ব্যবস্থাপনা", href: "/admin/donations", icon: HandHeart },
   { title: "পরীক্ষা ও ফলাফল", href: "/admin/exams", icon: FileText },
   { title: "অনলাইন ক্লাস", href: "/admin/online-classes", icon: Video },
+  { title: "প্রাক্তন ছাত্র", href: "/admin/alumni", icon: Award },
+  { title: "জমিয়াত", href: "/admin/jamiyat", icon: Mic2 },
   { title: "রিপোর্ট", href: "/admin/reports", icon: BarChart3 },
 ];
 

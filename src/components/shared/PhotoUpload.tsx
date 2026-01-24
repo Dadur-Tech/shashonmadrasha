@@ -7,8 +7,10 @@ import { toast } from "@/hooks/use-toast";
 
 interface PhotoUploadProps {
   currentPhotoUrl?: string | null;
-  onPhotoChange: (url: string | null) => void;
-  folder: "students" | "teachers";
+  value?: string | null;
+  onPhotoChange?: (url: string | null) => void;
+  onChange?: (url: string | null) => void;
+  folder: "students" | "teachers" | "alumni" | "institution";
   entityId?: string;
   size?: "sm" | "md" | "lg";
 }
@@ -21,14 +23,22 @@ const sizeClasses = {
 
 export function PhotoUpload({
   currentPhotoUrl,
+  value,
   onPhotoChange,
+  onChange,
   folder,
   entityId,
   size = "md",
 }: PhotoUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentPhotoUrl || null);
+  const initialUrl = value || currentPhotoUrl || null;
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleChange = (url: string | null) => {
+    if (onChange) onChange(url);
+    if (onPhotoChange) onPhotoChange(url);
+  };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,7 +76,7 @@ export function PhotoUpload({
         .getPublicUrl(fileName);
 
       setPreviewUrl(publicUrl);
-      onPhotoChange(publicUrl);
+      handleChange(publicUrl);
       toast({ title: "ছবি আপলোড হয়েছে" });
     } catch (error: any) {
       console.error("Upload error:", error);
@@ -90,7 +100,7 @@ export function PhotoUpload({
       }
     }
     setPreviewUrl(null);
-    onPhotoChange(null);
+    handleChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
