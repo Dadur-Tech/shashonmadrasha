@@ -52,6 +52,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 import { StatCard } from "@/components/ui/stat-card";
 import { Users, Heart, AlertCircle, GraduationCap } from "lucide-react";
 import { PhotoUpload } from "@/components/shared/PhotoUpload";
@@ -123,7 +124,7 @@ export default function StudentsPage() {
       toast({ title: "সফল!", description: "ছাত্র মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "student-delete");
     },
   });
 
@@ -437,7 +438,7 @@ function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () 
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "student-create");
     } else {
       toast({ title: "সফল!", description: "ছাত্র ভর্তি হয়েছে" });
       onSuccess();

@@ -38,6 +38,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 import { StatCard } from "@/components/ui/stat-card";
 
 const statusColors: Record<string, string> = {
@@ -74,7 +75,7 @@ export default function SalariesPage() {
       toast({ title: "সফল!", description: "বেতন রেকর্ড মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "salary-delete");
     },
   });
 
@@ -95,7 +96,7 @@ export default function SalariesPage() {
       toast({ title: "সফল!", description: "বেতন পরিশোধিত হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "salary-pay");
     },
   });
 
@@ -357,7 +358,7 @@ function AddSalaryForm({ teachers, onSuccess }: { teachers: any[]; onSuccess: ()
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "salary-create");
     } else {
       toast({ title: "সফল!", description: "বেতন এন্ট্রি হয়েছে" });
       onSuccess();

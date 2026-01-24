@@ -31,6 +31,7 @@ import {
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 import {
   Table,
   TableBody,
@@ -81,8 +82,8 @@ export default function ExamsPage() {
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       toast({ title: "সফল!", description: "পরীক্ষা মুছে ফেলা হয়েছে" });
     },
-    onError: (error: any) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      handleDatabaseError(error, "exam-delete");
     },
   });
 
@@ -99,8 +100,8 @@ export default function ExamsPage() {
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       toast({ title: "সফল!", description: "ফলাফল প্রকাশিত হয়েছে" });
     },
-    onError: (error: any) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      handleDatabaseError(error, "exam-publish");
     },
   });
 
@@ -117,8 +118,8 @@ export default function ExamsPage() {
       queryClient.invalidateQueries({ queryKey: ["exams"] });
       toast({ title: "সফল!", description: "ফলাফল আনপাবলিশ হয়েছে" });
     },
-    onError: (error: any) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+    onError: (error: unknown) => {
+      handleDatabaseError(error, "exam-unpublish");
     },
   });
 
@@ -413,7 +414,7 @@ function AddExamForm({ onSuccess }: { onSuccess: () => void }) {
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "exam-create");
     } else {
       toast({ title: "সফল!", description: "পরীক্ষা যোগ হয়েছে" });
       onSuccess();
@@ -496,7 +497,7 @@ function EditExamForm({ exam, onSuccess }: { exam: any; onSuccess: () => void })
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "exam-update");
     } else {
       toast({ title: "সফল!", description: "পরীক্ষা আপডেট হয়েছে" });
       onSuccess();
@@ -626,7 +627,7 @@ function ResultEntryForm({ examId, onSuccess }: { examId: string; onSuccess: () 
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "exam-results-save");
     } else {
       toast({ title: "সফল!", description: `${entries.length} জন ছাত্রের ফলাফল সংরক্ষিত হয়েছে` });
       setResults({});
@@ -784,7 +785,7 @@ function ViewResultsTable({ examId }: { examId: string }) {
       toast({ title: "সফল!", description: "ফলাফল মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "exam-result-delete");
     },
   });
 

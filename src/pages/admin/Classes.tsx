@@ -13,6 +13,7 @@ import { Plus, BookOpen, Loader2, Edit, Trash2, Settings } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 
 const departmentColors: Record<string, string> = {
   nazera: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -69,7 +70,7 @@ export default function ClassesPage() {
       toast({ title: "সফল!", description: "ক্লাস মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "class-delete");
     },
   });
 
@@ -293,7 +294,7 @@ function ClassForm({ onSuccess, initialData, departments }: { onSuccess: () => v
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "class-save");
     } else {
       toast({ title: "সফল!", description: initialData ? "ক্লাস আপডেট হয়েছে" : "ক্লাস যোগ হয়েছে" });
       onSuccess();
