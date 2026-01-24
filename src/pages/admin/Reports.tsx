@@ -224,6 +224,372 @@ export default function ReportsPage() {
     openPrintWindow(content, `মাসিক প্রতিবেদন - ${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`);
   };
 
+  // Fetch students for report
+  const { data: students = [] } = useQuery({
+    queryKey: ["students-report", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("students")
+        .select("*, classes(name)")
+        .eq("status", "active")
+        .order("full_name");
+      return data || [];
+    },
+  });
+
+  // Fetch fees for report
+  const { data: fees = [] } = useQuery({
+    queryKey: ["fees-report", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("student_fees")
+        .select("*, student:students(full_name, student_id)")
+        .eq("month", parseInt(selectedMonth))
+        .eq("year", parseInt(selectedYear))
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  // Fetch donations for report
+  const { data: donations = [] } = useQuery({
+    queryKey: ["donations-report", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const startDate = `${selectedYear}-${selectedMonth.padStart(2, '0')}-01`;
+      const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).toISOString().split('T')[0];
+      const { data } = await supabase
+        .from("donations")
+        .select("*")
+        .gte("created_at", startDate)
+        .lte("created_at", endDate + "T23:59:59")
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  // Fetch expenses for report
+  const { data: expenses = [] } = useQuery({
+    queryKey: ["expenses-report", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const startDate = `${selectedYear}-${selectedMonth.padStart(2, '0')}-01`;
+      const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0).toISOString().split('T')[0];
+      const { data } = await supabase
+        .from("expenses")
+        .select("*")
+        .gte("expense_date", startDate)
+        .lte("expense_date", endDate)
+        .order("expense_date", { ascending: false });
+      return data || [];
+    },
+  });
+
+  // Fetch salaries for report
+  const { data: salaries = [] } = useQuery({
+    queryKey: ["salaries-report", selectedMonth, selectedYear],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("teacher_salaries")
+        .select("*, teacher:teachers(full_name)")
+        .eq("month", parseInt(selectedMonth))
+        .eq("year", parseInt(selectedYear))
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+  const handlePrintStudentsReport = () => {
+    if (!institution) return;
+    const content = `
+      ${generateReportHeader({
+        title: "ছাত্র তালিকা",
+        subtitle: "সক্রিয় ছাত্রদের তালিকা",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>আইডি</th>
+            <th>নাম</th>
+            <th>ক্লাস</th>
+            <th>অভিভাবক ফোন</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${students.map((s, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${s.student_id}</td>
+              <td>${s.full_name}</td>
+              <td>${s.classes?.name || "-"}</td>
+              <td>${s.guardian_phone || "-"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <p style="margin-top: 20px;"><strong>মোট ছাত্র: ${students.length}</strong></p>
+      ${generateReportFooter({
+        title: "ছাত্র তালিকা",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, "ছাত্র তালিকা");
+  };
+
+  const handlePrintFeesReport = () => {
+    if (!institution) return;
+    const totalAmount = fees.reduce((sum, f) => sum + Number(f.amount || 0), 0);
+    const paidAmount = fees.reduce((sum, f) => sum + Number(f.paid_amount || 0), 0);
+    const content = `
+      ${generateReportHeader({
+        title: "ফি সংগ্রহ রিপোর্ট",
+        subtitle: `${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`,
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>ছাত্র</th>
+            <th>পরিমাণ</th>
+            <th>পরিশোধিত</th>
+            <th>বকেয়া</th>
+            <th>স্ট্যাটাস</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${fees.map((f, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${f.student?.full_name || "-"}</td>
+              <td>${formatCurrency(f.amount)}</td>
+              <td>${formatCurrency(f.paid_amount)}</td>
+              <td>${formatCurrency(f.due_amount)}</td>
+              <td>${f.status === "paid" ? "পরিশোধিত" : "বকেয়া"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>মোট</strong></td>
+            <td><strong>${formatCurrency(totalAmount)}</strong></td>
+            <td><strong>${formatCurrency(paidAmount)}</strong></td>
+            <td><strong>${formatCurrency(totalAmount - paidAmount)}</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      ${generateReportFooter({
+        title: "ফি সংগ্রহ রিপোর্ট",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, `ফি রিপোর্ট - ${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`);
+  };
+
+  const handlePrintDonationsReport = () => {
+    if (!institution) return;
+    const totalDonations = donations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+    const content = `
+      ${generateReportHeader({
+        title: "দান রিপোর্ট",
+        subtitle: `${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`,
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>দাতা</th>
+            <th>ক্যাটাগরি</th>
+            <th>পরিমাণ</th>
+            <th>স্ট্যাটাস</th>
+            <th>তারিখ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${donations.map((d, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${d.is_anonymous ? "বেনামী" : d.donor_name}</td>
+              <td>${d.category}</td>
+              <td>${formatCurrency(d.amount)}</td>
+              <td>${d.payment_status === "completed" ? "সম্পন্ন" : "পেন্ডিং"}</td>
+              <td>${new Date(d.created_at).toLocaleDateString('bn-BD')}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>মোট</strong></td>
+            <td><strong>${formatCurrency(totalDonations)}</strong></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+      ${generateReportFooter({
+        title: "দান রিপোর্ট",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, `দান রিপোর্ট - ${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`);
+  };
+
+  const handlePrintExpensesReport = () => {
+    if (!institution) return;
+    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    const content = `
+      ${generateReportHeader({
+        title: "ব্যয় রিপোর্ট",
+        subtitle: `${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`,
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>বিবরণ</th>
+            <th>ক্যাটাগরি</th>
+            <th>পরিমাণ</th>
+            <th>তারিখ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${expenses.map((e, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${e.description || e.title || "-"}</td>
+              <td>${"-"}</td>
+              <td>${formatCurrency(e.amount)}</td>
+              <td>${new Date(e.expense_date).toLocaleDateString('bn-BD')}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>মোট ব্যয়</strong></td>
+            <td><strong>${formatCurrency(totalExpenses)}</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      ${generateReportFooter({
+        title: "ব্যয় রিপোর্ট",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, `ব্যয় রিপোর্ট - ${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`);
+  };
+
+  const handlePrintSalariesReport = () => {
+    if (!institution) return;
+    const totalSalaries = salaries.reduce((sum, s) => sum + Number(s.net_salary || 0), 0);
+    const content = `
+      ${generateReportHeader({
+        title: "বেতন রিপোর্ট",
+        subtitle: `${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`,
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>শিক্ষক</th>
+            <th>মূল বেতন</th>
+            <th>বোনাস</th>
+            <th>কর্তন</th>
+            <th>নীট বেতন</th>
+            <th>স্ট্যাটাস</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${salaries.map((s, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${s.teacher?.full_name || "-"}</td>
+              <td>${formatCurrency(s.base_salary)}</td>
+              <td>${formatCurrency(s.bonus || 0)}</td>
+              <td>${formatCurrency(s.deduction || 0)}</td>
+              <td>${formatCurrency(s.net_salary)}</td>
+              <td>${s.status === "paid" ? "পরিশোধিত" : "বকেয়া"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5"><strong>মোট</strong></td>
+            <td><strong>${formatCurrency(totalSalaries)}</strong></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      ${generateReportFooter({
+        title: "বেতন রিপোর্ট",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, `বেতন রিপোর্ট - ${monthNames[parseInt(selectedMonth) - 1]} ${selectedYear}`);
+  };
+
+  const reportHandlers: Record<string, () => void> = {
+    monthly: handlePrintReport,
+    students: handlePrintStudentsReport,
+    fees: handlePrintFeesReport,
+    donations: handlePrintDonationsReport,
+    expenses: handlePrintExpensesReport,
+    salaries: handlePrintSalariesReport,
+  };
+
   const reportTypes = [
     { id: "monthly", title: "মাসিক আর্থিক প্রতিবেদন", icon: Calendar, description: "মাসিক আয়-ব্যয়ের সারসংক্ষেপ" },
     { id: "students", title: "ছাত্র তালিকা", icon: Users, description: "সকল ছাত্রের বিস্তারিত তালিকা" },
@@ -347,14 +713,10 @@ export default function ReportsPage() {
                         variant="outline" 
                         size="sm" 
                         className="flex-1 gap-2"
-                        onClick={report.id === "monthly" ? handlePrintReport : undefined}
+                        onClick={reportHandlers[report.id]}
                       >
                         <Printer className="w-4 h-4" />
                         প্রিন্ট
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1 gap-2">
-                        <Download className="w-4 h-4" />
-                        PDF
                       </Button>
                     </div>
                   </CardContent>
