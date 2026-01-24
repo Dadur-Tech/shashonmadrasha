@@ -23,8 +23,10 @@ import {
   Clock,
   Baby,
   Building2,
+  Printer,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { openPrintWindow, generateReportHeader, generateReportFooter, formatCurrency } from "@/lib/pdf-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { StatCard } from "@/components/ui/stat-card";
 
@@ -88,6 +90,85 @@ export default function DonationsPage() {
     !["lillah_boarding", "orphan_support", "madrasa_development"].includes(d.category)
   );
 
+  const { data: institution } = useQuery({
+    queryKey: ["institution"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("*")
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const handlePrintReport = () => {
+    if (!institution) return;
+    const content = `
+      ${generateReportHeader({
+        title: "দান রিপোর্ট",
+        subtitle: "সকল দানের বিস্তারিত তালিকা",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+      <div class="summary-box">
+        <h3 style="margin: 0 0 15px 0; color: #0d5c2e;">সারসংক্ষেপ</h3>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="label">মোট দান</div>
+            <div class="value">${formatCurrency(totalAmount)}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">সম্পন্ন দান</div>
+            <div class="value">${formatCurrency(completedAmount)}</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">মোট দাতা</div>
+            <div class="value">${donations.length}</div>
+          </div>
+        </div>
+      </div>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>ক্রম</th>
+            <th>দাতা</th>
+            <th>ক্যাটাগরি</th>
+            <th>পরিমাণ</th>
+            <th>স্ট্যাটাস</th>
+            <th>তারিখ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${donations.map((d, i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td>${d.is_anonymous ? "বেনামী দাতা" : d.donor_name}</td>
+              <td>${categoryLabels[d.category] || d.category}</td>
+              <td>${formatCurrency(d.amount)}</td>
+              <td>${d.payment_status === "completed" ? "সম্পন্ন" : "পেন্ডিং"}</td>
+              <td>${new Date(d.created_at).toLocaleDateString('bn-BD')}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      ${generateReportFooter({
+        title: "দান রিপোর্ট",
+        institution: {
+          name: institution.name,
+          nameEnglish: institution.name_english || "",
+          address: institution.address || "",
+          phone: institution.phone,
+        },
+      })}
+    `;
+    openPrintWindow(content, "দান রিপোর্ট");
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -97,9 +178,9 @@ export default function DonationsPage() {
             <h1 className="text-2xl font-bold text-foreground">দান ব্যবস্থাপনা</h1>
             <p className="text-muted-foreground">সকল দানের রেকর্ড দেখুন</p>
           </div>
-          <Button className="gap-2">
-            <Download className="w-4 h-4" />
-            রিপোর্ট ডাউনলোড
+          <Button className="gap-2" onClick={handlePrintReport}>
+            <Printer className="w-4 h-4" />
+            রিপোর্ট প্রিন্ট
           </Button>
         </div>
 
