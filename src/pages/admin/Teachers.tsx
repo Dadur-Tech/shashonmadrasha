@@ -40,6 +40,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 import { StatCard } from "@/components/ui/stat-card";
 import { PhotoUpload } from "@/components/shared/PhotoUpload";
 
@@ -104,7 +105,7 @@ export default function TeachersPage() {
       toast({ title: "সফল!", description: "শিক্ষক মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "teacher-delete");
     },
   });
 
@@ -388,7 +389,7 @@ function TeacherForm({ onSuccess, initialData, titles }: { onSuccess: () => void
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "teacher-save");
     } else {
       toast({ title: "সফল!", description: initialData ? "শিক্ষক আপডেট হয়েছে" : "শিক্ষক যোগ হয়েছে" });
       onSuccess();

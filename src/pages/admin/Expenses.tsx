@@ -36,6 +36,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 import { StatCard } from "@/components/ui/stat-card";
 
 export default function ExpensesPage() {
@@ -53,7 +54,7 @@ export default function ExpensesPage() {
       toast({ title: "সফল!", description: "খরচ মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "expense-delete");
     },
   });
 
@@ -289,7 +290,7 @@ function AddExpenseForm({ categories, onSuccess }: { categories: any[]; onSucces
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "expense-create");
     } else {
       toast({ title: "সফল!", description: "খরচ যোগ হয়েছে" });
       onSuccess();

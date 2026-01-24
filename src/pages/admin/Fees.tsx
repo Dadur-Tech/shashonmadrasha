@@ -54,6 +54,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StatCard } from "@/components/ui/stat-card";
 import { toast } from "@/hooks/use-toast";
+import { handleDatabaseError } from "@/lib/error-handler";
 
 const statusColors: Record<string, string> = {
   pending: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -114,7 +115,7 @@ export default function FeesPage() {
       toast({ title: "সফল!", description: "ফি রেকর্ড মুছে ফেলা হয়েছে" });
     },
     onError: (error: Error) => {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "fee-delete");
     },
   });
 
@@ -437,7 +438,7 @@ function AddFeeForm({ onSuccess }: { onSuccess: () => void }) {
 
     setLoading(false);
     if (error) {
-      toast({ title: "সমস্যা হয়েছে", description: error.message, variant: "destructive" });
+      handleDatabaseError(error, "fee-create");
     } else {
       toast({ title: "সফল!", description: "ফি যোগ হয়েছে" });
       onSuccess();
