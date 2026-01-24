@@ -11,6 +11,10 @@ import {
   Book,
   Menu,
   X,
+  PlayCircle,
+  FileText,
+  Users,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,11 +31,12 @@ import { TeacherHighlights } from "@/components/landing/TeacherHighlights";
 import { NotableAlumni } from "@/components/landing/NotableAlumni";
 import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
 import { OnlineClassesPreview } from "@/components/landing/OnlineClassesPreview";
+import { HeroSection } from "@/components/landing/HeroSection";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
   { href: "#departments", label: "বিভাগ" },
-  { href: "#online-classes", label: "অনলাইন ক্লাস" },
+  { href: "/courses", label: "অনলাইন ক্লাস", isRoute: true },
   { href: "#results", label: "ফলাফল" },
   { href: "#gallery", label: "গ্যালারি" },
   { href: "#donate", label: "দান" },
@@ -49,7 +54,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
                 <span className="text-primary-foreground font-bold text-lg">ج</span>
               </div>
               <div>
@@ -61,25 +66,35 @@ export default function Index() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => (
-                <a 
-                  key={link.href}
-                  href={link.href} 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {link.label}
-                </a>
+                link.isRoute ? (
+                  <Link 
+                    key={link.href}
+                    to={link.href}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a 
+                    key={link.href}
+                    href={link.href} 
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                )
               ))}
             </div>
 
             <div className="flex items-center gap-3">
               <Link to="/results" className="hidden sm:block">
-                <Button variant="outline" size="sm">
-                  <GraduationCap className="w-4 h-4 mr-2" />
+                <Button variant="outline" size="sm" className="gap-2">
+                  <GraduationCap className="w-4 h-4" />
                   ফলাফল দেখুন
                 </Button>
               </Link>
               <Link to="/login" className="hidden sm:block">
-                <Button size="sm">
+                <Button size="sm" className="shadow-lg">
                   অ্যাডমিন লগইন
                 </Button>
               </Link>
@@ -106,14 +121,25 @@ export default function Index() {
           >
             <div className="container mx-auto px-4 flex flex-col gap-2">
               {navLinks.map((link) => (
-                <a 
-                  key={link.href}
-                  href={link.href} 
-                  className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
+                link.isRoute ? (
+                  <Link 
+                    key={link.href}
+                    to={link.href}
+                    className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a 
+                    key={link.href}
+                    href={link.href} 
+                    className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                )
               ))}
               <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                 <Link to="/results" className="flex-1">
@@ -134,50 +160,38 @@ export default function Index() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
-        {/* Background Decoration */}
-        <div className="absolute inset-0 hero-gradient opacity-5" />
-        <div className="absolute top-20 right-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
-        
-        <div className="container mx-auto px-4 relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-8 shadow-sm">
-                <Heart className="w-4 h-4" />
-                بسم الله الرحمن الرحيم
-              </span>
-              
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-                আল জামিয়া আরাবিয়া
-                <span className="block text-gradient mt-3">শাসন সিংগাতী মাদ্রাসা</span>
-              </h1>
-              
-              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed">
-                ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি 
-                আধুনিক শিক্ষায় সুদক্ষ আলেম-উলামা তৈরির প্রতিষ্ঠান।
-              </p>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="#admission">
-                  <Button size="lg" className="gap-2 px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all">
-                    <Book className="w-5 h-5" />
-                    ভর্তি তথ্য
-                  </Button>
-                </a>
-                <a href="#donate">
-                  <Button size="lg" variant="outline" className="gap-2 px-10 py-6 text-lg border-2 hover:bg-primary/5">
-                    <Heart className="w-5 h-5" />
-                    দান করুন
-                  </Button>
-                </a>
-              </div>
-            </motion.div>
+      <HeroSection />
+
+      {/* Quick Links Section */}
+      <section className="py-12 -mt-16 relative z-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            {[
+              { icon: PlayCircle, label: "অনলাইন ক্লাস", href: "/courses", color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/40" },
+              { icon: FileText, label: "পরীক্ষার ফলাফল", href: "/results", color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950/40" },
+              { icon: Users, label: "ছাত্র তালিকা", href: "/students", color: "text-emerald-600", bgColor: "bg-emerald-50 dark:bg-emerald-950/40" },
+              { icon: Award, label: "প্রাক্তন ছাত্র", href: "/alumni", color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950/40" },
+            ].map((item, index) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Link to={item.href}>
+                  <Card className={`${item.bgColor} border-transparent hover:shadow-lg transition-all group cursor-pointer`}>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className={`p-2 rounded-lg bg-white dark:bg-background shadow-sm`}>
+                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                      </div>
+                      <span className="font-medium text-sm">{item.label}</span>
+                      <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -203,7 +217,9 @@ export default function Index() {
       <WeeklyJamiyat />
 
       {/* Online Classes Preview */}
-      <OnlineClassesPreview />
+      <div id="online-classes">
+        <OnlineClassesPreview />
+      </div>
 
       {/* Notable Alumni */}
       <NotableAlumni />
@@ -301,10 +317,10 @@ export default function Index() {
       {/* Footer */}
       <footer className="py-12 border-t border-border bg-card">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
                   <span className="text-primary-foreground font-bold text-lg">ج</span>
                 </div>
                 <div>
@@ -325,8 +341,16 @@ export default function Index() {
                 <li><a href="#departments" className="hover:text-foreground transition-colors">বিভাগ সমূহ</a></li>
                 <li><Link to="/courses" className="hover:text-foreground transition-colors">কোর্স ও ক্লাস</Link></li>
                 <li><Link to="/results" className="hover:text-foreground transition-colors">ফলাফল</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">পরিষেবা</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#donate" className="hover:text-foreground transition-colors">দান করুন</a></li>
                 <li><a href="#admission" className="hover:text-foreground transition-colors">ভর্তি তথ্য</a></li>
+                <li><Link to="/students" className="hover:text-foreground transition-colors">ছাত্র তালিকা</Link></li>
+                <li><Link to="/alumni" className="hover:text-foreground transition-colors">প্রাক্তন ছাত্র</Link></li>
               </ul>
             </div>
 

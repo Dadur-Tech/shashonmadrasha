@@ -9,6 +9,8 @@ import {
   BookOpen,
   AlertCircle,
   Loader2,
+  PlayCircle,
+  FileText,
 } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,25 +20,29 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { DepartmentPieChart, MonthlyIncomeChart, AttendanceBarChart } from "@/components/dashboard/DashboardCharts";
+import { RecentActivities } from "@/components/dashboard/RecentActivities";
+import { NotificationsPanel } from "@/components/dashboard/NotificationsPanel";
 
 export default function Dashboard() {
   // Fetch real stats from database
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const [studentsRes, teachersRes, donationsRes, feesRes] = await Promise.all([
+      const [studentsRes, teachersRes, donationsRes, feesRes, classesRes, examsRes] = await Promise.all([
         supabase.from("students").select("id, status, is_lillah", { count: "exact" }),
         supabase.from("teachers").select("id, status", { count: "exact" }).eq("status", "active"),
         supabase.from("donations").select("amount").eq("payment_status", "completed"),
         supabase.from("student_fees").select("amount, paid_amount, status"),
+        supabase.from("online_classes").select("id", { count: "exact" }),
+        supabase.from("exams").select("id", { count: "exact" }).eq("is_published", true),
       ]);
 
       const totalStudents = studentsRes.data?.length || 0;
       const lillahStudents = studentsRes.data?.filter(s => s.is_lillah || s.status === "lillah").length || 0;
       const activeTeachers = teachersRes.data?.length || 0;
-      
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
+      const totalClasses = classesRes.data?.length || 0;
+      const publishedExams = examsRes.data?.length || 0;
       
       const totalDonations = donationsRes.data?.reduce((sum, d) => sum + Number(d.amount || 0), 0) || 0;
       const totalFees = feesRes.data?.reduce((sum, f) => sum + Number(f.amount || 0), 0) || 0;
@@ -54,6 +60,8 @@ export default function Dashboard() {
         paidCount,
         dueCount,
         feePercentage,
+        totalClasses,
+        publishedExams,
       };
     },
   });
@@ -89,7 +97,7 @@ export default function Dashboard() {
     },
   });
 
-  // Fetch class counts
+  // Fetch class counts for pie chart
   const { data: classCounts = [] } = useQuery({
     queryKey: ["class-counts"],
     queryFn: async () => {
@@ -160,31 +168,51 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <StatCard
-          title="মোট ছাত্র সংখ্যা"
+          title="মোট ছাত্র"
           value={stats?.totalStudents?.toString() || "০"}
-          icon={<Users className="w-6 h-6" />}
+          icon={<Users className="w-5 h-5" />}
+          trend={{ value: 12, isPositive: true }}
         />
         <StatCard
-          title="মোট শিক্ষক"
+          title="শিক্ষক"
           value={stats?.activeTeachers?.toString() || "০"}
-          icon={<GraduationCap className="w-6 h-6" />}
+          icon={<GraduationCap className="w-5 h-5" />}
           variant="primary"
         />
         <StatCard
-          title="এই মাসের আয়"
-          value={`৳ ${(stats?.totalIncome || 0).toLocaleString('bn-BD')}`}
-          icon={<CreditCard className="w-6 h-6" />}
+          title="মাসিক আয়"
+          value={`৳${((stats?.totalIncome || 0) / 1000).toFixed(0)}k`}
+          icon={<CreditCard className="w-5 h-5" />}
           variant="gold"
+          trend={{ value: 8, isPositive: true }}
         />
         <StatCard
           title="লিল্লাহ ছাত্র"
           value={stats?.lillahStudents?.toString() || "০"}
-          icon={<Heart className="w-6 h-6" />}
+          icon={<Heart className="w-5 h-5" />}
           variant="success"
         />
+        <StatCard
+          title="অনলাইন ক্লাস"
+          value={stats?.totalClasses?.toString() || "০"}
+          icon={<PlayCircle className="w-5 h-5" />}
+          variant="info"
+        />
+        <StatCard
+          title="পরীক্ষা"
+          value={stats?.publishedExams?.toString() || "০"}
+          icon={<FileText className="w-5 h-5" />}
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <MonthlyIncomeChart data={[]} />
+        <DepartmentPieChart data={classCounts} />
+        <AttendanceBarChart />
       </div>
 
       {/* Main Content Grid */}
@@ -198,7 +226,7 @@ export default function Dashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentStudents.length === 0 ? (
                 <p className="text-center text-muted-foreground py-6">
                   এখনো কোনো ছাত্র ভর্তি হয়নি
@@ -236,6 +264,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        {/* Notifications Panel */}
+        <NotificationsPanel />
+      </div>
+
+      {/* Activity & More Info Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activities */}
+        <div className="lg:col-span-2">
+          <RecentActivities />
+        </div>
+
         {/* Sidebar Cards */}
         <div className="space-y-6">
           {/* Upcoming Events */}
@@ -246,7 +285,7 @@ export default function Dashboard() {
                 আসন্ন পরীক্ষা
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {upcomingEvents.length === 0 ? (
                 <p className="text-center text-muted-foreground py-4 text-sm">
                   কোনো আসন্ন পরীক্ষা নেই
@@ -308,70 +347,8 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Quick Alerts */}
-          <Card className="border-warning/50 bg-warning/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2 text-warning">
-                <AlertCircle className="w-5 h-5" />
-                গুরুত্বপূর্ণ বিজ্ঞপ্তি
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm">
-                {(stats?.dueCount || 0) > 0 && (
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-warning mt-2" />
-                    <span>{stats?.dueCount} জন ছাত্রের ফি বকেয়া</span>
-                  </li>
-                )}
-                {(stats?.lillahStudents || 0) > 0 && (
-                  <li className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-warning mt-2" />
-                    <span>{stats?.lillahStudents} জন লিল্লাহ ছাত্র রয়েছে</span>
-                  </li>
-                )}
-                {(stats?.dueCount === 0 && stats?.lillahStudents === 0) && (
-                  <li className="text-muted-foreground">কোনো বিজ্ঞপ্তি নেই</li>
-                )}
-              </ul>
-            </CardContent>
-          </Card>
         </div>
       </div>
-
-      {/* Class Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-primary" />
-            বিভাগ ভিত্তিক ছাত্র সংখ্যা
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {classCounts.length === 0 ? (
-              <p className="col-span-full text-center text-muted-foreground py-6">
-                কোনো বিভাগ সেটআপ করা হয়নি। প্রথমে ক্লাস যোগ করুন।
-              </p>
-            ) : (
-              classCounts.map((dept) => (
-                <div 
-                  key={dept.name} 
-                  className="p-4 rounded-xl bg-secondary/30 border border-border hover:border-primary/30 transition-colors"
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className={`w-3 h-3 rounded-full ${dept.color}`} />
-                    <span className="font-medium">{dept.name}</span>
-                  </div>
-                  <p className="text-3xl font-bold">{dept.count}</p>
-                  <p className="text-sm text-muted-foreground">জন ছাত্র</p>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
