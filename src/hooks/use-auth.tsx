@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchRoles = async (userId: string) => {
     try {
+      console.log("[Auth] Fetching roles for user:", userId);
       const { data: userRoles, error } = await supabase
         .from("user_roles")
         .select("role")
@@ -36,14 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         // Don't block auth flow on roles fetch issues
-        console.warn("fetchRoles error", error);
+        console.error("[Auth] fetchRoles error:", error.message, error.code, error.details);
         setRoles([]);
         return;
       }
 
-      setRoles((userRoles || []).map((r) => r.role as AppRole));
+      console.log("[Auth] Fetched roles:", userRoles);
+      const mappedRoles = (userRoles || []).map((r) => r.role as AppRole);
+      setRoles(mappedRoles);
+      console.log("[Auth] Set roles to:", mappedRoles);
     } catch (e) {
-      console.warn("fetchRoles exception", e);
+      console.error("[Auth] fetchRoles exception:", e);
       setRoles([]);
     }
   };
@@ -51,22 +55,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Fail-safe: never let auth loading spin forever
     const failSafe = window.setTimeout(() => {
+      console.log("[Auth] Fail-safe timeout triggered");
       setLoading(false);
-    }, 4000);
+    }, 5000);
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
+      async (event, newSession) => {
+        console.log("[Auth] onAuthStateChange event:", event, "user:", newSession?.user?.email);
+        
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
 
-          if (session?.user) {
-            await fetchRoles(session.user.id);
-          } else {
-            setRoles([]);
-          }
-        } finally {
+        if (newSession?.user) {
+          // IMPORTANT: Defer database calls to avoid race condition with session
+          // See: https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+          setTimeout(async () => {
+            try {
+              await fetchRoles(newSession.user.id);
+            } finally {
+              setLoading(false);
+            }
+          }, 0);
+        } else {
+          setRoles([]);
           setLoading(false);
         }
       }
@@ -75,18 +87,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // THEN check for existing session
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      .then(({ data: { session: existingSession } }) => {
+        console.log("[Auth] getSession result:", existingSession?.user?.email);
+        
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
 
-        if (session?.user) {
-          fetchRoles(session.user.id).finally(() => setLoading(false));
+        if (existingSession?.user) {
+          // Defer to ensure Supabase client has token set
+          setTimeout(async () => {
+            try {
+              await fetchRoles(existingSession.user.id);
+            } finally {
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setLoading(false);
         }
       })
       .catch((e) => {
-        console.warn("getSession error", e);
+        console.error("[Auth] getSession error:", e);
         setLoading(false);
       });
 
