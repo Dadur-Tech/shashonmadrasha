@@ -9,12 +9,16 @@ import {
   CheckCircle2,
   Phone,
   Mail,
-  MapPin,
   Clock,
   Star,
+  CreditCard,
+  FileText,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DonationSection } from "@/components/donation/DonationCard";
+import { OnlineAdmissionSection } from "@/components/admission/OnlineAdmissionForm";
 
 const features = [
   {
@@ -28,22 +32,32 @@ const features = [
     description: "শিক্ষক প্রোফাইল, বেতন, ক্লাস রুটিন এবং কর্মক্ষমতা মূল্যায়ন",
   },
   {
-    icon: BookOpen,
-    title: "পরীক্ষা ও ফলাফল",
-    description: "পরীক্ষার সময়সূচী, মার্কশিট, গ্রেড এবং ফলাফল প্রকাশ ব্যবস্থা",
+    icon: CreditCard,
+    title: "ফি ও পেমেন্ট",
+    description: "বিকাশ, নগদ, রকেট, SSLCommerz - সকল পেমেন্ট গেটওয়ে সাপোর্ট",
   },
   {
     icon: Heart,
     title: "লিল্লাহ বোর্ডিং",
     description: "এতিম ও গরীব ছাত্রদের জন্য বিশেষ ব্যবস্থাপনা ও স্পন্সর ম্যানেজমেন্ট",
   },
+  {
+    icon: FileText,
+    title: "হিসাব ও রিপোর্ট",
+    description: "আয়-ব্যয়, বেতন, PDF রিপোর্ট এবং প্রফেশনাল প্রিন্টিং",
+  },
+  {
+    icon: Video,
+    title: "অনলাইন ক্লাস",
+    description: "লাইভ ক্লাস, রেকর্ডিং এবং ছাত্রদের সাথে সহজ যোগাযোগ",
+  },
 ];
 
 const stats = [
-  { value: "৫০০+", label: "প্রতিষ্ঠান" },
-  { value: "২৫,০০০+", label: "ছাত্র" },
-  { value: "২,০০০+", label: "শিক্ষক" },
-  { value: "৯৯%", label: "সন্তুষ্টি" },
+  { value: "১০০+", label: "ছাত্র" },
+  { value: "১৫+", label: "শিক্ষক" },
+  { value: "৩৫+", label: "বছরের অভিজ্ঞতা" },
+  { value: "১০০%", label: "নিষ্ঠা" },
 ];
 
 export default function Index() {
@@ -156,6 +170,12 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Donation Section */}
+      <DonationSection />
+
+      {/* Online Admission Section */}
+      <OnlineAdmissionSection />
+
       {/* Features Section */}
       <section id="features" className="py-20 bg-secondary/30">
         <div className="container mx-auto px-4">
@@ -168,7 +188,7 @@ export default function Index() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
