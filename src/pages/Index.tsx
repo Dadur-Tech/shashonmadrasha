@@ -26,10 +26,12 @@ import { AboutMadrasa } from "@/components/landing/AboutMadrasa";
 import { TeacherHighlights } from "@/components/landing/TeacherHighlights";
 import { NotableAlumni } from "@/components/landing/NotableAlumni";
 import { WeeklyJamiyat } from "@/components/landing/WeeklyJamiyat";
+import { OnlineClassesPreview } from "@/components/landing/OnlineClassesPreview";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
   { href: "#departments", label: "বিভাগ" },
+  { href: "#online-classes", label: "অনলাইন ক্লাস" },
   { href: "#results", label: "ফলাফল" },
   { href: "#gallery", label: "গ্যালারি" },
   { href: "#donate", label: "দান" },
@@ -199,6 +201,9 @@ export default function Index() {
 
       {/* Weekly Jamiyat */}
       <WeeklyJamiyat />
+
+      {/* Online Classes Preview */}
+      <OnlineClassesPreview />
 
       {/* Notable Alumni */}
       <NotableAlumni />
