@@ -20,12 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
 import { 
   Search, 
   Plus, 
   MoreVertical, 
-  Eye, 
   Edit, 
   Trash2, 
   GraduationCap,
@@ -33,11 +34,14 @@ import {
   Loader2,
   Users,
   Banknote,
+  Settings,
+  User,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/ui/stat-card";
+import { PhotoUpload } from "@/components/shared/PhotoUpload";
 
 const statusColors: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
@@ -56,6 +60,7 @@ const statusLabels: Record<string, string> = {
 export default function TeachersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isTitleManageOpen, setIsTitleManageOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -64,8 +69,25 @@ export default function TeachersPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("teachers")
-        .select("*")
+        .select(`
+          *,
+          title:teacher_titles(id, name, name_arabic)
+        `)
         .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: titles = [] } = useQuery({
+    queryKey: ["teacher-titles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_titles")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
       
       if (error) throw error;
       return data;
@@ -104,34 +126,57 @@ export default function TeachersPage() {
             <h1 className="text-2xl font-bold text-foreground">শিক্ষক ব্যবস্থাপনা</h1>
             <p className="text-muted-foreground">সকল শিক্ষকের তথ্য দেখুন ও পরিচালনা করুন</p>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                নতুন শিক্ষক যোগ করুন
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>নতুন শিক্ষক যোগ করুন</DialogTitle>
-              </DialogHeader>
-              <TeacherForm onSuccess={() => {
-                setIsAddOpen(false);
-                queryClient.invalidateQueries({ queryKey: ["teachers"] });
-              }} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Dialog open={isTitleManageOpen} onOpenChange={setIsTitleManageOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Settings className="w-4 h-4" />
+                  বিশেষত্ব/টাইটেল
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>শিক্ষক বিশেষত্ব পরিচালনা</DialogTitle>
+                </DialogHeader>
+                <TitleManager onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["teacher-titles"] });
+                }} />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  নতুন শিক্ষক যোগ করুন
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>নতুন শিক্ষক যোগ করুন</DialogTitle>
+                </DialogHeader>
+                <TeacherForm 
+                  titles={titles}
+                  onSuccess={() => {
+                    setIsAddOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ["teachers"] });
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Edit Dialog */}
         <Dialog open={!!editingTeacher} onOpenChange={(open) => !open && setEditingTeacher(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>শিক্ষক সম্পাদনা করুন</DialogTitle>
             </DialogHeader>
             {editingTeacher && (
               <TeacherForm 
                 initialData={editingTeacher}
+                titles={titles}
                 onSuccess={() => {
                   setEditingTeacher(null);
                   queryClient.invalidateQueries({ queryKey: ["teachers"] });
@@ -191,10 +236,11 @@ export default function TeachersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>ছবি</TableHead>
                     <TableHead>আইডি</TableHead>
                     <TableHead>নাম</TableHead>
+                    <TableHead>বিশেষত্ব</TableHead>
                     <TableHead>ফোন</TableHead>
-                    <TableHead>যোগ্যতা</TableHead>
                     <TableHead>মাসিক বেতন</TableHead>
                     <TableHead>স্ট্যাটাস</TableHead>
                     <TableHead className="w-12"></TableHead>
@@ -209,14 +255,31 @@ export default function TeachersPage() {
                       transition={{ delay: index * 0.03 }}
                       className="group"
                     >
+                      <TableCell>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={teacher.photo_url || undefined} />
+                          <AvatarFallback>
+                            <User className="w-5 h-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
                       <TableCell className="font-mono text-xs">{teacher.teacher_id}</TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{teacher.full_name}</p>
-                          {teacher.specialization && (
-                            <p className="text-xs text-muted-foreground">{teacher.specialization}</p>
+                          {teacher.qualification && (
+                            <p className="text-xs text-muted-foreground">{teacher.qualification}</p>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {teacher.title ? (
+                          <Badge variant="secondary" className="font-semibold">
+                            {teacher.title.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
@@ -224,7 +287,6 @@ export default function TeachersPage() {
                           {teacher.phone}
                         </div>
                       </TableCell>
-                      <TableCell>{teacher.qualification || "-"}</TableCell>
                       <TableCell className="font-medium">
                         ৳{Number(teacher.monthly_salary).toLocaleString('bn-BD')}
                       </TableCell>
@@ -264,7 +326,7 @@ export default function TeachersPage() {
                   ))}
                   {filteredTeachers.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                         কোনো শিক্ষক পাওয়া যায়নি
                       </TableCell>
                     </TableRow>
@@ -279,13 +341,15 @@ export default function TeachersPage() {
   );
 }
 
-function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initialData?: any }) {
+function TeacherForm({ onSuccess, initialData, titles }: { onSuccess: () => void; initialData?: any; titles: any[] }) {
   const [loading, setLoading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialData?.photo_url || null);
   const [formData, setFormData] = useState({
     fullName: initialData?.full_name || "",
     phone: initialData?.phone || "",
     qualification: initialData?.qualification || "",
     specialization: initialData?.specialization || "",
+    titleId: initialData?.title_id || "",
     monthlySalary: initialData?.monthly_salary?.toString() || "",
   });
 
@@ -303,7 +367,9 @@ function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initia
       phone: formData.phone,
       qualification: formData.qualification || null,
       specialization: formData.specialization || null,
+      title_id: formData.titleId || null,
       monthly_salary: parseFloat(formData.monthlySalary) || 0,
+      photo_url: photoUrl,
     };
 
     let error;
@@ -330,7 +396,18 @@ function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initia
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Photo Upload */}
+      <div className="flex justify-center pb-4 border-b">
+        <PhotoUpload
+          currentPhotoUrl={photoUrl}
+          onPhotoChange={setPhotoUrl}
+          folder="teachers"
+          entityId={initialData?.id}
+          size="lg"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>পুরো নাম *</Label>
@@ -357,14 +434,33 @@ function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initia
           />
         </div>
         <div>
-          <Label>বিশেষত্ব</Label>
+          <Label>বিশেষত্ব/হাইলাইট</Label>
+          <Select 
+            value={formData.titleId} 
+            onValueChange={(v) => setFormData({ ...formData, titleId: v })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="নির্বাচন করুন" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">কোনোটি নয়</SelectItem>
+              {titles.map((title) => (
+                <SelectItem key={title.id} value={title.id}>
+                  {title.name} {title.name_arabic && `(${title.name_arabic})`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>বিষয়/এক্সপার্টিজ</Label>
           <Input
             value={formData.specialization}
             onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
             placeholder="কুরআন, হাদীস, ফিকহ..."
           />
         </div>
-        <div className="col-span-2">
+        <div>
           <Label>মাসিক বেতন</Label>
           <Input
             type="number"
@@ -379,5 +475,119 @@ function TeacherForm({ onSuccess, initialData }: { onSuccess: () => void; initia
         {initialData ? "আপডেট করুন" : "শিক্ষক যোগ করুন"}
       </Button>
     </form>
+  );
+}
+
+function TitleManager({ onSuccess }: { onSuccess: () => void }) {
+  const [newTitle, setNewTitle] = useState({ name: "", nameArabic: "" });
+  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: titles = [], isLoading } = useQuery({
+    queryKey: ["all-teacher-titles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_titles")
+        .select("*")
+        .order("display_order");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      if (!newTitle.name) {
+        throw new Error("টাইটেল নাম দিন");
+      }
+      const { error } = await supabase.from("teacher_titles").insert({
+        name: newTitle.name,
+        name_arabic: newTitle.nameArabic || null,
+        display_order: titles.length + 1,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setNewTitle({ name: "", nameArabic: "" });
+      queryClient.invalidateQueries({ queryKey: ["all-teacher-titles"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-titles"] });
+      toast({ title: "টাইটেল যোগ হয়েছে" });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({ title: "সমস্যা", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (titleId: string) => {
+      const { error } = await supabase.from("teacher_titles").delete().eq("id", titleId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-teacher-titles"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-titles"] });
+      toast({ title: "টাইটেল মুছে ফেলা হয়েছে" });
+      onSuccess();
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          placeholder="টাইটেল (বাংলা)"
+          value={newTitle.name}
+          onChange={(e) => setNewTitle({ ...newTitle, name: e.target.value })}
+        />
+        <Input
+          placeholder="টাইটেল (আরবী)"
+          value={newTitle.nameArabic}
+          onChange={(e) => setNewTitle({ ...newTitle, nameArabic: e.target.value })}
+          dir="rtl"
+        />
+      </div>
+      <Button 
+        onClick={() => addMutation.mutate()} 
+        disabled={addMutation.isPending}
+        className="w-full"
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        নতুন টাইটেল যোগ করুন
+      </Button>
+
+      <div className="border-t pt-4 mt-4">
+        <h4 className="font-semibold mb-3">বিদ্যমান টাইটেল সমূহ</h4>
+        {isLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+        ) : (
+          <div className="space-y-2">
+            {titles.map((title) => (
+              <div key={title.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div>
+                  <p className="font-medium">{title.name}</p>
+                  {title.name_arabic && (
+                    <p className="text-sm text-muted-foreground" dir="rtl">{title.name_arabic}</p>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive h-8 w-8"
+                  onClick={() => {
+                    if (confirm("মুছে ফেলতে চান?")) {
+                      deleteMutation.mutate(title.id);
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

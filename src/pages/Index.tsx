@@ -23,6 +23,7 @@ import { WeeklyMealSchedule } from "@/components/landing/WeeklyMealSchedule";
 import { RecentResults } from "@/components/landing/RecentResults";
 import { MadrasaGallery } from "@/components/landing/MadrasaGallery";
 import { AboutMadrasa } from "@/components/landing/AboutMadrasa";
+import { TeacherHighlights } from "@/components/landing/TeacherHighlights";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
@@ -182,6 +183,9 @@ export default function Index() {
 
       {/* About Section */}
       <AboutMadrasa />
+
+      {/* Teacher Highlights Section */}
+      <TeacherHighlights />
 
       {/* Department Students Section */}
       <div id="departments">

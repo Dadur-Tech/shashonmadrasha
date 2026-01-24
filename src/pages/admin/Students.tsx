@@ -11,6 +11,7 @@ import {
   UserPlus,
   Loader2,
   Phone,
+  User,
 } from "lucide-react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -52,6 +54,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { StatCard } from "@/components/ui/stat-card";
 import { Users, Heart, AlertCircle, GraduationCap } from "lucide-react";
+import { PhotoUpload } from "@/components/shared/PhotoUpload";
 
 const statusColors: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
@@ -271,6 +274,7 @@ export default function StudentsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>ছবি</TableHead>
                     <TableHead>আইডি</TableHead>
                     <TableHead>ছাত্রের নাম</TableHead>
                     <TableHead>অভিভাবক</TableHead>
@@ -289,22 +293,23 @@ export default function StudentsPage() {
                       transition={{ delay: index * 0.03 }}
                       className="group"
                     >
+                      <TableCell>
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={student.photo_url || undefined} />
+                          <AvatarFallback>
+                            <User className="w-5 h-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                      </TableCell>
                       <TableCell className="font-mono text-xs">{student.student_id}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-primary text-sm font-medium">
-                              {student.full_name.charAt(0)}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">{student.full_name}</p>
-                            {student.full_name_arabic && (
-                              <p className="text-xs text-muted-foreground" dir="rtl">
-                                {student.full_name_arabic}
-                              </p>
-                            )}
-                          </div>
+                        <div>
+                          <p className="font-medium">{student.full_name}</p>
+                          {student.full_name_arabic && (
+                            <p className="text-xs text-muted-foreground" dir="rtl">
+                              {student.full_name_arabic}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -363,7 +368,7 @@ export default function StudentsPage() {
                   ))}
                   {filteredStudents.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                         কোনো ছাত্র পাওয়া যায়নি
                       </TableCell>
                     </TableRow>
@@ -380,6 +385,7 @@ export default function StudentsPage() {
 
 function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     fullNameArabic: "",
@@ -426,6 +432,7 @@ function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () 
       previous_institution: formData.previousInstitution || null,
       notes: formData.notes || null,
       status: formData.isLillah ? "lillah" : "active",
+      photo_url: photoUrl,
     });
 
     setLoading(false);
@@ -438,7 +445,17 @@ function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Photo Upload */}
+      <div className="flex justify-center pb-4 border-b">
+        <PhotoUpload
+          currentPhotoUrl={photoUrl}
+          onPhotoChange={setPhotoUrl}
+          folder="students"
+          size="lg"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>ছাত্রের নাম (বাংলা) *</Label>
@@ -594,6 +611,7 @@ function AddStudentForm({ classes, onSuccess }: { classes: any[]; onSuccess: () 
 
 function EditStudentForm({ student, classes, onSuccess }: { student: any; classes: any[]; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(student.photo_url || null);
   const [formData, setFormData] = useState({
     fullName: student.full_name || "",
     fullNameArabic: student.full_name_arabic || "",
@@ -636,6 +654,7 @@ function EditStudentForm({ student, classes, onSuccess }: { student: any; classe
       lillah_reason: formData.lillahReason || null,
       notes: formData.notes || null,
       status: formData.isLillah ? "lillah" : formData.status,
+      photo_url: photoUrl,
     }).eq("id", student.id);
 
     setLoading(false);
@@ -648,7 +667,18 @@ function EditStudentForm({ student, classes, onSuccess }: { student: any; classe
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Photo Upload */}
+      <div className="flex justify-center pb-4 border-b">
+        <PhotoUpload
+          currentPhotoUrl={photoUrl}
+          onPhotoChange={setPhotoUrl}
+          folder="students"
+          entityId={student.id}
+          size="lg"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>ছাত্রের নাম (বাংলা) *</Label>

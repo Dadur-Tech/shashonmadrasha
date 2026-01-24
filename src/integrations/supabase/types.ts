@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+          name_bengali: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+          name_bengali: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+          name_bengali?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       donations: {
         Row: {
           amount: number
@@ -1017,6 +1053,39 @@ export type Database = {
           },
         ]
       }
+      teacher_titles: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       teachers: {
         Row: {
           address: string | null
@@ -1041,6 +1110,7 @@ export type Database = {
           specialization: string | null
           status: Database["public"]["Enums"]["teacher_status"]
           teacher_id: string
+          title_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1066,6 +1136,7 @@ export type Database = {
           specialization?: string | null
           status?: Database["public"]["Enums"]["teacher_status"]
           teacher_id: string
+          title_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1091,9 +1162,18 @@ export type Database = {
           specialization?: string | null
           status?: Database["public"]["Enums"]["teacher_status"]
           teacher_id?: string
+          title_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teachers_title_id_fkey"
+            columns: ["title_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_titles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
