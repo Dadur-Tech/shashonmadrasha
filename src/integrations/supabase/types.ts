@@ -77,6 +77,141 @@ export type Database = {
         }
         Relationships: []
       }
+      course_enrollments: {
+        Row: {
+          course_id: string | null
+          enrolled_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          last_watched_lesson_id: string | null
+          payment_status: string | null
+          payment_transaction_id: string | null
+          progress_percentage: number | null
+          user_email: string
+          user_name: string | null
+          user_phone: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_watched_lesson_id?: string | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          progress_percentage?: number | null
+          user_email: string
+          user_name?: string | null
+          user_phone?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_watched_lesson_id?: string | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          progress_percentage?: number | null
+          user_email?: string
+          user_name?: string | null
+          user_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_enrollments_last_watched_lesson_id_fkey"
+            columns: ["last_watched_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "online_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_enrollments_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          created_at: string
+          department: string | null
+          description: string | null
+          difficulty_level: string | null
+          enrollment_count: number | null
+          id: string
+          instructor_id: string | null
+          is_free: boolean | null
+          is_published: boolean | null
+          price: number | null
+          rating: number | null
+          thumbnail_url: string | null
+          title: string
+          title_arabic: string | null
+          total_duration_minutes: number | null
+          total_lessons: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          enrollment_count?: number | null
+          id?: string
+          instructor_id?: string | null
+          is_free?: boolean | null
+          is_published?: boolean | null
+          price?: number | null
+          rating?: number | null
+          thumbnail_url?: string | null
+          title: string
+          title_arabic?: string | null
+          total_duration_minutes?: number | null
+          total_lessons?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          enrollment_count?: number | null
+          id?: string
+          instructor_id?: string | null
+          is_free?: boolean | null
+          is_published?: boolean | null
+          price?: number | null
+          rating?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          title_arabic?: string | null
+          total_duration_minutes?: number | null
+          total_lessons?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
@@ -504,6 +639,51 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_progress: {
+        Row: {
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          is_completed: boolean | null
+          last_watched_at: string | null
+          lesson_id: string | null
+          watched_percentage: number | null
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          is_completed?: boolean | null
+          last_watched_at?: string | null
+          lesson_id?: string | null
+          watched_percentage?: number | null
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          is_completed?: boolean | null
+          last_watched_at?: string | null
+          lesson_id?: string | null
+          watched_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "course_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "online_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notable_alumni: {
         Row: {
           achievement: string | null
@@ -600,48 +780,75 @@ export type Database = {
       online_classes: {
         Row: {
           class_id: string | null
+          course_id: string | null
           created_at: string
           description: string | null
           duration_minutes: number | null
           id: string
+          is_free: boolean | null
+          is_premium: boolean | null
           is_recorded: boolean | null
+          lesson_order: number | null
           meeting_link: string | null
           meeting_platform: string | null
+          price: number | null
           recording_url: string | null
           scheduled_at: string
           status: string | null
           teacher_id: string | null
+          thumbnail_url: string | null
           title: string
+          video_type: string | null
+          views_count: number | null
+          youtube_url: string | null
         }
         Insert: {
           class_id?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          is_free?: boolean | null
+          is_premium?: boolean | null
           is_recorded?: boolean | null
+          lesson_order?: number | null
           meeting_link?: string | null
           meeting_platform?: string | null
+          price?: number | null
           recording_url?: string | null
           scheduled_at: string
           status?: string | null
           teacher_id?: string | null
+          thumbnail_url?: string | null
           title: string
+          video_type?: string | null
+          views_count?: number | null
+          youtube_url?: string | null
         }
         Update: {
           class_id?: string | null
+          course_id?: string | null
           created_at?: string
           description?: string | null
           duration_minutes?: number | null
           id?: string
+          is_free?: boolean | null
+          is_premium?: boolean | null
           is_recorded?: boolean | null
+          lesson_order?: number | null
           meeting_link?: string | null
           meeting_platform?: string | null
+          price?: number | null
           recording_url?: string | null
           scheduled_at?: string
           status?: string | null
           teacher_id?: string | null
+          thumbnail_url?: string | null
           title?: string
+          video_type?: string | null
+          views_count?: number | null
+          youtube_url?: string | null
         }
         Relationships: [
           {
@@ -649,6 +856,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_classes_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
           {
@@ -671,6 +885,7 @@ export type Database = {
           gateway_type: Database["public"]["Enums"]["payment_gateway_type"]
           id: string
           is_enabled: boolean
+          logo_url: string | null
           merchant_id: string | null
           sandbox_mode: boolean | null
           updated_at: string
@@ -685,6 +900,7 @@ export type Database = {
           gateway_type: Database["public"]["Enums"]["payment_gateway_type"]
           id?: string
           is_enabled?: boolean
+          logo_url?: string | null
           merchant_id?: string | null
           sandbox_mode?: boolean | null
           updated_at?: string
@@ -699,6 +915,7 @@ export type Database = {
           gateway_type?: Database["public"]["Enums"]["payment_gateway_type"]
           id?: string
           is_enabled?: boolean
+          logo_url?: string | null
           merchant_id?: string | null
           sandbox_mode?: boolean | null
           updated_at?: string
