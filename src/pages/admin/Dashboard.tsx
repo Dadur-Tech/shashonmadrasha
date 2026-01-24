@@ -49,26 +49,26 @@ export default function Dashboard() {
         <StatCard
           title="মোট ছাত্র সংখ্যা"
           value="৪৫৬"
-          icon={Users}
+          icon={<Users className="w-6 h-6" />}
           trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="মোট শিক্ষক"
           value="২৮"
-          icon={GraduationCap}
+          icon={<GraduationCap className="w-6 h-6" />}
           variant="primary"
         />
         <StatCard
           title="এই মাসের আয়"
           value="৳ ২,৪৫,০০০"
-          icon={CreditCard}
+          icon={<CreditCard className="w-6 h-6" />}
           trend={{ value: 8, isPositive: true }}
           variant="gold"
         />
         <StatCard
           title="লিল্লাহ ছাত্র"
           value="৪২"
-          icon={Heart}
+          icon={<Heart className="w-6 h-6" />}
           variant="success"
         />
       </div>

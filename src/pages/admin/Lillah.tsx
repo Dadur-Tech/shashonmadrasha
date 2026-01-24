@@ -75,24 +75,24 @@ export default function LillahPage() {
           <StatCard
             title="মোট লিল্লাহ ছাত্র"
             value="৪২"
-            icon={Heart}
+            icon={<Heart className="w-6 h-6" />}
             variant="gold"
           />
           <StatCard
             title="এতিম ছাত্র"
             value="২৮"
-            icon={Users}
+            icon={<Users className="w-6 h-6" />}
           />
           <StatCard
             title="স্পন্সরপ্রাপ্ত"
             value="৩৫"
-            icon={Gift}
+            icon={<Gift className="w-6 h-6" />}
             variant="success"
           />
           <StatCard
             title="মাসিক স্পন্সরশিপ"
             value="৳ ৮৫,০০০"
-            icon={Wallet}
+            icon={<Wallet className="w-6 h-6" />}
           />
         </div>
 
