@@ -229,12 +229,12 @@ export default function ResultsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <Select value={selectedClass} onValueChange={(val) => setSelectedClass(val === "all" ? "" : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="সকল ক্লাস" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">সকল ক্লাস</SelectItem>
+                  <SelectItem value="all">সকল ক্লাস</SelectItem>
                   {classes?.map(cls => (
                     <SelectItem key={cls.id} value={cls.id}>
                       {cls.name} ({departmentLabels[cls.department] || cls.department})
