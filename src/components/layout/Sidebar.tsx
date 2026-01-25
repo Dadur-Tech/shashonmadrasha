@@ -3,12 +3,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Users,
   GraduationCap,
   BookOpen,
   Calendar,
+  CalendarDays,
   CreditCard,
   Heart,
   FileText,
@@ -26,10 +29,12 @@ import {
   Mic2,
   Award,
   ShieldCheck,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+
 
 interface NavItem {
   title: string;
@@ -53,6 +58,8 @@ const mainNavItems: NavItem[] = [
   { title: "অনলাইন ক্লাস", href: "/admin/online-classes", icon: Video },
   { title: "প্রাক্তন ছাত্র", href: "/admin/alumni", icon: Award },
   { title: "জমিয়াত", href: "/admin/jamiyat", icon: Mic2 },
+  { title: "নোটিশ বোর্ড", href: "/admin/announcements", icon: Bell },
+  { title: "ইভেন্ট ব্যবস্থাপনা", href: "/admin/events", icon: CalendarDays },
   { title: "রিপোর্ট", href: "/admin/reports", icon: BarChart3 },
 ];
 
@@ -83,6 +90,26 @@ export function Sidebar({ onNavigate }: SidebarProps) {
     onNavigate?.();
   };
 
+  // Fetch institution settings for logo
+  const { data: institution } = useQuery({
+    queryKey: ["institution-settings-sidebar"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("name, name_english, logo_url")
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Parse institution name
+  const institutionName = institution?.name || "আল জামিয়াতুল আরাবিয়া";
+  const nameParts = institutionName.split(" ");
+  const shortName = nameParts.slice(0, 3).join(" ");
+  const subName = nameParts.length > 3 ? nameParts.slice(3).join(" ") : "শাসন সিংগাতি";
+
   return (
     <motion.aside
       initial={false}
@@ -100,20 +127,36 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-                <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
+              <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center overflow-hidden">
+                {institution?.logo_url ? (
+                  <img 
+                    src={institution.logo_url} 
+                    alt="Logo" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
+                )}
               </div>
               <div>
-                <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">আল জামিয়াতুল আরাবিয়া</h1>
-                <p className="text-xs text-sidebar-foreground/60">শাসন সিংগাতি</p>
+                <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">{shortName}</h1>
+                <p className="text-xs text-sidebar-foreground/60">{subName}</p>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
         
         {collapsed && (
-          <div className="w-10 h-10 mx-auto rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
+          <div className="w-10 h-10 mx-auto rounded-xl bg-sidebar-primary flex items-center justify-center overflow-hidden">
+            {institution?.logo_url ? (
+              <img 
+                src={institution.logo_url} 
+                alt="Logo" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-sidebar-primary-foreground font-bold text-lg">ج</span>
+            )}
           </div>
         )}
       </div>
