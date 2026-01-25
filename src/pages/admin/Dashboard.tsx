@@ -193,76 +193,76 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">ড্যাশবোর্ড</h1>
-          <p className="text-muted-foreground">মাদ্রাসার সামগ্রিক পরিসংখ্যান ও তথ্য</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">ড্যাশবোর্ড</h1>
+          <p className="text-sm text-muted-foreground">মাদ্রাসার সামগ্রিক পরিসংখ্যান ও তথ্য</p>
         </div>
         <Link to="/admin/reports">
-          <Button className="gap-2">
+          <Button className="gap-2 w-full sm:w-auto">
             <TrendingUp className="w-4 h-4" />
             রিপোর্ট দেখুন
           </Button>
         </Link>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+      {/* Quick Stats Grid - Responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
         <StatCard
           title="মোট ছাত্র"
           value={stats?.totalStudents?.toString() || "০"}
-          icon={<Users className="w-5 h-5" />}
+          icon={<Users className="w-4 h-4 sm:w-5 sm:h-5" />}
           trend={{ value: 12, isPositive: true }}
         />
         <StatCard
           title="শিক্ষক"
           value={stats?.activeTeachers?.toString() || "০"}
-          icon={<GraduationCap className="w-5 h-5" />}
+          icon={<GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="primary"
         />
         <StatCard
           title="মাসিক আয়"
           value={`৳${((stats?.totalIncome || 0) / 1000).toFixed(0)}k`}
-          icon={<CreditCard className="w-5 h-5" />}
+          icon={<CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="gold"
           trend={{ value: 8, isPositive: true }}
         />
         <StatCard
           title="লিল্লাহ ছাত্র"
           value={stats?.lillahStudents?.toString() || "০"}
-          icon={<Heart className="w-5 h-5" />}
+          icon={<Heart className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="success"
         />
         <StatCard
           title="অনলাইন ক্লাস"
           value={stats?.totalClasses?.toString() || "০"}
-          icon={<PlayCircle className="w-5 h-5" />}
+          icon={<PlayCircle className="w-4 h-4 sm:w-5 sm:h-5" />}
           variant="info"
         />
         <StatCard
           title="পরীক্ষা"
           value={stats?.publishedExams?.toString() || "০"}
-          icon={<FileText className="w-5 h-5" />}
+          icon={<FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts Row - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <MonthlyIncomeChart data={[]} />
         <DepartmentPieChart data={classCounts} />
         <AttendanceBarChart />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main Content Grid - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Students */}
         <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">সাম্প্রতিক ভর্তি</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base sm:text-lg">সাম্প্রতিক ভর্তি</CardTitle>
             <Link to="/admin/students">
-              <Button variant="ghost" size="sm">সব দেখুন</Button>
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm">সব দেখুন</Button>
             </Link>
           </CardHeader>
           <CardContent>
@@ -308,15 +308,15 @@ export default function Dashboard() {
         <NotificationsPanel />
       </div>
 
-      {/* Activity & More Info Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Activity & More Info Row - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recent Activities */}
         <div className="lg:col-span-2">
           <RecentActivities />
         </div>
 
         {/* Sidebar Cards */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Upcoming Events */}
           <Card>
             <CardHeader>

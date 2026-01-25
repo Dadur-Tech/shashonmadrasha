@@ -42,6 +42,8 @@ import AlumniManagement from "./pages/admin/AlumniManagement";
 import JamiyatManagement from "./pages/admin/JamiyatManagement";
 import BootstrapAdminPage from "./pages/admin/BootstrapAdmin";
 import UserManagementPage from "./pages/admin/UserManagement";
+import AnnouncementsPage from "./pages/admin/Announcements";
+import EventsPage from "./pages/admin/Events";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +94,8 @@ const App = () => (
               <Route path="/admin/alumni" element={<AlumniManagement />} />
               <Route path="/admin/jamiyat" element={<JamiyatManagement />} />
               <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route path="/admin/announcements" element={<AnnouncementsPage />} />
+              <Route path="/admin/events" element={<EventsPage />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

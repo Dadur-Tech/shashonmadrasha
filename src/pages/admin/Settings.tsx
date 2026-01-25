@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Settings, 
   Bell, 
@@ -18,6 +19,7 @@ import {
   Loader2,
   Moon,
   Sun,
+  Mail,
 } from "lucide-react";
 
 interface SettingsState {
@@ -54,6 +56,11 @@ export default function SettingsPage() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [emailForm, setEmailForm] = useState({
+    newEmail: "",
+    password: "",
+  });
+  const [emailSaving, setEmailSaving] = useState(false);
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -115,28 +122,87 @@ export default function SettingsPage() {
 
     setSaving(true);
     
-    // Simulate password change (would be actual Supabase call)
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword,
+      });
+
+      if (error) throw error;
+
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast({
         title: "পাসওয়ার্ড পরিবর্তিত",
         description: "আপনার পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে",
       });
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "সমস্যা হয়েছে",
+        description: error.message || "পাসওয়ার্ড পরিবর্তন করা যায়নি",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEmailChange = async () => {
+    if (!emailForm.newEmail || !emailForm.password) {
+      toast({
+        title: "তথ্য পূরণ করুন",
+        description: "নতুন ইমেইল এবং বর্তমান পাসওয়ার্ড দিন",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailForm.newEmail)) {
+      toast({
+        title: "অবৈধ ইমেইল",
+        description: "অনুগ্রহ করে সঠিক ইমেইল ঠিকানা দিন",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setEmailSaving(true);
+
+    try {
+      // Update email in Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        email: emailForm.newEmail,
+      });
+
+      if (error) throw error;
+
+      setEmailForm({ newEmail: "", password: "" });
+      toast({
+        title: "ইমেইল আপডেট হয়েছে",
+        description: "নতুন ইমেইলে একটি কনফার্মেশন লিংক পাঠানো হয়েছে। অনুগ্রহ করে ভেরিফাই করুন।",
+      });
+    } catch (error: any) {
+      toast({
+        title: "সমস্যা হয়েছে",
+        description: error.message || "ইমেইল পরিবর্তন করা যায়নি",
+        variant: "destructive",
+      });
+    } finally {
+      setEmailSaving(false);
+    }
   };
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">সেটিংস</h1>
             <p className="text-muted-foreground">সিস্টেম সেটিংস পরিচালনা করুন</p>
           </div>
           {user && (
-            <div className="text-right text-sm">
+            <div className="text-right text-sm bg-secondary/50 p-3 rounded-lg">
               <p className="text-muted-foreground">লগইনকৃত:</p>
               <p className="font-medium">{user.email}</p>
             </div>
@@ -144,22 +210,22 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-            <TabsTrigger value="general" className="gap-2">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+            <TabsTrigger value="general" className="gap-2 text-xs sm:text-sm">
               <Settings className="w-4 h-4" />
-              সাধারণ
+              <span className="hidden sm:inline">সাধারণ</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
+            <TabsTrigger value="notifications" className="gap-2 text-xs sm:text-sm">
               <Bell className="w-4 h-4" />
-              নোটিফিকেশন
+              <span className="hidden sm:inline">নোটিফিকেশন</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
+            <TabsTrigger value="security" className="gap-2 text-xs sm:text-sm">
               <Shield className="w-4 h-4" />
-              নিরাপত্তা
+              <span className="hidden sm:inline">নিরাপত্তা</span>
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="gap-2">
+            <TabsTrigger value="appearance" className="gap-2 text-xs sm:text-sm">
               <Palette className="w-4 h-4" />
-              থিম
+              <span className="hidden sm:inline">থিম</span>
             </TabsTrigger>
           </TabsList>
 
@@ -174,7 +240,7 @@ export default function SettingsPage() {
                   <CardDescription>সিস্টেমের মৌলিক সেটিংস</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label>সিস্টেম ভাষা</Label>
                       <Input value="বাংলা" disabled />
@@ -288,6 +354,62 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
+              {/* Email Change Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="w-5 h-5" />
+                    ইমেইল পরিবর্তন
+                  </CardTitle>
+                  <CardDescription>আপনার লগইন ইমেইল আপডেট করুন</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-3 rounded-lg bg-warning/10 border border-warning/30">
+                    <p className="text-sm text-warning-foreground">
+                      ইমেইল পরিবর্তন করলে নতুন ইমেইলে একটি কনফার্মেশন লিংক যাবে।
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="newEmail">নতুন ইমেইল</Label>
+                    <Input 
+                      id="newEmail"
+                      type="email"
+                      value={emailForm.newEmail}
+                      onChange={(e) => setEmailForm({ ...emailForm, newEmail: e.target.value })}
+                      placeholder="newemail@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="emailPassword">বর্তমান পাসওয়ার্ড</Label>
+                    <Input 
+                      id="emailPassword"
+                      type="password"
+                      value={emailForm.password}
+                      onChange={(e) => setEmailForm({ ...emailForm, password: e.target.value })}
+                      placeholder="নিশ্চিত করতে পাসওয়ার্ড দিন"
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleEmailChange} 
+                    disabled={emailSaving || !emailForm.newEmail}
+                    className="gap-2"
+                  >
+                    {emailSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        আপডেট হচ্ছে...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4" />
+                        ইমেইল পরিবর্তন করুন
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Password Change Card */}
               <Card>
                 <CardHeader>
                   <CardTitle>পাসওয়ার্ড পরিবর্তন</CardTitle>
