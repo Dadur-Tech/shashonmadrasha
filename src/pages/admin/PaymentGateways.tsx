@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,9 @@ import {
   Smartphone,
   Globe,
   AlertCircle,
+  Upload,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,9 +38,10 @@ interface PaymentGateway {
   api_secret_encrypted: string | null;
   sandbox_mode: boolean;
   display_order: number;
+  logo_url: string | null;
 }
 
-const gatewayIcons: Record<string, string> = {
+const defaultGatewayIcons: Record<string, string> = {
   bkash: "🅱️",
   nagad: "🔶",
   rocket: "🚀",
@@ -62,13 +66,14 @@ export default function PaymentGatewaysPage() {
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [editingGateway, setEditingGateway] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, { merchantId: string; apiKey: string; apiSecret: string }>>({});
+  const [uploadingLogo, setUploadingLogo] = useState<Record<string, boolean>>({});
 
   const { data: gateways = [], isLoading } = useQuery({
     queryKey: ["payment-gateways"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payment_gateways")
-        .select("*")
+        .select("id, gateway_type, display_name, is_enabled, merchant_id, api_key_encrypted, api_secret_encrypted, sandbox_mode, display_order, logo_url")
         .order("display_order");
       
       if (error) throw error;
@@ -136,6 +141,24 @@ export default function PaymentGatewaysPage() {
     },
   });
 
+  const updateLogo = useMutation({
+    mutationFn: async ({ id, logoUrl }: { id: string; logoUrl: string | null }) => {
+      const { error } = await supabase
+        .from("payment_gateways")
+        .update({ logo_url: logoUrl })
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-gateways"] });
+      toast({
+        title: "সফল!",
+        description: "লোগো আপডেট হয়েছে",
+      });
+    },
+  });
+
   const toggleSandboxMode = useMutation({
     mutationFn: async ({ id, sandboxMode }: { id: string; sandboxMode: boolean }) => {
       const { error } = await supabase
@@ -185,6 +208,49 @@ export default function PaymentGatewaysPage() {
         apiSecret: data.apiSecret,
       });
     }
+  };
+
+  const handleLogoUpload = async (gatewayId: string, file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "শুধুমাত্র ছবি আপলোড করুন", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "ছবি ২MB এর কম হতে হবে", variant: "destructive" });
+      return;
+    }
+
+    setUploadingLogo({ ...uploadingLogo, [gatewayId]: true });
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `payment-gateways/${gatewayId}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("photos")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("photos")
+        .getPublicUrl(fileName);
+
+      updateLogo.mutate({ id: gatewayId, logoUrl: publicUrl });
+    } catch (error: any) {
+      toast({ title: "আপলোড সমস্যা", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingLogo({ ...uploadingLogo, [gatewayId]: false });
+    }
+  };
+
+  const handleLogoRemove = async (gateway: PaymentGateway) => {
+    if (gateway.logo_url) {
+      const urlParts = gateway.logo_url.split("/photos/");
+      if (urlParts.length > 1) {
+        await supabase.storage.from("photos").remove([urlParts[1]]);
+      }
+    }
+    updateLogo.mutate({ id: gateway.id, logoUrl: null });
   };
 
   const mobileGateways = gateways.filter(g => 
@@ -272,6 +338,9 @@ export default function PaymentGatewaysPage() {
                   onToggleSecrets={() => setShowSecrets({ ...showSecrets, [gateway.id]: !showSecrets[gateway.id] })}
                   onFormChange={(data) => setFormData({ ...formData, [gateway.id]: data })}
                   isSaving={updateCredentials.isPending}
+                  onLogoUpload={(file) => handleLogoUpload(gateway.id, file)}
+                  onLogoRemove={() => handleLogoRemove(gateway)}
+                  uploadingLogo={uploadingLogo[gateway.id]}
                 />
               ))}
             </div>
@@ -295,6 +364,9 @@ export default function PaymentGatewaysPage() {
                   onToggleSecrets={() => setShowSecrets({ ...showSecrets, [gateway.id]: !showSecrets[gateway.id] })}
                   onFormChange={(data) => setFormData({ ...formData, [gateway.id]: data })}
                   isSaving={updateCredentials.isPending}
+                  onLogoUpload={(file) => handleLogoUpload(gateway.id, file)}
+                  onLogoRemove={() => handleLogoRemove(gateway)}
+                  uploadingLogo={uploadingLogo[gateway.id]}
                 />
               ))}
             </div>
@@ -307,7 +379,7 @@ export default function PaymentGatewaysPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
-                        {gatewayIcons[manualGateway.gateway_type]}
+                        {defaultGatewayIcons[manualGateway.gateway_type]}
                       </div>
                       <div>
                         <CardTitle className="text-lg">{manualGateway.display_name}</CardTitle>
@@ -349,6 +421,9 @@ interface GatewayCardProps {
   onToggleSecrets: () => void;
   onFormChange: (data: { merchantId: string; apiKey: string; apiSecret: string }) => void;
   isSaving: boolean;
+  onLogoUpload?: (file: File) => void;
+  onLogoRemove?: () => void;
+  uploadingLogo?: boolean;
 }
 
 function GatewayCard({
@@ -365,7 +440,19 @@ function GatewayCard({
   onToggleSecrets,
   onFormChange,
   isSaving,
+  onLogoUpload,
+  onLogoRemove,
+  uploadingLogo,
 }: GatewayCardProps) {
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onLogoUpload) {
+      onLogoUpload(file);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -376,10 +463,14 @@ function GatewayCard({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${
                 gateway.is_enabled ? "bg-primary/10" : "bg-secondary"
               }`}>
-                {gatewayIcons[gateway.gateway_type]}
+                {gateway.logo_url ? (
+                  <img src={gateway.logo_url} alt={gateway.display_name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-2xl">{defaultGatewayIcons[gateway.gateway_type]}</span>
+                )}
               </div>
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -398,6 +489,54 @@ function GatewayCard({
         
         {gateway.is_enabled && (
           <CardContent className="space-y-4">
+            {/* Logo Upload */}
+            <div className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50">
+              <div className="w-16 h-16 rounded-lg overflow-hidden bg-background border-2 border-dashed border-border flex items-center justify-center relative">
+                {uploadingLogo && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
+                {gateway.logo_url ? (
+                  <img src={gateway.logo_url} alt={gateway.display_name} className="w-full h-full object-cover" />
+                ) : (
+                  <Camera className="w-6 h-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">কাস্টম লোগো</p>
+                <p className="text-xs text-muted-foreground mb-2">অফিসিয়াল কোম্পানি লোগো আপলোড করুন</p>
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoSelect}
+                    className="hidden"
+                    ref={logoInputRef}
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                  >
+                    <Upload className="w-3 h-3 mr-1" />
+                    আপলোড
+                  </Button>
+                  {gateway.logo_url && onLogoRemove && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={onLogoRemove}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Sandbox Toggle */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
               <div>

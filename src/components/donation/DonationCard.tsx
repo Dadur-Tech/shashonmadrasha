@@ -78,6 +78,7 @@ interface PaymentGateway {
   is_enabled: boolean;
   merchant_id: string | null;
   sandbox_mode: boolean;
+  logo_url: string | null;
 }
 
 export const DonationSection = () => {
@@ -502,7 +503,11 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
                     }`}
                   >
                     <RadioGroupItem value={gateway.gateway_type} id={gateway.gateway_type} className="sr-only" />
-                    <span className="text-2xl">{gatewayIcons[gateway.gateway_type] || "💰"}</span>
+                    {gateway.logo_url ? (
+                      <img src={gateway.logo_url} alt={gateway.display_name} className="w-8 h-8 object-contain rounded" />
+                    ) : (
+                      <span className="text-2xl">{gatewayIcons[gateway.gateway_type] || "💰"}</span>
+                    )}
                     <span className="font-medium">{gateway.display_name}</span>
                     {formData.paymentMethod === gateway.gateway_type && (
                       <Check className="w-4 h-4 text-primary ml-auto" />
