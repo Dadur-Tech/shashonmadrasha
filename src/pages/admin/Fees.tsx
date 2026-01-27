@@ -143,6 +143,47 @@ export default function FeesPage() {
             <p className="text-muted-foreground">ছাত্রদের ফি সংগ্রহ ও ট্র্যাকিং</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                // Generate fee report
+                const reportData = fees.map(f => ({
+                  "ফি আইডি": f.fee_id,
+                  "ছাত্র": f.student?.full_name || "-",
+                  "ছাত্র আইডি": f.student?.student_id || "-",
+                  "ক্লাস": f.student?.classes?.name || "-",
+                  "ফি টাইপ": f.fee_type?.name || "মাসিক ফি",
+                  "মাস": f.month ? monthNames[f.month - 1] : "-",
+                  "বছর": f.year,
+                  "পরিমাণ": f.amount,
+                  "পরিশোধিত": f.paid_amount || 0,
+                  "বকেয়া": f.due_amount || 0,
+                  "স্ট্যাটাস": statusLabels[f.status] || f.status,
+                }));
+                
+                // Create CSV
+                const headers = Object.keys(reportData[0] || {});
+                const csvContent = [
+                  headers.join(","),
+                  ...reportData.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(","))
+                ].join("\n");
+                
+                // Download
+                const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `fee-report-${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                toast({ title: "রিপোর্ট ডাউনলোড হচ্ছে!" });
+              }}
+            >
+              <Download className="w-4 h-4" />
+              রিপোর্ট
+            </Button>
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">

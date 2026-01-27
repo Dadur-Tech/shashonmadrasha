@@ -150,7 +150,43 @@ export default function SalariesPage() {
             <p className="text-muted-foreground">শিক্ষকদের বেতন পরিশোধ ও ট্র্যাকিং</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                // Generate salary report
+                const reportData = salaries.map(s => ({
+                  "বেতন আইডি": s.salary_id,
+                  "শিক্ষক": s.teacher?.full_name || "-",
+                  "মাস": monthNames[s.month - 1],
+                  "বছর": s.year,
+                  "মূল বেতন": s.base_salary,
+                  "বোনাস": s.bonus || 0,
+                  "কর্তন": s.deduction || 0,
+                  "নেট বেতন": s.net_salary,
+                  "স্ট্যাটাস": statusLabels[s.status] || s.status,
+                  "পরিশোধ তারিখ": s.payment_date || "-",
+                }));
+                
+                // Create CSV
+                const headers = Object.keys(reportData[0] || {});
+                const csvContent = [
+                  headers.join(","),
+                  ...reportData.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(","))
+                ].join("\n");
+                
+                // Download
+                const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `salary-report-${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                toast({ title: "রিপোর্ট ডাউনলোড হচ্ছে!" });
+              }}
+            >
               <Download className="w-4 h-4" />
               রিপোর্ট
             </Button>

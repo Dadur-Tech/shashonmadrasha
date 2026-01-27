@@ -26,6 +26,7 @@ import {
   Calendar,
   Trash2,
   MoreVertical,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -110,26 +111,65 @@ export default function ExpensesPage() {
             <h1 className="text-2xl font-bold text-foreground">খরচ ব্যবস্থাপনা</h1>
             <p className="text-muted-foreground">সকল খরচের হিসাব রাখুন</p>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                নতুন খরচ যোগ করুন
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>নতুন খরচ যোগ করুন</DialogTitle>
-              </DialogHeader>
-              <AddExpenseForm 
-                categories={categories}
-                onSuccess={() => {
-                  setIsAddOpen(false);
-                  queryClient.invalidateQueries({ queryKey: ["expenses"] });
-                }} 
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                // Generate expense report
+                const reportData = expenses.map(e => ({
+                  "খরচ আইডি": e.expense_id,
+                  "তারিখ": e.expense_date,
+                  "শিরোনাম": e.title,
+                  "বিবরণ": e.description || "-",
+                  "ক্যাটাগরি": e.category?.name || "-",
+                  "পেমেন্ট পদ্ধতি": e.payment_method || "নগদ",
+                  "পরিমাণ": e.amount,
+                }));
+                
+                // Create CSV
+                const headers = Object.keys(reportData[0] || {});
+                const csvContent = [
+                  headers.join(","),
+                  ...reportData.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(","))
+                ].join("\n");
+                
+                // Download
+                const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `expense-report-${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                URL.revokeObjectURL(url);
+                
+                toast({ title: "রিপোর্ট ডাউনলোড হচ্ছে!" });
+              }}
+            >
+              <Download className="w-4 h-4" />
+              রিপোর্ট
+            </Button>
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  নতুন খরচ যোগ করুন
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>নতুন খরচ যোগ করুন</DialogTitle>
+                </DialogHeader>
+                <AddExpenseForm 
+                  categories={categories}
+                  onSuccess={() => {
+                    setIsAddOpen(false);
+                    queryClient.invalidateQueries({ queryKey: ["expenses"] });
+                  }} 
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats */}

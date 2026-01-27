@@ -193,20 +193,41 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   useEffect(() => {
     async function loadGateways() {
       try {
-        // Use the public view that excludes API credentials
+        // Use the public view - already filtered by is_enabled = true in view
         const { data, error } = await supabase
           .from("payment_gateways_public")
           .select("*")
           .order("display_order");
         
-        if (error) throw error;
+        if (error) {
+          console.error("Gateway fetch error:", error);
+          throw error;
+        }
+        
+        console.log("Loaded gateways:", data);
         
         if (data && data.length > 0) {
-          setGateways(data);
-          setFormData(prev => ({ ...prev, paymentMethod: data[0].gateway_type }));
+          // Filter out gateways that don't have merchant_id for mobile wallets
+          const validGateways = data.filter(g => {
+            if (['bkash', 'nagad', 'rocket', 'upay'].includes(g.gateway_type)) {
+              return g.merchant_id && g.merchant_id.trim() !== '';
+            }
+            // For other gateways like manual, always include
+            return true;
+          });
+          
+          setGateways(validGateways);
+          if (validGateways.length > 0) {
+            setFormData(prev => ({ ...prev, paymentMethod: validGateways[0].gateway_type }));
+          }
         }
       } catch (error) {
         console.error("Failed to load gateways:", error);
+        toast({
+          title: "পেমেন্ট মাধ্যম লোড করতে সমস্যা",
+          description: "অনুগ্রহ করে পেজটি রিফ্রেশ করুন",
+          variant: "destructive",
+        });
       } finally {
         setLoadingGateways(false);
       }
