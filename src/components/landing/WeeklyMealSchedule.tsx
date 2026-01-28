@@ -1,66 +1,50 @@
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Utensils, Coffee, Moon, Sun } from "lucide-react";
+import { Utensils, Coffee, Moon, Sun, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-const mealSchedule = [
-  {
-    day: "শনিবার",
-    dayIndex: 6, // Saturday = 6
-    breakfast: "রুটি, ডাল, সবজি",
-    lunch: "ভাত, মাছ, ডাল, সবজি",
-    dinner: "ভাত, মুরগি, সালাদ",
-  },
-  {
-    day: "রবিবার",
-    dayIndex: 0, // Sunday = 0
-    breakfast: "পরোটা, ডিম, চা",
-    lunch: "ভাত, গরুর মাংস, ডাল",
-    dinner: "খিচুড়ি, সালাদ",
-  },
-  {
-    day: "সোমবার",
-    dayIndex: 1, // Monday = 1
-    breakfast: "রুটি, সবজি, চা",
-    lunch: "ভাত, মাছ, আলু ভর্তা",
-    dinner: "ভাত, ডাল, সবজি",
-  },
-  {
-    day: "মঙ্গলবার",
-    dayIndex: 2, // Tuesday = 2
-    breakfast: "পরোটা, হালুয়া",
-    lunch: "ভাত, খাসির মাংস",
-    dinner: "ভাত, ডিম, সালাদ",
-  },
-  {
-    day: "বুধবার",
-    dayIndex: 3, // Wednesday = 3
-    breakfast: "রুটি, সবজি, চা",
-    lunch: "ভাত, মুরগি, ডাল",
-    dinner: "খিচুড়ি, পায়েস",
-  },
-  {
-    day: "বৃহস্পতিবার",
-    dayIndex: 4, // Thursday = 4
-    breakfast: "পরোটা, ডাল, চা",
-    lunch: "বিরিয়ানি",
-    dinner: "ভাত, মাছ ভাজি",
-  },
-  {
-    day: "শুক্রবার",
-    dayIndex: 5, // Friday = 5
-    breakfast: "রুটি, সবজি, চা",
-    lunch: "পোলাও, মুরগি, সালাদ",
-    dinner: "ভাত, ডাল, সবজি",
-  },
-];
+interface MealScheduleItem {
+  id: string;
+  day_index: number;
+  day_name: string;
+  breakfast: string | null;
+  lunch: string | null;
+  dinner: string | null;
+  is_active: boolean;
+}
 
 export function WeeklyMealSchedule() {
+  const { data: mealSchedule, isLoading } = useQuery({
+    queryKey: ["public-meal-schedule"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("meal_schedule")
+        .select("*")
+        .order("day_index");
+      
+      if (error) throw error;
+      return data as MealScheduleItem[];
+    },
+  });
+
   // Get current day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
   const today = new Date().getDay();
-  
-  // Find the index in our meal schedule array that matches today
-  const todayMealIndex = mealSchedule.findIndex(meal => meal.dayIndex === today);
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gradient-to-b from-background to-secondary/40">
+        <div className="container mx-auto px-4 flex justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </section>
+    );
+  }
+
+  if (!mealSchedule || mealSchedule.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-secondary/40 relative overflow-hidden">
@@ -101,7 +85,7 @@ export function WeeklyMealSchedule() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
           {mealSchedule.map((meal, index) => (
             <motion.div
-              key={meal.day}
+              key={meal.day_index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 * index }}
@@ -109,14 +93,14 @@ export function WeeklyMealSchedule() {
               whileHover={{ y: -5, transition: { duration: 0.2 } }}
             >
               <Card className={`h-full border-2 transition-all duration-300 ${
-                index === todayMealIndex 
+                meal.day_index === today 
                   ? 'border-primary shadow-xl bg-primary/5 ring-2 ring-primary/20' 
                   : 'border-border hover:border-primary/30 hover:shadow-lg'
               }`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-center gap-2 mb-4 pb-3 border-b border-border">
-                    <h4 className="font-bold text-foreground">{meal.day}</h4>
-                    {index === todayMealIndex && (
+                    <h4 className="font-bold text-foreground">{meal.day_name}</h4>
+                    {meal.day_index === today && (
                       <Badge className="bg-primary text-primary-foreground text-xs">আজ</Badge>
                     )}
                   </div>
@@ -127,7 +111,7 @@ export function WeeklyMealSchedule() {
                         <Coffee className="w-4 h-4 text-amber-600" />
                         <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">সকাল</span>
                       </div>
-                      <p className="text-sm text-foreground font-medium">{meal.breakfast}</p>
+                      <p className="text-sm text-foreground font-medium">{meal.breakfast || "-"}</p>
                     </div>
                     
                     <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
@@ -135,7 +119,7 @@ export function WeeklyMealSchedule() {
                         <Sun className="w-4 h-4 text-emerald-600" />
                         <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">দুপুর</span>
                       </div>
-                      <p className="text-sm text-foreground font-medium">{meal.lunch}</p>
+                      <p className="text-sm text-foreground font-medium">{meal.lunch || "-"}</p>
                     </div>
                     
                     <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800">
@@ -143,7 +127,7 @@ export function WeeklyMealSchedule() {
                         <Moon className="w-4 h-4 text-blue-600" />
                         <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">রাত</span>
                       </div>
-                      <p className="text-sm text-foreground font-medium">{meal.dinner}</p>
+                      <p className="text-sm text-foreground font-medium">{meal.dinner || "-"}</p>
                     </div>
                   </div>
                 </CardContent>

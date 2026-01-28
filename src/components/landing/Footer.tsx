@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserDropdown } from "@/components/shared/UserDropdown";
@@ -21,6 +21,11 @@ export function Footer() {
   const nameParts = institutionName.split(" ");
   const shortName = nameParts.slice(0, 3).join(" ");
   const subName = nameParts.slice(3).join(" ") || "শাসন সিংগাতী মাদ্রাসা";
+  
+  const facebookUrl = (institution as any)?.facebook_url;
+  const youtubeUrl = (institution as any)?.youtube_url;
+  const whatsappNumber = (institution as any)?.whatsapp_number;
+  const description = (institution as any)?.description || (institution as any)?.motto;
 
   return (
     <footer className="py-12 border-t border-border bg-card">
@@ -45,13 +50,48 @@ export function Footer() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি 
-              চরিত্র গঠন ও নৈতিক শিক্ষায় আলোকিত প্রতিষ্ঠান।
+              {description || "ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি চরিত্র গঠন ও নৈতিক শিক্ষায় আলোকিত প্রতিষ্ঠান।"}
             </p>
             {institution?.principal_name && (
               <p className="text-sm text-muted-foreground mt-2">
-                <strong>প্রিন্সিপাল:</strong> {institution.principal_name}
+                <strong>মুহতামিম:</strong> {institution.principal_name}
               </p>
+            )}
+            
+            {/* Social Links */}
+            {(facebookUrl || youtubeUrl || whatsappNumber) && (
+              <div className="flex items-center gap-3 mt-4">
+                {facebookUrl && (
+                  <a 
+                    href={facebookUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-colors"
+                  >
+                    <Facebook className="w-4 h-4 text-blue-600" />
+                  </a>
+                )}
+                {youtubeUrl && (
+                  <a 
+                    href={youtubeUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-colors"
+                  >
+                    <Youtube className="w-4 h-4 text-red-600" />
+                  </a>
+                )}
+                {whatsappNumber && (
+                  <a 
+                    href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg bg-green-500/10 hover:bg-green-500/20 flex items-center justify-center transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 text-green-600" />
+                  </a>
+                )}
+              </div>
             )}
           </div>
 
@@ -81,11 +121,15 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 flex-shrink-0" />
-                {institution?.phone || "+৮৮০ ১৭XX-XXXXXX"}
+                <a href={`tel:${institution?.phone?.replace(/\s/g, '')}`} className="hover:text-foreground transition-colors">
+                  {institution?.phone || "+৮৮০ ১৭XX-XXXXXX"}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                {institution?.email || "info@madrasa.com"}
+                <a href={`mailto:${institution?.email}`} className="hover:text-foreground transition-colors">
+                  {institution?.email || "info@madrasa.com"}
+                </a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />

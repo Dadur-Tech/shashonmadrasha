@@ -1212,47 +1212,71 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          description: string | null
           email: string | null
           established_year: number | null
+          facebook_url: string | null
+          favicon_url: string | null
           id: string
           logo_url: string | null
+          motto: string | null
           name: string
           name_english: string | null
+          off_day: string | null
           phone: string | null
           principal_name: string | null
           registration_number: string | null
           updated_at: string
           website: string | null
+          whatsapp_number: string | null
+          working_hours: string | null
+          youtube_url: string | null
         }
         Insert: {
           address?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           established_year?: number | null
+          facebook_url?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
+          motto?: string | null
           name?: string
           name_english?: string | null
+          off_day?: string | null
           phone?: string | null
           principal_name?: string | null
           registration_number?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp_number?: string | null
+          working_hours?: string | null
+          youtube_url?: string | null
         }
         Update: {
           address?: string | null
           created_at?: string
+          description?: string | null
           email?: string | null
           established_year?: number | null
+          facebook_url?: string | null
+          favicon_url?: string | null
           id?: string
           logo_url?: string | null
+          motto?: string | null
           name?: string
           name_english?: string | null
+          off_day?: string | null
           phone?: string | null
           principal_name?: string | null
           registration_number?: string | null
           updated_at?: string
           website?: string | null
+          whatsapp_number?: string | null
+          working_hours?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -1522,6 +1546,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      meal_schedule: {
+        Row: {
+          breakfast: string | null
+          created_at: string | null
+          day_index: number
+          day_name: string
+          dinner: string | null
+          id: string
+          is_active: boolean | null
+          lunch: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          breakfast?: string | null
+          created_at?: string | null
+          day_index: number
+          day_name: string
+          dinner?: string | null
+          id?: string
+          is_active?: boolean | null
+          lunch?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          breakfast?: string | null
+          created_at?: string | null
+          day_index?: number
+          day_name?: string
+          dinner?: string | null
+          id?: string
+          is_active?: boolean | null
+          lunch?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       notable_alumni: {
         Row: {

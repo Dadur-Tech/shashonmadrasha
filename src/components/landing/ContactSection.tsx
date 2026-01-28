@@ -47,7 +47,10 @@ export function ContactSection() {
     { 
       icon: Clock, 
       title: "অফিস সময়", 
-      lines: ["সকাল ৯টা - বিকাল ৫টা", "শুক্রবার বন্ধ"], 
+      lines: [
+        (institution as any)?.working_hours || "সকাল ৯টা - বিকাল ৫টা",
+        `${(institution as any)?.off_day || "শুক্রবার"} বন্ধ`
+      ], 
       color: "text-amber-600", 
       bgColor: "bg-amber-50 dark:bg-amber-950/40", 
       borderColor: "border-amber-200 dark:border-amber-800" 
