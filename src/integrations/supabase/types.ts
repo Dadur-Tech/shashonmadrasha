@@ -2818,8 +2818,6 @@ export type Database = {
           full_name: string | null
           full_name_arabic: string | null
           id: string | null
-          joining_date: string | null
-          phone: string | null
           photo_url: string | null
           qualification: string | null
           specialization: string | null
@@ -2831,8 +2829,6 @@ export type Database = {
           full_name?: string | null
           full_name_arabic?: string | null
           id?: string | null
-          joining_date?: string | null
-          phone?: string | null
           photo_url?: string | null
           qualification?: string | null
           specialization?: string | null
@@ -2844,8 +2840,6 @@ export type Database = {
           full_name?: string | null
           full_name_arabic?: string | null
           id?: string | null
-          joining_date?: string | null
-          phone?: string | null
           photo_url?: string | null
           qualification?: string | null
           specialization?: string | null
