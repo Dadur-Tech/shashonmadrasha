@@ -47,6 +47,7 @@ import EventsPage from "./pages/admin/Events";
 import LibraryPage from "./pages/admin/Library";
 import HostelPage from "./pages/admin/Hostel";
 import CertificatesPage from "./pages/admin/Certificates";
+import BackupPage from "./pages/admin/Backup";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,7 @@ const App = () => (
               <Route path="/admin/library" element={<LibraryPage />} />
               <Route path="/admin/hostel" element={<HostelPage />} />
               <Route path="/admin/certificates" element={<CertificatesPage />} />
+              <Route path="/admin/backup" element={<BackupPage />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
