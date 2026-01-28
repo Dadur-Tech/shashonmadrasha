@@ -44,6 +44,9 @@ import BootstrapAdminPage from "./pages/admin/BootstrapAdmin";
 import UserManagementPage from "./pages/admin/UserManagement";
 import AnnouncementsPage from "./pages/admin/Announcements";
 import EventsPage from "./pages/admin/Events";
+import LibraryPage from "./pages/admin/Library";
+import HostelPage from "./pages/admin/Hostel";
+import CertificatesPage from "./pages/admin/Certificates";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +99,9 @@ const App = () => (
               <Route path="/admin/users" element={<UserManagementPage />} />
               <Route path="/admin/announcements" element={<AnnouncementsPage />} />
               <Route path="/admin/events" element={<EventsPage />} />
+              <Route path="/admin/library" element={<LibraryPage />} />
+              <Route path="/admin/hostel" element={<HostelPage />} />
+              <Route path="/admin/certificates" element={<CertificatesPage />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

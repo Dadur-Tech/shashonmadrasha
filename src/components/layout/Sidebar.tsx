@@ -30,6 +30,8 @@ import {
   Award,
   ShieldCheck,
   Bell,
+  Book,
+  Home,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -45,7 +47,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { title: "ড্যাশবোর্ড", href: "/admin", icon: LayoutDashboard },
-  { title: "ছাত্র ব্যবস্থাপনা", href: "/admin/students", icon: Users, badge: 5 },
+  { title: "ছাত্র ব্যবস্থাপনা", href: "/admin/students", icon: Users },
   { title: "শিক্ষক ব্যবস্থাপনা", href: "/admin/teachers", icon: GraduationCap },
   { title: "ক্লাস ও বিভাগ", href: "/admin/classes", icon: BookOpen },
   { title: "উপস্থিতি", href: "/admin/attendance", icon: Calendar },
@@ -56,6 +58,9 @@ const mainNavItems: NavItem[] = [
   { title: "দান ব্যবস্থাপনা", href: "/admin/donations", icon: HandHeart },
   { title: "পরীক্ষা ও ফলাফল", href: "/admin/exams", icon: FileText },
   { title: "অনলাইন ক্লাস", href: "/admin/online-classes", icon: Video },
+  { title: "লাইব্রেরি", href: "/admin/library", icon: Book },
+  { title: "হোস্টেল", href: "/admin/hostel", icon: Home },
+  { title: "সনদপত্র", href: "/admin/certificates", icon: Award },
   { title: "প্রাক্তন ছাত্র", href: "/admin/alumni", icon: Award },
   { title: "জমিয়াত", href: "/admin/jamiyat", icon: Mic2 },
   { title: "নোটিশ বোর্ড", href: "/admin/announcements", icon: Bell },
