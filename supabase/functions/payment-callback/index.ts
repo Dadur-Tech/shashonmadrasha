@@ -368,7 +368,6 @@ serve(async (req) => {
               .from('student_fees')
               .update({
                 paid_amount: newPaidAmount,
-                due_amount: newDueAmount > 0 ? newDueAmount : 0,
                 status: newStatus,
               })
               .eq('id', transaction.reference_id);
