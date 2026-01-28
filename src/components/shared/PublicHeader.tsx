@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { UserDropdown } from "./UserDropdown";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PublicHeaderProps {
   title?: string;
@@ -17,9 +18,10 @@ export function PublicHeader({
   title, 
   showBackButton = true, 
   backUrl = "/",
-  backLabel = "হোমে ফিরুন"
+  backLabel
 }: PublicHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   const { data: institution } = useQuery({
     queryKey: ["institution-header"],
@@ -34,7 +36,8 @@ export function PublicHeader({
   });
 
   // Use provided title or fall back to institution name
-  const displayTitle = title || institution?.name || "মাদ্রাসা";
+  const displayTitle = title || institution?.name || t("madrasa");
+  const displayBackLabel = backLabel || t("homeReturn");
 
   return (
     <header className="bg-primary text-primary-foreground py-3 shadow-lg sticky top-0 z-50">
@@ -44,7 +47,7 @@ export function PublicHeader({
           {showBackButton ? (
             <Link to={backUrl} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">{backLabel}</span>
+              <span className="hidden sm:inline">{displayBackLabel}</span>
             </Link>
           ) : (
             <div className="w-24" />

@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -39,45 +40,44 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
-
 interface NavItem {
-  title: string;
+  titleKey: string;
   href: string;
   icon: React.ElementType;
   badge?: number;
 }
 
 const mainNavItems: NavItem[] = [
-  { title: "ড্যাশবোর্ড", href: "/admin", icon: LayoutDashboard },
-  { title: "ছাত্র ব্যবস্থাপনা", href: "/admin/students", icon: Users },
-  { title: "শিক্ষক ব্যবস্থাপনা", href: "/admin/teachers", icon: GraduationCap },
-  { title: "ক্লাস ও বিভাগ", href: "/admin/classes", icon: BookOpen },
-  { title: "উপস্থিতি", href: "/admin/attendance", icon: Calendar },
-  { title: "ফি ব্যবস্থাপনা", href: "/admin/fees", icon: CreditCard },
-  { title: "খরচ ব্যবস্থাপনা", href: "/admin/expenses", icon: Wallet },
-  { title: "বেতন ব্যবস্থাপনা", href: "/admin/salaries", icon: DollarSign },
-  { title: "লিল্লাহ বোর্ডিং", href: "/admin/lillah", icon: Heart },
-  { title: "দান ব্যবস্থাপনা", href: "/admin/donations", icon: HandHeart },
-  { title: "পরীক্ষা ও ফলাফল", href: "/admin/exams", icon: FileText },
-  { title: "অনলাইন ক্লাস", href: "/admin/online-classes", icon: Video },
-  { title: "লাইব্রেরি", href: "/admin/library", icon: Book },
-  { title: "হোস্টেল", href: "/admin/hostel", icon: Home },
-  { title: "সনদপত্র", href: "/admin/certificates", icon: Award },
-  { title: "প্রাক্তন ছাত্র", href: "/admin/alumni", icon: Award },
-  { title: "জমিয়াত", href: "/admin/jamiyat", icon: Mic2 },
-  { title: "নোটিশ বোর্ড", href: "/admin/announcements", icon: Bell },
-  { title: "ইভেন্ট ব্যবস্থাপনা", href: "/admin/events", icon: CalendarDays },
-  { title: "রিপোর্ট", href: "/admin/reports", icon: BarChart3 },
+  { titleKey: "dashboard", href: "/admin", icon: LayoutDashboard },
+  { titleKey: "students", href: "/admin/students", icon: Users },
+  { titleKey: "teachers", href: "/admin/teachers", icon: GraduationCap },
+  { titleKey: "classes", href: "/admin/classes", icon: BookOpen },
+  { titleKey: "attendance", href: "/admin/attendance", icon: Calendar },
+  { titleKey: "fees", href: "/admin/fees", icon: CreditCard },
+  { titleKey: "expenses", href: "/admin/expenses", icon: Wallet },
+  { titleKey: "salaries", href: "/admin/salaries", icon: DollarSign },
+  { titleKey: "lillah", href: "/admin/lillah", icon: Heart },
+  { titleKey: "donations", href: "/admin/donations", icon: HandHeart },
+  { titleKey: "exams", href: "/admin/exams", icon: FileText },
+  { titleKey: "onlineClasses", href: "/admin/online-classes", icon: Video },
+  { titleKey: "library", href: "/admin/library", icon: Book },
+  { titleKey: "hostel", href: "/admin/hostel", icon: Home },
+  { titleKey: "certificates", href: "/admin/certificates", icon: Award },
+  { titleKey: "alumni", href: "/admin/alumni", icon: Award },
+  { titleKey: "jamiyat", href: "/admin/jamiyat", icon: Mic2 },
+  { titleKey: "announcements", href: "/admin/announcements", icon: Bell },
+  { titleKey: "events", href: "/admin/events", icon: CalendarDays },
+  { titleKey: "reports", href: "/admin/reports", icon: BarChart3 },
 ];
 
 const secondaryNavItems: NavItem[] = [
-  { title: "ইউজার ম্যানেজমেন্ট", href: "/admin/users", icon: ShieldCheck },
-  { title: "পেমেন্ট গেটওয়ে", href: "/admin/payment-gateways", icon: CreditCard },
-  { title: "প্রতিষ্ঠান সেটিংস", href: "/admin/institution", icon: Building2 },
-  { title: "খাদ্য তালিকা", href: "/admin/meal-schedule", icon: Utensils },
-  { title: "ব্যাকআপ ডাউনলোড", href: "/admin/backup", icon: CloudDownload },
-  { title: "সেটিংস", href: "/admin/settings", icon: Settings },
-  { title: "সাহায্য", href: "/admin/help", icon: HelpCircle },
+  { titleKey: "userManagement", href: "/admin/users", icon: ShieldCheck },
+  { titleKey: "paymentGateways", href: "/admin/payment-gateways", icon: CreditCard },
+  { titleKey: "institution", href: "/admin/institution", icon: Building2 },
+  { titleKey: "mealSchedule", href: "/admin/meal-schedule", icon: Utensils },
+  { titleKey: "backup", href: "/admin/backup", icon: CloudDownload },
+  { titleKey: "settings", href: "/admin/settings", icon: Settings },
+  { titleKey: "help", href: "/admin/help", icon: HelpCircle },
 ];
 
 interface SidebarProps {
@@ -89,6 +89,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await signOut();
@@ -180,6 +181,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               collapsed={collapsed}
               isActive={location.pathname === item.href}
               onClick={handleNavClick}
+              title={t(item.titleKey)}
             />
           ))}
         </nav>
@@ -194,6 +196,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
               collapsed={collapsed}
               isActive={location.pathname === item.href}
               onClick={handleNavClick}
+              title={t(item.titleKey)}
             />
           ))}
         </nav>
@@ -219,10 +222,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 className="flex-1"
               >
                 <p className="font-medium text-sidebar-foreground text-sm">
-                  {user ? "অ্যাডমিন" : "গেস্ট"}
+                  {user ? t("admin") : t("guest")}
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate max-w-[150px]">
-                  {user?.email || "লগইন করুন"}
+                  {user?.email || t("loginPrompt")}
                 </p>
               </motion.div>
             )}
@@ -236,7 +239,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             className="w-full mt-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <LogOut className="w-4 h-4 mr-2" />
-            লগআউট
+            {t("logout")}
           </Button>
         )}
       </div>
@@ -263,11 +266,13 @@ function NavLink({
   collapsed, 
   isActive,
   onClick,
+  title,
 }: { 
   item: NavItem; 
   collapsed: boolean; 
   isActive: boolean;
   onClick?: () => void;
+  title: string;
 }) {
   const Icon = item.icon;
 
@@ -293,7 +298,7 @@ function NavLink({
             exit={{ opacity: 0 }}
             className="text-sm font-medium"
           >
-            {item.title}
+            {title}
           </motion.span>
         )}
       </AnimatePresence>
