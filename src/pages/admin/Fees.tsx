@@ -469,7 +469,6 @@ function AddFeeForm({ onSuccess }: { onSuccess: () => void }) {
       student_id: formData.studentId,
       amount: amount,
       paid_amount: 0,
-      due_amount: amount,
       month: formData.month,
       year: formData.year,
       due_date: formData.dueDate || null,
@@ -587,7 +586,6 @@ function CollectFeeForm({ fee, onSuccess }: { fee: any; onSuccess: () => void })
       .from("student_fees")
       .update({
         paid_amount: newPaidAmount,
-        due_amount: Math.max(0, newDueAmount),
         status: newStatus,
       })
       .eq("id", fee.id);
