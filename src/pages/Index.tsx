@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { DonationSection } from "@/components/donation/DonationCard";
 import { OnlineAdmissionSection } from "@/components/admission/OnlineAdmissionForm";
 import { MadrasaStats } from "@/components/landing/MadrasaStats";
@@ -51,6 +53,19 @@ export default function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
 
+  // Fetch institution settings for logo
+  const { data: institution } = useQuery({
+    queryKey: ["institution-nav"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("name, logo_url")
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   return (
     <div className="min-h-screen bg-background islamic-pattern">
       {/* Navigation */}
@@ -58,11 +73,21 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                <span className="text-primary-foreground font-bold text-lg">ج</span>
-              </div>
+              {institution?.logo_url ? (
+                <img 
+                  src={institution.logo_url} 
+                  alt="Logo" 
+                  className="w-10 h-10 rounded-xl object-contain bg-primary/10 p-0.5 shadow-lg"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                  <span className="text-primary-foreground font-bold text-lg">ج</span>
+                </div>
+              )}
               <div>
-                <h1 className="font-bold text-foreground text-sm leading-tight">আল জামিয়া আরাবিয়া</h1>
+                <h1 className="font-bold text-foreground text-sm leading-tight">
+                  {institution?.name || "আল জামিয়া আরাবিয়া"}
+                </h1>
                 <p className="text-xs text-muted-foreground">শাসন সিংগাতী মাদ্রাসা</p>
               </div>
             </div>

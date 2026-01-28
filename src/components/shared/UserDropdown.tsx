@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 
 interface UserDropdownProps {
-  variant?: "default" | "ghost";
+  variant?: "default" | "ghost" | "header";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
@@ -21,11 +21,15 @@ export function UserDropdown({ variant = "default", size = "sm", className }: Us
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
+  // Map header variant to ghost for button styling
+  const buttonVariant = variant === "header" ? "ghost" : variant;
+  const headerStyles = variant === "header" ? "text-primary-foreground hover:bg-white/10" : "";
+
   // If not logged in, show login button
   if (!user) {
     return (
       <Link to="/login" className={className}>
-        <Button variant={variant} size={size} className="shadow-lg">
+        <Button variant={buttonVariant as "default" | "ghost"} size={size} className={`shadow-lg ${headerStyles}`}>
           লগইন
         </Button>
       </Link>
@@ -46,7 +50,7 @@ export function UserDropdown({ variant = "default", size = "sm", className }: Us
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant={variant} size={size} className={`gap-2 ${className}`}>
+        <Button variant={buttonVariant as "default" | "ghost"} size={size} className={`gap-2 ${className} ${headerStyles}`}>
           <User className="w-4 h-4" />
           {displayName}
           <ChevronDown className="w-3 h-3" />

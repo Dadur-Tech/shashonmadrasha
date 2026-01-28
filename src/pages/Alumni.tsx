@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, MapPin, Award, Search, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GraduationCap, MapPin, Award, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 
 interface Alumni {
   id: string;
@@ -52,15 +51,11 @@ export default function AlumniPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
+      <PublicHeader title="প্রাক্তন ছাত্রবৃন্দ" />
+
+      {/* Hero Section */}
       <div className="bg-primary/5 border-b">
         <div className="container mx-auto px-4 py-12">
-          <Button asChild variant="ghost" className="mb-6 gap-2">
-            <Link to="/">
-              <ArrowLeft className="w-4 h-4" />
-              হোমপেজে ফিরুন
-            </Link>
-          </Button>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

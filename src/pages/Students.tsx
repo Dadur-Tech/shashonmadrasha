@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -14,13 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 import { 
   Search, 
-  ArrowLeft, 
   Users, 
-  GraduationCap,
   BookOpen,
-  Phone,
   QrCode
 } from "lucide-react";
 
@@ -136,18 +133,7 @@ export default function StudentsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground py-4 shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>হোমে ফিরুন</span>
-            </Link>
-            <h1 className="text-xl font-bold">ছাত্র তালিকা</h1>
-            <div className="w-24" />
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="ছাত্র তালিকা" />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero */}

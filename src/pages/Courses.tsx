@@ -16,16 +16,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CourseCard } from "@/components/elearning/CourseCard";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 import { 
   Search, 
   GraduationCap, 
   BookOpen, 
-  Filter,
-  ArrowLeft,
   Sparkles,
   Video,
   Users,
-  Award,
 } from "lucide-react";
 
 const departmentLabels: Record<string, string> = {
@@ -129,25 +127,7 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>হোমে ফিরুন</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-6 h-6" />
-              <span className="font-bold">ই-লার্নিং প্ল্যাটফর্ম</span>
-            </div>
-            <Link to="/login">
-              <Button variant="secondary" size="sm">
-                লগইন
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="ই-লার্নিং প্ল্যাটফর্ম" />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
