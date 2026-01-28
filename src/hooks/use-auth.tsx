@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,7 +29,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [rolesLoaded, setRolesLoaded] = useState(false);
 
+  // Refs to avoid unnecessary role refetch / UI flicker (e.g. on TOKEN_REFRESHED)
+  const currentUserIdRef = useRef<string | null>(null);
+  const rolesLoadedRef = useRef<boolean>(false);
+  const rolesFetchInFlightForRef = useRef<string | null>(null);
+  const initialSessionHandledRef = useRef(false);
+
   const fetchRoles = async (userId: string) => {
+    // Avoid duplicate concurrent fetches
+    if (rolesFetchInFlightForRef.current === userId) return;
+    rolesFetchInFlightForRef.current = userId;
+
     try {
       setRolesLoaded(false);
       console.log("[Auth] Fetching roles for user:", userId);
@@ -55,8 +65,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("[Auth] fetchRoles exception:", e);
       setRoles([]);
       setRolesLoaded(true);
+    } finally {
+      // Only clear if we are clearing the same user in flight
+      if (rolesFetchInFlightForRef.current === userId) {
+        rolesFetchInFlightForRef.current = null;
+      }
     }
   };
+
+  // Keep refs in sync with state for stable checks inside auth callbacks
+  useEffect(() => {
+    currentUserIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
+  useEffect(() => {
+    rolesLoadedRef.current = rolesLoaded;
+  }, [rolesLoaded]);
 
   useEffect(() => {
     // Fail-safe: never let auth loading spin forever
@@ -66,44 +90,86 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, 5000);
 
     // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        console.log("[Auth] onAuthStateChange event:", event, "user:", newSession?.user?.email);
-        
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log("[Auth] onAuthStateChange event:", event, "user:", newSession?.user?.email);
 
-        if (newSession?.user) {
-          setRolesLoaded(false);
-          // IMPORTANT: Defer database calls to avoid race condition with session
-          // See: https://supabase.com/docs/reference/javascript/auth-onauthstatechange
-          setTimeout(async () => {
-            try {
-              await fetchRoles(newSession.user.id);
-            } finally {
-              setLoading(false);
-            }
-          }, 0);
-        } else {
-          setRoles([]);
-          setRolesLoaded(true);
+      const newUserId = newSession?.user?.id ?? null;
+      const prevUserId = currentUserIdRef.current;
+      const rolesReady = rolesLoadedRef.current;
+
+      // Prevent double-initialization: INITIAL_SESSION often overlaps with getSession()
+      if (event === "INITIAL_SESSION") {
+        if (initialSessionHandledRef.current) {
+          // Still keep session/user in sync
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
           setLoading(false);
+          return;
         }
+        initialSessionHandledRef.current = true;
       }
-    );
+
+      // Keep session/user in sync for all events
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
+
+      // Avoid UI flicker on TOKEN_REFRESHED: roles don't change with token refresh
+      if (event === "TOKEN_REFRESHED" && newUserId && newUserId === prevUserId && rolesReady) {
+        setLoading(false);
+        return;
+      }
+
+      if (newSession?.user) {
+        // If the same user is already fully initialized, don't refetch roles
+        if ((event === "INITIAL_SESSION" || event === "SIGNED_IN") && newUserId && newUserId === prevUserId && rolesReady) {
+          setLoading(false);
+          return;
+        }
+
+        setRolesLoaded(false);
+        // IMPORTANT: Defer database calls to avoid race condition with session
+        // See: https://supabase.com/docs/reference/javascript/auth-onauthstatechange
+        setTimeout(async () => {
+          try {
+            await fetchRoles(newSession.user.id);
+          } finally {
+            setLoading(false);
+          }
+        }, 0);
+      } else {
+        setRoles([]);
+        setRolesLoaded(true);
+        setLoading(false);
+      }
+    });
 
     // THEN check for existing session
     supabase.auth
       .getSession()
       .then(({ data: { session: existingSession } }) => {
         console.log("[Auth] getSession result:", existingSession?.user?.email);
-        
+
+        // If INITIAL_SESSION already handled, avoid doing the same work twice
+        if (initialSessionHandledRef.current) {
+          setLoading(false);
+          return;
+        }
+        initialSessionHandledRef.current = true;
+
         setSession(existingSession);
         setUser(existingSession?.user ?? null);
 
         if (existingSession?.user) {
+          // If same user and roles already ready, don't refetch
+          if (existingSession.user.id === currentUserIdRef.current && rolesLoadedRef.current) {
+            setLoading(false);
+            return;
+          }
+
           setRolesLoaded(false);
-          // Defer to ensure Supabase client has token set
+          // Defer to ensure client has token set
           setTimeout(async () => {
             try {
               await fetchRoles(existingSession.user.id);

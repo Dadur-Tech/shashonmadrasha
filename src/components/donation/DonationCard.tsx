@@ -339,6 +339,16 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
         });
 
         if (response.error) throw new Error(response.error.message);
+
+        // If API mode returns a checkout URL, redirect to official gateway page
+        if (response.data?.paymentUrl) {
+          toast({
+            title: "পেমেন্ট পেজে নিয়ে যাওয়া হচ্ছে",
+            description: `${selectedGateway?.display_name || formData.paymentMethod} এ পেমেন্ট সম্পন্ন করুন।`,
+          });
+          window.location.href = response.data.paymentUrl;
+          return;
+        }
         
         setPaymentData({
           ...response.data.paymentData,
