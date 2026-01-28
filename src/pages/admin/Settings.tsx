@@ -20,6 +20,8 @@ import {
   Moon,
   Sun,
   Mail,
+  Download,
+  Database,
 } from "lucide-react";
 
 interface SettingsState {
@@ -192,6 +194,62 @@ export default function SettingsPage() {
     }
   };
 
+  // Data Export Function
+  const handleDataExport = async (tableName: string, title: string, fileName: string) => {
+    try {
+      const { data, error } = await supabase.from(tableName as any).select("*");
+      
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        toast({
+          title: "কোনো ডাটা নেই",
+          description: `${title}তে কোনো তথ্য পাওয়া যায়নি`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert to CSV
+      const headers = Object.keys(data[0]);
+      const csvRows = [
+        headers.join(","),
+        ...data.map(row => 
+          headers.map(h => {
+            const val = (row as any)[h];
+            if (val === null || val === undefined) return "";
+            if (typeof val === "string" && (val.includes(",") || val.includes("\n"))) {
+              return `"${val.replace(/"/g, '""')}"`;
+            }
+            return val;
+          }).join(",")
+        )
+      ];
+      const csvString = csvRows.join("\n");
+
+      // Download
+      const blob = new Blob(["\uFEFF" + csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${fileName}_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "এক্সপোর্ট সফল",
+        description: `${data.length}টি রেকর্ড ডাউনলোড হয়েছে`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "এক্সপোর্ট ব্যর্থ",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 max-w-4xl mx-auto">
@@ -259,6 +317,75 @@ export default function SettingsPage() {
                       checked={settings.autoBackup}
                       onCheckedChange={(checked) => handleSettingChange("autoBackup", checked)}
                     />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Data Export Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Database className="w-5 h-5" />
+                    ডাটা এক্সপোর্ট
+                  </CardTitle>
+                  <CardDescription>মাদ্রাসার সম্পূর্ণ ডাটা ডাউনলোড করুন</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">ছাত্র তালিকা</p>
+                        <p className="text-sm text-muted-foreground">সকল ছাত্রের তথ্য</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("students", "ছাত্র তালিকা", "students_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">শিক্ষক তালিকা</p>
+                        <p className="text-sm text-muted-foreground">সকল শিক্ষকের তথ্য</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("teachers", "শিক্ষক তালিকা", "teachers_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">ফি রেকর্ড</p>
+                        <p className="text-sm text-muted-foreground">সকল ফি লেনদেন</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("student_fees", "ফি রেকর্ড", "fees_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">দান রেকর্ড</p>
+                        <p className="text-sm text-muted-foreground">সকল দান লেনদেন</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("donations", "দান রেকর্ড", "donations_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">খরচ রেকর্ড</p>
+                        <p className="text-sm text-muted-foreground">সকল খরচের হিসাব</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("expenses", "খরচ রেকর্ড", "expenses_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
+                      <div>
+                        <p className="font-medium">বেতন রেকর্ড</p>
+                        <p className="text-sm text-muted-foreground">সকল বেতনের তথ্য</p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => handleDataExport("teacher_salaries", "বেতন রেকর্ড", "salaries_export")} className="gap-2">
+                        <Download className="w-4 h-4" />CSV
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

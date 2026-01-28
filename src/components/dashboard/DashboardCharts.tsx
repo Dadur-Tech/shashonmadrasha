@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from "recharts";
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { motion } from "framer-motion";
 
 interface DepartmentData {
@@ -15,40 +15,12 @@ interface MonthlyData {
   expense: number;
 }
 
-interface ChartProps {
-  departmentData: DepartmentData[];
-  monthlyData?: MonthlyData[];
-}
-
-const chartConfig = {
-  income: {
-    label: "আয়",
-    color: "hsl(var(--primary))",
-  },
-  expense: {
-    label: "ব্যয়",
-    color: "hsl(var(--destructive))",
-  },
-  count: {
-    label: "সংখ্যা",
-    color: "hsl(var(--primary))",
-  },
-  present: {
-    label: "উপস্থিত",
-    color: "hsl(142.1 76.2% 36.3%)",
-  },
-  absent: {
-    label: "অনুপস্থিত",
-    color: "hsl(var(--destructive))",
-  },
-} satisfies ChartConfig;
-
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(142.1 76.2% 36.3%)', 'hsl(221.2 83.2% 53.3%)'];
 
 export function DepartmentPieChart({ data }: { data: DepartmentData[] }) {
   if (!data || data.length === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-lg">বিভাগ ভিত্তিক ছাত্র</CardTitle>
         </CardHeader>
@@ -67,44 +39,48 @@ export function DepartmentPieChart({ data }: { data: DepartmentData[] }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4 }}
+      className="h-full"
     >
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-lg">বিভাগ ভিত্তিক ছাত্র</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <ChartContainer config={chartConfig} className="h-[200px] w-[200px] flex-shrink-0">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={4}
-                  dataKey="count"
-                  nameKey="name"
-                  strokeWidth={2}
-                  stroke="hsl(var(--background))"
-                >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ChartContainer>
-            <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col items-center gap-4">
+            {/* Pie Chart - Fixed size container */}
+            <div className="w-[180px] h-[180px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="count"
+                    nameKey="name"
+                    strokeWidth={0}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Legend - Below chart */}
+            <div className="w-full space-y-2">
               {data.map((item, index) => {
                 const percentage = total > 0 ? ((item.count / total) * 100).toFixed(1) : 0;
                 return (
                   <div key={item.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors">
                     <div 
-                      className="w-4 h-4 rounded-md shrink-0" 
+                      className="w-3 h-3 rounded-full shrink-0" 
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     />
-                    <span className="text-sm text-foreground flex-1">{item.name}</span>
+                    <span className="text-sm text-foreground flex-1 truncate">{item.name}</span>
                     <span className="text-sm font-semibold text-foreground">{item.count}</span>
                     <span className="text-xs text-muted-foreground">({percentage}%)</span>
                   </div>
@@ -135,61 +111,62 @@ export function MonthlyIncomeChart({ data }: { data: MonthlyData[] }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay: 0.1 }}
+      className="h-full"
     >
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-lg">মাসিক আয়-ব্যয়</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="h-[250px]">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0.05}/>
-                </linearGradient>
-                <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(0 84.2% 60.2%)" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="hsl(0 84.2% 60.2%)" stopOpacity={0.05}/>
-                </linearGradient>
-              </defs>
-              <XAxis 
-                dataKey="month" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                tickFormatter={(value) => `৳${(value/1000).toFixed(0)}k`} 
-                width={50}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Area 
-                type="monotone" 
-                dataKey="income" 
-                stroke="hsl(142.1 76.2% 36.3%)" 
-                fill="url(#incomeGradient)" 
-                strokeWidth={2.5}
-                name="আয়"
-                dot={false}
-                activeDot={{ r: 5, strokeWidth: 2 }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="expense" 
-                stroke="hsl(0 84.2% 60.2%)" 
-                fill="url(#expenseGradient)" 
-                strokeWidth={2.5}
-                name="ব্যয়"
-                dot={false}
-                activeDot={{ r: 5, strokeWidth: 2 }}
-              />
-            </AreaChart>
-          </ChartContainer>
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0.3}/>
+                    <stop offset="100%" stopColor="hsl(142.1 76.2% 36.3%)" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(0 84.2% 60.2%)" stopOpacity={0.3}/>
+                    <stop offset="100%" stopColor="hsl(0 84.2% 60.2%)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="month" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tickFormatter={(value) => `৳${(value/1000).toFixed(0)}k`} 
+                  width={45}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area 
+                  type="monotone" 
+                  dataKey="income" 
+                  stroke="hsl(142.1 76.2% 36.3%)" 
+                  fill="url(#incomeGradient)" 
+                  strokeWidth={2}
+                  name="আয়"
+                  dot={false}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="expense" 
+                  stroke="hsl(0 84.2% 60.2%)" 
+                  fill="url(#expenseGradient)" 
+                  strokeWidth={2}
+                  name="ব্যয়"
+                  dot={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-6 mt-3">
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142.1 76.2% 36.3%)' }} />
               <span className="text-muted-foreground">আয়</span>
@@ -220,46 +197,49 @@ export function AttendanceBarChart() {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay: 0.2 }}
+      className="h-full"
     >
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle className="text-lg">সাপ্তাহিক উপস্থিতি</CardTitle>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="h-[250px]">
-            <BarChart data={data} barGap={2} barCategoryGap="20%">
-              <XAxis 
-                dataKey="day" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                tickFormatter={(value) => `${value}%`} 
-                width={45}
-                domain={[0, 100]}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar 
-                dataKey="present" 
-                fill="hsl(142.1 76.2% 36.3%)" 
-                radius={[4, 4, 0, 0]} 
-                name="উপস্থিত"
-                maxBarSize={40}
-              />
-              <Bar 
-                dataKey="absent" 
-                fill="hsl(0 84.2% 60.2%)" 
-                radius={[4, 4, 0, 0]} 
-                name="অনুপস্থিত"
-                maxBarSize={40}
-              />
-            </BarChart>
-          </ChartContainer>
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data} barGap={4} barCategoryGap="25%" margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <XAxis 
+                  dataKey="day" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tickFormatter={(value) => `${value}%`} 
+                  width={40}
+                  domain={[0, 100]}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar 
+                  dataKey="present" 
+                  fill="hsl(142.1 76.2% 36.3%)" 
+                  radius={[4, 4, 0, 0]} 
+                  name="উপস্থিত"
+                  maxBarSize={35}
+                />
+                <Bar 
+                  dataKey="absent" 
+                  fill="hsl(0 84.2% 60.2%)" 
+                  radius={[4, 4, 0, 0]} 
+                  name="অনুপস্থিত"
+                  maxBarSize={35}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex justify-center gap-6 mt-3">
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142.1 76.2% 36.3%)' }} />
               <span className="text-muted-foreground">উপস্থিত</span>
