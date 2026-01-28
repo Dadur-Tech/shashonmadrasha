@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_calendar: {
+        Row: {
+          affects_all_classes: boolean | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          is_holiday: boolean | null
+          specific_class_ids: string[] | null
+          start_date: string
+          title: string
+          title_arabic: string | null
+        }
+        Insert: {
+          affects_all_classes?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_holiday?: boolean | null
+          specific_class_ids?: string[] | null
+          start_date: string
+          title: string
+          title_arabic?: string | null
+        }
+        Update: {
+          affects_all_classes?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          is_holiday?: boolean | null
+          specific_class_ids?: string[] | null
+          start_date?: string
+          title?: string
+          title_arabic?: string | null
+        }
+        Relationships: []
+      }
       academic_years: {
         Row: {
           created_at: string
@@ -88,6 +136,385 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      book_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+        }
+        Relationships: []
+      }
+      book_issues: {
+        Row: {
+          book_id: string
+          borrower_type: string
+          created_at: string
+          due_date: string
+          fine_amount: number | null
+          fine_paid: boolean | null
+          id: string
+          issue_date: string
+          issue_id: string
+          issued_by: string | null
+          notes: string | null
+          return_date: string | null
+          returned_to: string | null
+          status: string
+          student_id: string | null
+          teacher_id: string | null
+        }
+        Insert: {
+          book_id: string
+          borrower_type?: string
+          created_at?: string
+          due_date: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          issue_date?: string
+          issue_id: string
+          issued_by?: string | null
+          notes?: string | null
+          return_date?: string | null
+          returned_to?: string | null
+          status?: string
+          student_id?: string | null
+          teacher_id?: string | null
+        }
+        Update: {
+          book_id?: string
+          borrower_type?: string
+          created_at?: string
+          due_date?: string
+          fine_amount?: number | null
+          fine_paid?: boolean | null
+          id?: string
+          issue_date?: string
+          issue_id?: string
+          issued_by?: string | null
+          notes?: string | null
+          return_date?: string | null
+          returned_to?: string | null
+          status?: string
+          student_id?: string | null
+          teacher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_issues_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_issues_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_issues_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_issues_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_issues_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_issues_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      books: {
+        Row: {
+          author: string | null
+          author_arabic: string | null
+          available_copies: number | null
+          book_id: string
+          category_id: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          edition: string | null
+          id: string
+          is_active: boolean | null
+          is_reference_only: boolean | null
+          isbn: string | null
+          language: string | null
+          publisher: string | null
+          shelf_location: string | null
+          title: string
+          title_arabic: string | null
+          total_copies: number | null
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          author_arabic?: string | null
+          available_copies?: number | null
+          book_id: string
+          category_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          edition?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_reference_only?: boolean | null
+          isbn?: string | null
+          language?: string | null
+          publisher?: string | null
+          shelf_location?: string | null
+          title: string
+          title_arabic?: string | null
+          total_copies?: number | null
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          author_arabic?: string | null
+          available_copies?: number | null
+          book_id?: string
+          category_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          edition?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_reference_only?: boolean | null
+          isbn?: string | null
+          language?: string | null
+          publisher?: string | null
+          shelf_location?: string | null
+          title?: string
+          title_arabic?: string | null
+          total_copies?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "book_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      certificate_templates: {
+        Row: {
+          background_image_url: string | null
+          content_template: string
+          created_at: string
+          footer_text: string | null
+          header_text: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          background_image_url?: string | null
+          content_template: string
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          background_image_url?: string | null
+          content_template?: string
+          created_at?: string
+          footer_text?: string | null
+          header_text?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      class_schedule: {
+        Row: {
+          class_id: string
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean | null
+          room_number: string | null
+          start_time: string
+          subject_id: string | null
+          teacher_id: string | null
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          room_number?: string | null
+          start_time: string
+          subject_id?: string | null
+          teacher_id?: string | null
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          room_number?: string | null
+          start_time?: string
+          subject_id?: string | null
+          teacher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_schedule_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_schedule_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_schedule_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_schedule_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_subjects: {
+        Row: {
+          books_required: string[] | null
+          class_id: string
+          created_at: string
+          id: string
+          is_mandatory: boolean | null
+          subject_id: string
+          syllabus_content: string | null
+          teacher_id: string | null
+          weekly_periods: number | null
+        }
+        Insert: {
+          books_required?: string[] | null
+          class_id: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean | null
+          subject_id: string
+          syllabus_content?: string | null
+          teacher_id?: string | null
+          weekly_periods?: number | null
+        }
+        Update: {
+          books_required?: string[] | null
+          class_id?: string
+          created_at?: string
+          id?: string
+          is_mandatory?: boolean | null
+          subject_id?: string
+          syllabus_content?: string | null
+          teacher_id?: string | null
+          weekly_periods?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_subjects_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_subjects_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_subjects_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       classes: {
         Row: {
@@ -683,6 +1110,104 @@ export type Database = {
         }
         Relationships: []
       }
+      hostel_buildings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+          total_rooms: number | null
+          warden_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+          total_rooms?: number | null
+          warden_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+          total_rooms?: number | null
+          warden_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hostel_buildings_warden_id_fkey"
+            columns: ["warden_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hostel_buildings_warden_id_fkey"
+            columns: ["warden_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hostel_rooms: {
+        Row: {
+          amenities: string[] | null
+          building_id: string
+          capacity: number
+          created_at: string
+          current_occupancy: number | null
+          floor_number: number | null
+          id: string
+          is_active: boolean | null
+          monthly_rent: number | null
+          room_number: string
+          room_type: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          building_id: string
+          capacity?: number
+          created_at?: string
+          current_occupancy?: number | null
+          floor_number?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_rent?: number | null
+          room_number: string
+          room_type?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          building_id?: string
+          capacity?: number
+          created_at?: string
+          current_occupancy?: number | null
+          floor_number?: number | null
+          id?: string
+          is_active?: boolean | null
+          monthly_rent?: number | null
+          room_number?: string
+          room_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hostel_rooms_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "hostel_buildings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_settings: {
         Row: {
           address: string | null
@@ -730,6 +1255,77 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      issued_certificates: {
+        Row: {
+          certificate_number: string
+          certificate_type: string
+          created_at: string
+          id: string
+          is_revoked: boolean | null
+          issue_date: string
+          issued_by: string | null
+          remarks: string | null
+          student_id: string
+          template_id: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          certificate_number: string
+          certificate_type: string
+          created_at?: string
+          id?: string
+          is_revoked?: boolean | null
+          issue_date?: string
+          issued_by?: string | null
+          remarks?: string | null
+          student_id: string
+          template_id?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          certificate_number?: string
+          certificate_type?: string
+          created_at?: string
+          id?: string
+          is_revoked?: boolean | null
+          issue_date?: string
+          issued_by?: string | null
+          remarks?: string | null
+          student_id?: string
+          template_id?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "issued_certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issued_certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issued_certificates_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "issued_certificates_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "certificate_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jamiyat_categories: {
         Row: {
@@ -782,6 +1378,103 @@ export type Database = {
           is_enabled?: boolean | null
           last_updated_at?: string | null
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      leave_applications: {
+        Row: {
+          applicant_type: string
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          end_date: string
+          id: string
+          leave_type_id: string | null
+          reason: string
+          rejection_reason: string | null
+          start_date: string
+          status: string
+          teacher_id: string | null
+          total_days: number
+        }
+        Insert: {
+          applicant_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          leave_type_id?: string | null
+          reason: string
+          rejection_reason?: string | null
+          start_date: string
+          status?: string
+          teacher_id?: string | null
+          total_days: number
+        }
+        Update: {
+          applicant_type?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          leave_type_id?: string | null
+          reason?: string
+          rejection_reason?: string | null
+          start_date?: string
+          status?: string
+          teacher_id?: string | null
+          total_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_applications_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_applications_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_applications_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          is_paid: boolean | null
+          max_days_per_year: number | null
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean | null
+          max_days_per_year?: number | null
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean | null
+          max_days_per_year?: number | null
+          name?: string
         }
         Relationships: []
       }
@@ -1221,6 +1914,74 @@ export type Database = {
           },
         ]
       }
+      room_allocations: {
+        Row: {
+          allocated_by: string | null
+          allocation_date: string
+          bed_number: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          room_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          allocated_by?: string | null
+          allocation_date?: string
+          bed_number?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          room_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          allocated_by?: string | null
+          allocation_date?: string
+          bed_number?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          room_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_allocations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "hostel_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_allocations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "lillah_students_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_allocations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_allocations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sponsors: {
         Row: {
           address: string | null
@@ -1511,6 +2272,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subjects: {
+        Row: {
+          code: string | null
+          created_at: string
+          department: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_arabic: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_arabic?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_arabic?: string | null
+        }
+        Relationships: []
       }
       teacher_attendance: {
         Row: {
