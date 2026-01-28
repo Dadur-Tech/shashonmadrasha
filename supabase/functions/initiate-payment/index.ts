@@ -214,16 +214,171 @@ serve(async (req) => {
           merchantNumber: gatewayConfig.merchant_id,
         };
       }
-    } else if (['nagad', 'rocket', 'upay'].includes(gateway)) {
-      // For other mobile wallets - show payment instructions (manual mode)
-      paymentData = {
-        type: 'mobile_wallet',
-        gateway,
-        transactionId,
-        amount,
-        instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
-        merchantNumber: gatewayConfig.merchant_id,
-      };
+    } else if (gateway === 'nagad') {
+      // Nagad Payment Gateway API
+      if (paymentMode === 'api' && gatewayConfig.merchant_id && gatewayConfig.api_key_encrypted) {
+        try {
+          console.log('Initiating Nagad checkout...');
+          const nagadResult = await initiateNagad({
+            merchantId: gatewayConfig.merchant_id,
+            merchantPrivateKey: gatewayConfig.api_key_encrypted,
+            pgPublicKey: gatewayConfig.api_secret_encrypted || '',
+            amount,
+            transactionId,
+            callbackUrl: `${callbackUrl}?gateway=nagad&return_url=${encodeURIComponent(return_url)}`,
+            isSandbox: gatewayConfig.sandbox_mode,
+          });
+          
+          if (nagadResult.redirectUrl) {
+            paymentUrl = nagadResult.redirectUrl;
+            paymentData = {
+              type: 'redirect',
+              redirectUrl: nagadResult.redirectUrl,
+            };
+          } else {
+            paymentData = {
+              type: 'mobile_wallet',
+              gateway,
+              transactionId,
+              amount,
+              instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+              merchantNumber: gatewayConfig.merchant_id,
+              apiError: nagadResult.message || 'Nagad API সমস্যা',
+            };
+          }
+        } catch (error) {
+          console.error('Nagad API error:', error);
+          paymentData = {
+            type: 'mobile_wallet',
+            gateway,
+            transactionId,
+            amount,
+            instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+            merchantNumber: gatewayConfig.merchant_id,
+            apiError: error instanceof Error ? error.message : 'API সংযোগ সমস্যা',
+          };
+        }
+      } else {
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+          merchantNumber: gatewayConfig.merchant_id,
+        };
+      }
+    } else if (gateway === 'rocket') {
+      // Rocket (DBBL) Payment Gateway API
+      if (paymentMode === 'api' && gatewayConfig.merchant_id && gatewayConfig.api_key_encrypted) {
+        try {
+          console.log('Initiating Rocket checkout...');
+          const rocketResult = await initiateRocket({
+            merchantId: gatewayConfig.merchant_id,
+            storePassword: gatewayConfig.api_key_encrypted,
+            amount,
+            transactionId,
+            payerPhone: payer_phone,
+            callbackUrl: `${callbackUrl}?gateway=rocket&return_url=${encodeURIComponent(return_url)}`,
+            isSandbox: gatewayConfig.sandbox_mode,
+          });
+          
+          if (rocketResult.redirectUrl) {
+            paymentUrl = rocketResult.redirectUrl;
+            paymentData = {
+              type: 'redirect',
+              redirectUrl: rocketResult.redirectUrl,
+            };
+          } else {
+            paymentData = {
+              type: 'mobile_wallet',
+              gateway,
+              transactionId,
+              amount,
+              instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+              merchantNumber: gatewayConfig.merchant_id,
+              apiError: rocketResult.message || 'Rocket API সমস্যা',
+            };
+          }
+        } catch (error) {
+          console.error('Rocket API error:', error);
+          paymentData = {
+            type: 'mobile_wallet',
+            gateway,
+            transactionId,
+            amount,
+            instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+            merchantNumber: gatewayConfig.merchant_id,
+            apiError: error instanceof Error ? error.message : 'API সংযোগ সমস্যা',
+          };
+        }
+      } else {
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+          merchantNumber: gatewayConfig.merchant_id,
+        };
+      }
+    } else if (gateway === 'upay') {
+      // Upay Payment Gateway API
+      if (paymentMode === 'api' && gatewayConfig.merchant_id && gatewayConfig.api_key_encrypted) {
+        try {
+          console.log('Initiating Upay checkout...');
+          const upayResult = await initiateUpay({
+            merchantId: gatewayConfig.merchant_id,
+            merchantKey: gatewayConfig.api_key_encrypted,
+            merchantCode: gatewayConfig.api_secret_encrypted || '',
+            amount,
+            transactionId,
+            payerPhone: payer_phone,
+            successUrl: `${callbackUrl}?gateway=upay&status=success&return_url=${encodeURIComponent(return_url)}`,
+            failUrl: `${callbackUrl}?gateway=upay&status=fail&return_url=${encodeURIComponent(return_url)}`,
+            cancelUrl: `${callbackUrl}?gateway=upay&status=cancel&return_url=${encodeURIComponent(return_url)}`,
+            isSandbox: gatewayConfig.sandbox_mode,
+          });
+          
+          if (upayResult.redirectUrl) {
+            paymentUrl = upayResult.redirectUrl;
+            paymentData = {
+              type: 'redirect',
+              redirectUrl: upayResult.redirectUrl,
+            };
+          } else {
+            paymentData = {
+              type: 'mobile_wallet',
+              gateway,
+              transactionId,
+              amount,
+              instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+              merchantNumber: gatewayConfig.merchant_id,
+              apiError: upayResult.message || 'Upay API সমস্যা',
+            };
+          }
+        } catch (error) {
+          console.error('Upay API error:', error);
+          paymentData = {
+            type: 'mobile_wallet',
+            gateway,
+            transactionId,
+            amount,
+            instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+            merchantNumber: gatewayConfig.merchant_id,
+            apiError: error instanceof Error ? error.message : 'API সংযোগ সমস্যা',
+          };
+        }
+      } else {
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+          merchantNumber: gatewayConfig.merchant_id,
+        };
+      }
     }
 
     return new Response(
@@ -447,6 +602,201 @@ async function initiateAmarPay(params: {
     }
   } catch (error) {
     console.error('AmarPay API error:', error);
+    throw error;
+  }
+}
+
+// Nagad Payment Gateway API
+async function initiateNagad(params: {
+  merchantId: string;
+  merchantPrivateKey: string;
+  pgPublicKey: string;
+  amount: number;
+  transactionId: string;
+  callbackUrl: string;
+  isSandbox: boolean;
+}): Promise<{ redirectUrl?: string; message?: string }> {
+  const baseUrl = params.isSandbox 
+    ? 'https://sandbox.mynagad.com:10080/api/dfs'
+    : 'https://api.mynagad.com/api/dfs';
+
+  try {
+    const dateTime = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + '000';
+    const orderId = params.transactionId;
+    
+    // Step 1: Initialize payment
+    const initData = {
+      merchantId: params.merchantId,
+      orderId: orderId,
+      datetime: dateTime,
+      challenge: crypto.randomUUID().replace(/-/g, '').substring(0, 32),
+    };
+
+    console.log('Nagad Init Request:', initData);
+
+    const initResponse = await fetch(`${baseUrl}/check-out/initialize/${params.merchantId}/${orderId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-KM-Api-Version': 'v-0.2.0',
+        'X-KM-IP-V4': '127.0.0.1',
+        'X-KM-Client-Type': 'PC_WEB',
+      },
+      body: JSON.stringify({
+        dateTime: dateTime,
+        sensitiveData: JSON.stringify(initData),
+        signature: 'signature_placeholder', // Will need real RSA signature in production
+      }),
+    });
+
+    const initResult = await initResponse.json();
+    console.log('Nagad Init Response:', JSON.stringify(initResult));
+
+    if (initResult.sensitiveData) {
+      // Step 2: Complete checkout
+      const completeData = {
+        merchantId: params.merchantId,
+        orderId: orderId,
+        amount: params.amount.toString(),
+        currencyCode: '050',
+        challenge: initData.challenge,
+      };
+
+      const completeResponse = await fetch(`${baseUrl}/check-out/complete/${initResult.paymentReferenceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-KM-Api-Version': 'v-0.2.0',
+          'X-KM-IP-V4': '127.0.0.1',
+          'X-KM-Client-Type': 'PC_WEB',
+        },
+        body: JSON.stringify({
+          sensitiveData: JSON.stringify(completeData),
+          signature: 'signature_placeholder',
+          merchantCallbackURL: params.callbackUrl,
+        }),
+      });
+
+      const completeResult = await completeResponse.json();
+      console.log('Nagad Complete Response:', JSON.stringify(completeResult));
+
+      if (completeResult.callBackUrl) {
+        return { redirectUrl: completeResult.callBackUrl };
+      }
+    }
+
+    return { message: initResult.reason || 'Nagad API সমস্যা - ম্যানুয়াল পেমেন্ট করুন' };
+  } catch (error) {
+    console.error('Nagad API exception:', error);
+    throw error;
+  }
+}
+
+// Rocket (Dutch-Bangla Bank) Payment Gateway API
+async function initiateRocket(params: {
+  merchantId: string;
+  storePassword: string;
+  amount: number;
+  transactionId: string;
+  payerPhone: string;
+  callbackUrl: string;
+  isSandbox: boolean;
+}): Promise<{ redirectUrl?: string; message?: string }> {
+  // Rocket uses similar approach to SSLCommerz
+  const baseUrl = params.isSandbox 
+    ? 'https://sandbox.rocket.com.bd/gwprocess/v4/api.php' // Placeholder URL
+    : 'https://pay.rocket.com.bd/gwprocess/v4/api.php';
+
+  try {
+    const formData = new URLSearchParams({
+      store_id: params.merchantId,
+      store_passwd: params.storePassword,
+      total_amount: params.amount.toString(),
+      currency: 'BDT',
+      tran_id: params.transactionId,
+      success_url: `${params.callbackUrl}&status=success`,
+      fail_url: `${params.callbackUrl}&status=fail`,
+      cancel_url: `${params.callbackUrl}&status=cancel`,
+      cus_phone: params.payerPhone,
+      product_name: 'Donation',
+      product_category: 'Donation',
+      product_profile: 'general',
+    });
+
+    console.log('Rocket Init Request for txn:', params.transactionId);
+
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString(),
+    });
+    
+    const data = await response.json();
+    console.log('Rocket Response:', JSON.stringify(data));
+    
+    if (data.status === 'SUCCESS' && data.GatewayPageURL) {
+      return { redirectUrl: data.GatewayPageURL };
+    }
+
+    return { message: data.failedreason || 'Rocket API সমস্যা - ম্যানুয়াল পেমেন্ট করুন' };
+  } catch (error) {
+    console.error('Rocket API exception:', error);
+    throw error;
+  }
+}
+
+// Upay Payment Gateway API
+async function initiateUpay(params: {
+  merchantId: string;
+  merchantKey: string;
+  merchantCode: string;
+  amount: number;
+  transactionId: string;
+  payerPhone: string;
+  successUrl: string;
+  failUrl: string;
+  cancelUrl: string;
+  isSandbox: boolean;
+}): Promise<{ redirectUrl?: string; message?: string }> {
+  const baseUrl = params.isSandbox 
+    ? 'https://sandbox.upay.com.bd/api/payment/init'
+    : 'https://api.upay.com.bd/api/payment/init';
+
+  try {
+    const payload = {
+      merchant_id: params.merchantId,
+      merchant_key: params.merchantKey,
+      merchant_code: params.merchantCode,
+      merchant_txn_id: params.transactionId,
+      amount: params.amount.toString(),
+      currency: 'BDT',
+      customer_phone: params.payerPhone,
+      success_url: params.successUrl,
+      failed_url: params.failUrl,
+      cancel_url: params.cancelUrl,
+    };
+
+    console.log('Upay Init Request:', { ...payload, merchant_key: '***' });
+
+    const response = await fetch(baseUrl, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    console.log('Upay Response:', JSON.stringify(data));
+
+    if (data.gateway_url || data.redirect_url) {
+      return { redirectUrl: data.gateway_url || data.redirect_url };
+    }
+
+    return { message: data.message || 'Upay API সমস্যা - ম্যানুয়াল পেমেন্ট করুন' };
+  } catch (error) {
+    console.error('Upay API exception:', error);
     throw error;
   }
 }
