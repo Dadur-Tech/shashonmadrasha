@@ -6,12 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 import { 
-  ArrowLeft, 
   User, 
   Phone, 
   MapPin, 
-  Calendar, 
   GraduationCap, 
   Heart,
   Building,
@@ -99,7 +98,6 @@ export default function StudentProfile() {
             </p>
             <Link to="/">
               <Button>
-                <ArrowLeft className="w-4 h-4 mr-2" />
                 হোমে ফিরুন
               </Button>
             </Link>
@@ -109,29 +107,31 @@ export default function StudentProfile() {
     );
   }
 
+  const handlePrintClick = () => {
+    window.print();
+  };
+
   return (
     <div className="min-h-screen bg-background print:bg-white">
       {/* Header - Hidden in print */}
-      <header className="bg-primary text-primary-foreground py-4 shadow-lg print:hidden">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>হোমে ফিরুন</span>
-            </Link>
-            <h1 className="text-xl font-bold">ছাত্র প্রোফাইল</h1>
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handlePrint}
-              className="gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              প্রিন্ট
-            </Button>
-          </div>
+      <div className="print:hidden">
+        <PublicHeader />
+      </div>
+      
+      {/* Print Button - Positioned below header */}
+      <div className="container mx-auto px-4 py-2 print:hidden">
+        <div className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrintClick}
+            className="gap-2"
+          >
+            <Printer className="w-4 h-4" />
+            প্রিন্ট
+          </Button>
         </div>
-      </header>
+      </div>
 
       <main className="container mx-auto px-4 py-8 print:py-4">
         {/* Print Header - Only shown in print */}
