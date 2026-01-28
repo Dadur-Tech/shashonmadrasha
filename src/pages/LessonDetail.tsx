@@ -6,14 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { VideoPlayer } from "@/components/elearning/VideoPlayer";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 import {
-  ArrowLeft,
   Clock,
   Calendar,
-  User,
   BookOpen,
-  GraduationCap,
-  Share2,
 } from "lucide-react";
 
 const departmentLabels: Record<string, string> = {
@@ -91,25 +88,7 @@ export default function LessonDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/courses" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>ক্লাস তালিকা</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-6 h-6" />
-              <span className="font-bold hidden sm:inline">ই-লার্নিং প্ল্যাটফর্ম</span>
-            </div>
-            <Button variant="secondary" size="sm" className="gap-2">
-              <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">শেয়ার</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

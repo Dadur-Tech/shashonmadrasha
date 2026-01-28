@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { VideoPlayer } from "@/components/elearning/VideoPlayer";
 import { LessonCard } from "@/components/elearning/LessonCard";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 import {
-  ArrowLeft,
   BookOpen,
   Clock,
   Users,
@@ -18,7 +18,6 @@ import {
   Play,
   CheckCircle2,
   GraduationCap,
-  Award,
   ShoppingCart,
 } from "lucide-react";
 
@@ -103,24 +102,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/courses" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>কোর্স তালিকা</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-6 h-6" />
-              <span className="font-bold hidden sm:inline">ই-লার্নিং প্ল্যাটফর্ম</span>
-            </div>
-            <Link to="/login">
-              <Button variant="secondary" size="sm">লগইন</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

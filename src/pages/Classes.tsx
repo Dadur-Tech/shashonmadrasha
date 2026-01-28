@@ -7,23 +7,22 @@ import {
   Clock, 
   Users, 
   Calendar,
-  ArrowLeft,
   Search,
   Filter,
   BookOpen,
   GraduationCap,
-  Sparkles,
+  Loader2,
   ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 
 const statusColors: Record<string, string> = {
   scheduled: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -110,22 +109,11 @@ export default function ClassesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
+      <PublicHeader />
+      
+      {/* Sub Header */}
       <header className="bg-gradient-to-r from-primary/10 via-purple-500/10 to-blue-500/10 border-b border-border">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                হোমপেজে ফিরুন
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outline" size="sm">
-                অ্যাডমিন লগইন
-              </Button>
-            </Link>
-          </div>
 
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">

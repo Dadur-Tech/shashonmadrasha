@@ -7,7 +7,7 @@ import { useState } from "react";
 import { UserDropdown } from "./UserDropdown";
 
 interface PublicHeaderProps {
-  title: string;
+  title?: string;
   showBackButton?: boolean;
   backUrl?: string;
   backLabel?: string;
@@ -32,6 +32,9 @@ export function PublicHeader({
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Use provided title or fall back to institution name
+  const displayTitle = title || institution?.name || "মাদ্রাসা";
 
   return (
     <header className="bg-primary text-primary-foreground py-3 shadow-lg sticky top-0 z-50">
@@ -61,9 +64,9 @@ export function PublicHeader({
               </div>
             )}
             <div className="hidden md:block">
-              <h1 className="text-lg font-bold leading-tight">{title}</h1>
+              <h1 className="text-lg font-bold leading-tight">{displayTitle}</h1>
             </div>
-            <h1 className="md:hidden text-lg font-bold">{title}</h1>
+            <h1 className="md:hidden text-lg font-bold truncate max-w-[200px]">{displayTitle}</h1>
           </Link>
 
           {/* Right: User dropdown */}
