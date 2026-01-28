@@ -1226,6 +1226,7 @@ export type Database = {
           phone: string | null
           principal_name: string | null
           registration_number: string | null
+          system_language: string | null
           updated_at: string
           website: string | null
           whatsapp_number: string | null
@@ -1249,6 +1250,7 @@ export type Database = {
           phone?: string | null
           principal_name?: string | null
           registration_number?: string | null
+          system_language?: string | null
           updated_at?: string
           website?: string | null
           whatsapp_number?: string | null
@@ -1272,6 +1274,7 @@ export type Database = {
           phone?: string | null
           principal_name?: string | null
           registration_number?: string | null
+          system_language?: string | null
           updated_at?: string
           website?: string | null
           whatsapp_number?: string | null

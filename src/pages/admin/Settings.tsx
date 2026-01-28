@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Settings, 
@@ -22,6 +24,7 @@ import {
   Mail,
   Download,
   Database,
+  Languages,
 } from "lucide-react";
 
 interface SettingsState {
@@ -51,7 +54,9 @@ const defaultSettings: SettingsState = {
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [saving, setSaving] = useState(false);
+  const [languageSaving, setLanguageSaving] = useState(false);
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -63,6 +68,25 @@ export default function SettingsPage() {
     password: "",
   });
   const [emailSaving, setEmailSaving] = useState(false);
+
+  const handleLanguageChange = async (newLanguage: "bn" | "en") => {
+    setLanguageSaving(true);
+    try {
+      await setLanguage(newLanguage);
+      toast({
+        title: t("languageChanged"),
+        description: t("languageChangedDesc"),
+      });
+    } catch (error) {
+      toast({
+        title: t("error"),
+        description: "Failed to update language",
+        variant: "destructive",
+      });
+    } finally {
+      setLanguageSaving(false);
+    }
+  };
 
   // Load settings from localStorage on mount
   useEffect(() => {
@@ -256,12 +280,12 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">সেটিংস</h1>
-            <p className="text-muted-foreground">সিস্টেম সেটিংস পরিচালনা করুন</p>
+            <h1 className="text-2xl font-bold text-foreground">{t("settingsTitle")}</h1>
+            <p className="text-muted-foreground">{t("settingsDesc")}</p>
           </div>
           {user && (
             <div className="text-right text-sm bg-secondary/50 p-3 rounded-lg">
-              <p className="text-muted-foreground">লগইনকৃত:</p>
+              <p className="text-muted-foreground">{t("loggedIn")}:</p>
               <p className="font-medium">{user.email}</p>
             </div>
           )}
@@ -271,49 +295,89 @@ export default function SettingsPage() {
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
             <TabsTrigger value="general" className="gap-2 text-xs sm:text-sm">
               <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">সাধারণ</span>
+              <span className="hidden sm:inline">{t("general")}</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2 text-xs sm:text-sm">
               <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">নোটিফিকেশন</span>
+              <span className="hidden sm:inline">{t("notifications")}</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="gap-2 text-xs sm:text-sm">
               <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">নিরাপত্তা</span>
+              <span className="hidden sm:inline">{t("security")}</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="gap-2 text-xs sm:text-sm">
               <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline">থিম</span>
+              <span className="hidden sm:inline">{t("theme")}</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="general">
             <div className="grid gap-6">
+              {/* Language Settings Card */}
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Languages className="w-5 h-5 text-primary" />
+                    {t("systemLanguage")}
+                  </CardTitle>
+                  <CardDescription>{t("selectLanguage")}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    <Select
+                      value={language}
+                      onValueChange={(value: "bn" | "en") => handleLanguageChange(value)}
+                      disabled={languageSaving}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder={t("selectLanguage")} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        <SelectItem value="bn">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🇧🇩</span>
+                            <span>{t("bengali")} (বাংলা)</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="en">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">🇬🇧</span>
+                            <span>{t("english")} (English)</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {languageSaving && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-3">
+                    {language === "bn" 
+                      ? "বর্তমানে সিস্টেম বাংলায় দেখানো হচ্ছে" 
+                      : "System is currently displayed in English"}
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Globe className="w-5 h-5" />
-                    সাধারণ সেটিংস
+                    {t("generalSettings")}
                   </CardTitle>
-                  <CardDescription>সিস্টেমের মৌলিক সেটিংস</CardDescription>
+                  <CardDescription>{t("generalSettingsDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <Label>সিস্টেম ভাষা</Label>
-                      <Input value="বাংলা" disabled />
-                    </div>
-                    <div>
-                      <Label>টাইমজোন</Label>
+                      <Label>{t("timezone")}</Label>
                       <Input value="Asia/Dhaka (GMT+6)" disabled />
                     </div>
                   </div>
                   <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50">
                     <div>
-                      <p className="font-medium">অটো ব্যাকআপ</p>
-                      <p className="text-sm text-muted-foreground">প্রতিদিন স্বয়ংক্রিয়ভাবে ডাটা ব্যাকআপ</p>
+                      <p className="font-medium">{t("autoBackup")}</p>
+                      <p className="text-sm text-muted-foreground">{t("autoBackupDesc")}</p>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={settings.autoBackup}
                       onCheckedChange={(checked) => handleSettingChange("autoBackup", checked)}
                     />
