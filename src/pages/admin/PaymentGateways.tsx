@@ -35,6 +35,7 @@ interface PaymentGatewayConfig {
   custom_instructions?: string;
   success_message?: string;
   info_message?: string;
+  bkash_password?: string; // bKash API requires username (merchant_id) and password
 }
 
 interface PaymentGateway {
@@ -615,6 +616,28 @@ function GatewayCard({
                     API = গ্রাহক সরাসরি পেমেন্ট করবে | Redirect = গেটওয়ে পেজে যাবে | Manual = নির্দেশনা দেখাবে
                   </p>
                 </div>
+                
+                {/* bKash specific password field */}
+                {gateway.gateway_type === 'bkash' && gateway.additional_config?.payment_mode === 'api' && (
+                  <div>
+                    <Label className="text-sm font-medium">বিকাশ পাসওয়ার্ড (API মোডে প্রয়োজন)</Label>
+                    <Input
+                      type="password"
+                      value={gateway.additional_config?.bkash_password || ''}
+                      onChange={(e) => {
+                        onConfigChange({ 
+                          ...gateway.additional_config, 
+                          bkash_password: e.target.value 
+                        });
+                      }}
+                      placeholder="বিকাশ মার্চেন্ট পাসওয়ার্ড দিন"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      বিকাশ থেকে প্রাপ্ত Username = Merchant ID, Password এখানে দিন
+                    </p>
+                  </div>
+                )}
                 
                 <div>
                   <Label className="text-sm font-medium">কাস্টম নির্দেশনা (ম্যানুয়াল মোডে দেখাবে)</Label>

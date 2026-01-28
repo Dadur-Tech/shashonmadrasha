@@ -50,7 +50,15 @@ import CertificatesPage from "./pages/admin/Certificates";
 import BackupPage from "./pages/admin/Backup";
 import MealSchedulePage from "./pages/admin/MealSchedule";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Disable auto-refresh when switching tabs
+      staleTime: 5 * 60 * 1000, // 5 minutes - reduce unnecessary refetches
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

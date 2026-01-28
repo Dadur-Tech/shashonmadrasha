@@ -83,6 +83,9 @@ serve(async (req) => {
 
     let paymentUrl: string = '';
     let paymentData: any = {};
+    
+    // Check payment mode from config
+    const paymentMode = gatewayConfig.additional_config?.payment_mode || 'manual';
 
     // Handle different gateways
     if (gateway === 'sslcommerz') {
@@ -116,14 +119,69 @@ serve(async (req) => {
         isSandbox: gatewayConfig.sandbox_mode,
       });
       paymentUrl = paymentData.paymentUrl;
-    } else if (['bkash', 'nagad', 'rocket', 'upay'].includes(gateway)) {
-      // For mobile wallets - show QR code or payment number
+    } else if (gateway === 'bkash') {
+      // Check if API mode is enabled
+      if (paymentMode === 'api' && gatewayConfig.api_key_encrypted && gatewayConfig.api_secret_encrypted) {
+        try {
+          paymentData = await initiateBkash({
+            appKey: gatewayConfig.api_key_encrypted,
+            appSecret: gatewayConfig.api_secret_encrypted,
+            username: gatewayConfig.merchant_id || '',
+            password: gatewayConfig.additional_config?.bkash_password || '',
+            amount,
+            transactionId,
+            payerPhone: payer_phone,
+            callbackUrl: `${callbackUrl}?gateway=bkash&return_url=${encodeURIComponent(return_url)}`,
+            isSandbox: gatewayConfig.sandbox_mode,
+          });
+          
+          if (paymentData.bkashURL) {
+            paymentUrl = paymentData.bkashURL;
+          } else {
+            // If bKash API fails, fallback to manual
+            console.error('bKash API returned no URL:', paymentData);
+            paymentData = {
+              type: 'mobile_wallet',
+              gateway,
+              transactionId,
+              amount,
+              instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+              merchantNumber: gatewayConfig.merchant_id,
+              apiError: paymentData.statusMessage || 'API সমস্যা - ম্যানুয়াল পেমেন্ট করুন',
+            };
+          }
+        } catch (error) {
+          console.error('bKash API error:', error);
+          // Fallback to manual on error
+          paymentData = {
+            type: 'mobile_wallet',
+            gateway,
+            transactionId,
+            amount,
+            instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+            merchantNumber: gatewayConfig.merchant_id,
+            apiError: error instanceof Error ? error.message : 'API সংযোগ সমস্যা',
+          };
+        }
+      } else {
+        // Manual mode - show payment instructions
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
+          merchantNumber: gatewayConfig.merchant_id,
+        };
+      }
+    } else if (['nagad', 'rocket', 'upay'].includes(gateway)) {
+      // For other mobile wallets - show payment instructions (manual mode)
       paymentData = {
         type: 'mobile_wallet',
         gateway,
         transactionId,
         amount,
-        instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount),
+        instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
         merchantNumber: gatewayConfig.merchant_id,
       };
     }
@@ -146,6 +204,94 @@ serve(async (req) => {
     );
   }
 });
+
+// bKash Tokenized Checkout API
+async function initiateBkash(params: {
+  appKey: string;
+  appSecret: string;
+  username: string;
+  password: string;
+  amount: number;
+  transactionId: string;
+  payerPhone: string;
+  callbackUrl: string;
+  isSandbox: boolean;
+}): Promise<any> {
+  const baseUrl = params.isSandbox 
+    ? 'https://tokenized.sandbox.bka.sh/v1.2.0-beta'
+    : 'https://tokenized.pay.bka.sh/v1.2.0-beta';
+
+  console.log('bKash Init - Using baseUrl:', baseUrl);
+  console.log('bKash Init - App Key length:', params.appKey?.length);
+  console.log('bKash Init - Username:', params.username);
+
+  // Step 1: Grant Token
+  const grantTokenResponse = await fetch(`${baseUrl}/tokenized/checkout/token/grant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'username': params.username,
+      'password': params.password,
+    },
+    body: JSON.stringify({
+      app_key: params.appKey,
+      app_secret: params.appSecret,
+    }),
+  });
+
+  const tokenData = await grantTokenResponse.json();
+  console.log('bKash Token Response:', JSON.stringify(tokenData));
+
+  if (tokenData.statusCode !== '0000' || !tokenData.id_token) {
+    console.error('bKash token grant failed:', tokenData);
+    return {
+      statusCode: tokenData.statusCode || 'ERROR',
+      statusMessage: tokenData.statusMessage || 'টোকেন পেতে সমস্যা হয়েছে। App Key/Secret চেক করুন।',
+    };
+  }
+
+  const idToken = tokenData.id_token;
+
+  // Step 2: Create Payment
+  const createPaymentResponse = await fetch(`${baseUrl}/tokenized/checkout/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': idToken,
+      'X-APP-Key': params.appKey,
+    },
+    body: JSON.stringify({
+      mode: '0011', // Checkout URL mode
+      payerReference: params.payerPhone,
+      callbackURL: params.callbackUrl,
+      amount: params.amount.toString(),
+      currency: 'BDT',
+      intent: 'sale',
+      merchantInvoiceNumber: params.transactionId,
+    }),
+  });
+
+  const paymentData = await createPaymentResponse.json();
+  console.log('bKash Create Payment Response:', JSON.stringify(paymentData));
+
+  if (paymentData.statusCode !== '0000') {
+    console.error('bKash create payment failed:', paymentData);
+    return {
+      statusCode: paymentData.statusCode || 'ERROR',
+      statusMessage: paymentData.statusMessage || 'পেমেন্ট তৈরি করতে সমস্যা হয়েছে',
+    };
+  }
+
+  return {
+    bkashURL: paymentData.bkashURL,
+    paymentID: paymentData.paymentID,
+    statusCode: paymentData.statusCode,
+    statusMessage: paymentData.statusMessage,
+    idToken, // Store for later use in callback
+  };
+}
 
 async function initiateSSLCommerz(params: {
   storeId: string | null;
@@ -265,7 +411,14 @@ async function initiateAmarPay(params: {
   }
 }
 
-function getMobileWalletInstructions(gateway: string, merchantNumber: string | null, amount: number): string {
+function getMobileWalletInstructions(gateway: string, merchantNumber: string | null, amount: number, customInstructions?: string): string {
+  // If custom instructions are provided, use them
+  if (customInstructions && customInstructions.trim()) {
+    return customInstructions
+      .replace(/\{number\}/g, merchantNumber || 'মার্চেন্ট নম্বর কনফিগার করুন')
+      .replace(/\{amount\}/g, amount.toLocaleString('bn-BD'));
+  }
+  
   const number = merchantNumber || 'মার্চেন্ট নম্বর কনফিগার করুন';
   const amountBn = amount.toLocaleString('bn-BD');
   
