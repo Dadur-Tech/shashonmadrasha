@@ -78,8 +78,7 @@ serve(async (req) => {
       );
     }
 
-    const baseUrl = supabaseUrl.replace('.supabase.co', '.supabase.co/functions/v1');
-    const callbackUrl = `${baseUrl}/payment-callback`;
+    const callbackUrl = `${supabaseUrl}/functions/v1/payment-callback`;
 
     let paymentUrl: string = '';
     let paymentData: any = {};
@@ -87,39 +86,67 @@ serve(async (req) => {
     // Check payment mode from config
     const paymentMode = gatewayConfig.additional_config?.payment_mode || 'manual';
 
+    console.log('Payment initiation:', { gateway, paymentMode, amount, transactionId });
+
     // Handle different gateways
     if (gateway === 'sslcommerz') {
-      paymentData = await initiateSSLCommerz({
-        storeId: gatewayConfig.merchant_id,
-        storePassword: gatewayConfig.api_secret_encrypted,
-        amount,
-        transactionId,
-        payerName: payer_name,
-        payerPhone: payer_phone,
-        payerEmail: payer_email || 'donor@example.com',
-        successUrl: `${callbackUrl}?gateway=sslcommerz&status=success`,
-        failUrl: `${callbackUrl}?gateway=sslcommerz&status=fail`,
-        cancelUrl: `${callbackUrl}?gateway=sslcommerz&status=cancel`,
-        isSandbox: gatewayConfig.sandbox_mode,
-        returnUrl: return_url,
-      });
-      paymentUrl = paymentData.redirectUrl;
+      try {
+        paymentData = await initiateSSLCommerz({
+          storeId: gatewayConfig.merchant_id,
+          storePassword: gatewayConfig.api_secret_encrypted,
+          amount,
+          transactionId,
+          payerName: payer_name,
+          payerPhone: payer_phone,
+          payerEmail: payer_email || 'donor@example.com',
+          successUrl: `${callbackUrl}?gateway=sslcommerz&status=success&return_url=${encodeURIComponent(return_url)}`,
+          failUrl: `${callbackUrl}?gateway=sslcommerz&status=fail&return_url=${encodeURIComponent(return_url)}`,
+          cancelUrl: `${callbackUrl}?gateway=sslcommerz&status=cancel&return_url=${encodeURIComponent(return_url)}`,
+          isSandbox: gatewayConfig.sandbox_mode,
+          returnUrl: return_url,
+        });
+        paymentUrl = paymentData.redirectUrl;
+      } catch (error) {
+        console.error('SSLCommerz initiation error:', error);
+        // Fallback to manual mode
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: 'SSLCommerz সংযোগে সমস্যা হয়েছে। অনুগ্রহ করে সরাসরি যোগাযোগ করুন।',
+          apiError: error instanceof Error ? error.message : 'API সমস্যা',
+        };
+      }
     } else if (gateway === 'amarpay') {
-      paymentData = await initiateAmarPay({
-        storeId: gatewayConfig.merchant_id,
-        signatureKey: gatewayConfig.api_secret_encrypted,
-        amount,
-        transactionId,
-        payerName: payer_name,
-        payerPhone: payer_phone,
-        payerEmail: payer_email || 'donor@example.com',
-        successUrl: `${callbackUrl}?gateway=amarpay&status=success&return_url=${encodeURIComponent(return_url)}`,
-        failUrl: `${callbackUrl}?gateway=amarpay&status=fail&return_url=${encodeURIComponent(return_url)}`,
-        cancelUrl: `${callbackUrl}?gateway=amarpay&status=cancel&return_url=${encodeURIComponent(return_url)}`,
-        isSandbox: gatewayConfig.sandbox_mode,
-      });
-      paymentUrl = paymentData.paymentUrl;
-  } else if (gateway === 'bkash') {
+      try {
+        paymentData = await initiateAmarPay({
+          storeId: gatewayConfig.merchant_id,
+          signatureKey: gatewayConfig.api_secret_encrypted,
+          amount,
+          transactionId,
+          payerName: payer_name,
+          payerPhone: payer_phone,
+          payerEmail: payer_email || 'donor@example.com',
+          successUrl: `${callbackUrl}?gateway=amarpay&status=success&return_url=${encodeURIComponent(return_url)}`,
+          failUrl: `${callbackUrl}?gateway=amarpay&status=fail&return_url=${encodeURIComponent(return_url)}`,
+          cancelUrl: `${callbackUrl}?gateway=amarpay&status=cancel&return_url=${encodeURIComponent(return_url)}`,
+          isSandbox: gatewayConfig.sandbox_mode,
+        });
+        paymentUrl = paymentData.paymentUrl;
+      } catch (error) {
+        console.error('AmarPay initiation error:', error);
+        // Fallback to manual mode
+        paymentData = {
+          type: 'mobile_wallet',
+          gateway,
+          transactionId,
+          amount,
+          instructions: 'AmarPay সংযোগে সমস্যা হয়েছে। অনুগ্রহ করে সরাসরি যোগাযোগ করুন।',
+          apiError: error instanceof Error ? error.message : 'API সমস্যা',
+        };
+      }
+    } else if (gateway === 'bkash') {
       // Check if API mode is enabled for embedded checkout
       if (paymentMode === 'api' && gatewayConfig.api_key_encrypted && gatewayConfig.api_secret_encrypted) {
         try {

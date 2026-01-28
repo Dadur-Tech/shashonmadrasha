@@ -91,6 +91,38 @@ interface PaymentGateway {
 }
 
 export const DonationSection = () => {
+  // Check URL params for payment callback result
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const txnId = urlParams.get('txn');
+    
+    if (paymentStatus) {
+      // Clear the URL params after reading
+      const newUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', newUrl);
+      
+      if (paymentStatus === 'success') {
+        toast({
+          title: "আলহামদুলিল্লাহ! পেমেন্ট সফল হয়েছে",
+          description: txnId ? `ট্র্যান্সাকশন আইডি: ${txnId}` : "আপনার দান গৃহীত হয়েছে।",
+        });
+      } else if (paymentStatus === 'cancelled') {
+        toast({
+          title: "পেমেন্ট বাতিল করা হয়েছে",
+          description: "আপনি পেমেন্ট বাতিল করেছেন। আবার চেষ্টা করতে পারেন।",
+          variant: "destructive",
+        });
+      } else if (paymentStatus === 'failed') {
+        toast({
+          title: "পেমেন্ট ব্যর্থ হয়েছে",
+          description: "পেমেন্ট সম্পন্ন হয়নি। অনুগ্রহ করে পুনরায় চেষ্টা করুন।",
+          variant: "destructive",
+        });
+      }
+    }
+  }, []);
+
   return (
     <section id="donate" className="py-20 bg-gradient-to-b from-background to-secondary/30">
       <div className="container mx-auto px-4">
