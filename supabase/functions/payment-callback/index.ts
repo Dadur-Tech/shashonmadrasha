@@ -21,6 +21,12 @@ serve(async (req) => {
     const status = url.searchParams.get('status');
     let returnUrl = url.searchParams.get('return_url') || '/';
 
+    // Ensure returnUrl is a valid URL, not just a path
+    if (returnUrl && !returnUrl.startsWith('http')) {
+      // Default to the main site if return_url is relative
+      returnUrl = `https://shashonmadrasha.lovable.app${returnUrl.startsWith('/') ? returnUrl : '/' + returnUrl}`;
+    }
+
     let transactionId: string | null = null;
     let gatewayTransactionId: string | null = null;
     let paymentStatus: 'completed' | 'failed' | 'cancelled' = 'failed';
@@ -39,6 +45,8 @@ serve(async (req) => {
         }
       }
     }
+
+    console.log('Payment callback received:', { gateway, status, body: JSON.stringify(body).substring(0, 500) });
 
     // Handle bKash embedded checkout execute
     if (body.gateway === 'bkash' && body.paymentID && body.idToken) {
@@ -81,13 +89,11 @@ serve(async (req) => {
       console.log('bKash Execute Response:', JSON.stringify(executeData));
 
       if (executeData.statusCode === '0000' && executeData.transactionStatus === 'Completed') {
-        // Payment successful - update transaction
+        // Payment successful - find transaction by merchantInvoiceNumber
         const { data: transaction } = await supabase
           .from('payment_transactions')
           .select('*')
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .eq('transaction_id', executeData.merchantInvoiceNumber)
           .single();
 
         if (transaction) {
@@ -137,6 +143,8 @@ serve(async (req) => {
       gatewayTransactionId = body.val_id || body.bank_tran_id;
       returnUrl = body.value_a || returnUrl;
       
+      console.log('SSLCommerz callback:', { tran_id: transactionId, status: body.status, val_id: body.val_id });
+      
       if (status === 'success' && body.status === 'VALID') {
         paymentStatus = 'completed';
       } else if (status === 'cancel') {
@@ -149,6 +157,8 @@ serve(async (req) => {
     else if (gateway === 'amarpay') {
       transactionId = body.mer_txnid || body.opt_a;
       gatewayTransactionId = body.pg_txnid;
+      
+      console.log('AmarPay callback:', { mer_txnid: body.mer_txnid, pay_status: body.pay_status });
       
       if (body.pay_status === 'Successful') {
         paymentStatus = 'completed';
@@ -163,6 +173,8 @@ serve(async (req) => {
       const paymentID = url.searchParams.get('paymentID');
       const callbackStatus = url.searchParams.get('status');
       
+      console.log('bKash redirect callback:', { paymentID, callbackStatus });
+      
       if (callbackStatus === 'success' && paymentID) {
         // Get the gateway config to execute the payment
         const { data: gatewayConfig } = await supabase
@@ -173,10 +185,58 @@ serve(async (req) => {
           .single();
 
         if (gatewayConfig) {
-          // We need the idToken - for redirect mode, we need to retrieve from stored session
-          // For now, mark as pending verification
-          paymentStatus = 'completed'; // Assume success from redirect
-          gatewayTransactionId = paymentID;
+          // For redirect mode, we need to execute the payment here
+          const baseUrl = gatewayConfig.sandbox_mode 
+            ? 'https://tokenized.sandbox.bka.sh/v1.2.0-beta'
+            : 'https://tokenized.pay.bka.sh/v1.2.0-beta';
+
+          // First, get a new token
+          const tokenResponse = await fetch(`${baseUrl}/tokenized/checkout/token/grant`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'username': gatewayConfig.merchant_id || '',
+              'password': gatewayConfig.additional_config?.bkash_password || '',
+            },
+            body: JSON.stringify({
+              app_key: gatewayConfig.api_key_encrypted,
+              app_secret: gatewayConfig.api_secret_encrypted,
+            }),
+          });
+
+          const tokenData = await tokenResponse.json();
+          
+          if (tokenData.statusCode === '0000' && tokenData.id_token) {
+            // Now execute the payment
+            const executeResponse = await fetch(`${baseUrl}/tokenized/checkout/execute`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': tokenData.id_token,
+                'X-APP-Key': gatewayConfig.api_key_encrypted,
+              },
+              body: JSON.stringify({
+                paymentID: paymentID,
+              }),
+            });
+
+            const executeData = await executeResponse.json();
+            console.log('bKash Execute (redirect) Response:', JSON.stringify(executeData));
+
+            if (executeData.statusCode === '0000' && executeData.transactionStatus === 'Completed') {
+              paymentStatus = 'completed';
+              gatewayTransactionId = executeData.trxID;
+              transactionId = executeData.merchantInvoiceNumber;
+            } else {
+              console.error('bKash execute failed:', executeData);
+              paymentStatus = 'failed';
+            }
+          } else {
+            console.error('bKash token grant failed for callback:', tokenData);
+            paymentStatus = 'failed';
+          }
         }
       } else if (callbackStatus === 'cancel') {
         paymentStatus = 'cancelled';
@@ -184,16 +244,18 @@ serve(async (req) => {
         paymentStatus = 'failed';
       }
       
-      // Find the transaction by paymentID in notes or gateway_transaction_id
-      const { data: txn } = await supabase
-        .from('payment_transactions')
-        .select('transaction_id')
-        .or(`gateway_transaction_id.eq.${paymentID},notes.ilike.%${paymentID}%`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      transactionId = txn?.transaction_id || null;
+      // If we still don't have transactionId, try to find it from pending transactions
+      if (!transactionId && paymentID) {
+        const { data: txn } = await supabase
+          .from('payment_transactions')
+          .select('transaction_id')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        transactionId = txn?.transaction_id || null;
+      }
     }
     // Handle manual verification
     else if (gateway === 'manual') {
@@ -201,6 +263,8 @@ serve(async (req) => {
       gatewayTransactionId = body.gateway_txn_id;
       paymentStatus = body.verified ? 'completed' : 'failed';
     }
+
+    console.log('Processing transaction update:', { transactionId, gatewayTransactionId, paymentStatus });
 
     if (transactionId) {
       // Update payment transaction
@@ -264,10 +328,12 @@ serve(async (req) => {
       }
     }
 
-    // Redirect user back to the app
+    // Build redirect URL with proper encoding
     const redirectPath = paymentStatus === 'completed' 
-      ? `${returnUrl}?payment=success&txn=${transactionId}`
-      : `${returnUrl}?payment=${paymentStatus}&txn=${transactionId}`;
+      ? `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}payment=success&txn=${encodeURIComponent(transactionId || '')}`
+      : `${returnUrl}${returnUrl.includes('?') ? '&' : '?'}payment=${paymentStatus}&txn=${encodeURIComponent(transactionId || '')}`;
+
+    console.log('Redirecting to:', redirectPath);
 
     return new Response(null, {
       status: 302,
@@ -280,7 +346,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Payment callback error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
