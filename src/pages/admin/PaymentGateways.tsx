@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { 
   CreditCard, 
@@ -28,6 +30,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+interface PaymentGatewayConfig {
+  payment_mode?: 'api' | 'manual' | 'redirect';
+  custom_instructions?: string;
+  success_message?: string;
+  info_message?: string;
+}
+
 interface PaymentGateway {
   id: string;
   gateway_type: string;
@@ -39,6 +48,7 @@ interface PaymentGateway {
   sandbox_mode: boolean;
   display_order: number;
   logo_url: string | null;
+  additional_config: PaymentGatewayConfig | null;
 }
 
 const defaultGatewayIcons: Record<string, string> = {
@@ -73,7 +83,7 @@ export default function PaymentGatewaysPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("payment_gateways")
-        .select("id, gateway_type, display_name, is_enabled, merchant_id, api_key_encrypted, api_secret_encrypted, sandbox_mode, display_order, logo_url")
+        .select("id, gateway_type, display_name, is_enabled, merchant_id, api_key_encrypted, api_secret_encrypted, sandbox_mode, display_order, logo_url, additional_config")
         .order("display_order");
       
       if (error) throw error;
@@ -173,6 +183,31 @@ export default function PaymentGatewaysPage() {
       toast({
         title: "সফল!",
         description: "মোড পরিবর্তন হয়েছে",
+      });
+    },
+  });
+
+  const updateConfig = useMutation({
+    mutationFn: async ({ id, config }: { id: string; config: PaymentGatewayConfig }) => {
+      const { error } = await supabase
+        .from("payment_gateways")
+        .update({ additional_config: config as any })
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-gateways"] });
+      toast({
+        title: "সফল!",
+        description: "কনফিগারেশন আপডেট হয়েছে",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "সমস্যা হয়েছে",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -341,6 +376,7 @@ export default function PaymentGatewaysPage() {
                   onLogoUpload={(file) => handleLogoUpload(gateway.id, file)}
                   onLogoRemove={() => handleLogoRemove(gateway)}
                   uploadingLogo={uploadingLogo[gateway.id]}
+                  onConfigChange={(config) => updateConfig.mutate({ id: gateway.id, config })}
                 />
               ))}
             </div>
@@ -367,6 +403,7 @@ export default function PaymentGatewaysPage() {
                   onLogoUpload={(file) => handleLogoUpload(gateway.id, file)}
                   onLogoRemove={() => handleLogoRemove(gateway)}
                   uploadingLogo={uploadingLogo[gateway.id]}
+                  onConfigChange={(config) => updateConfig.mutate({ id: gateway.id, config })}
                 />
               ))}
             </div>
@@ -424,6 +461,7 @@ interface GatewayCardProps {
   onLogoUpload?: (file: File) => void;
   onLogoRemove?: () => void;
   uploadingLogo?: boolean;
+  onConfigChange?: (config: PaymentGatewayConfig) => void;
 }
 
 function GatewayCard({
@@ -443,6 +481,7 @@ function GatewayCard({
   onLogoUpload,
   onLogoRemove,
   uploadingLogo,
+  onConfigChange,
 }: GatewayCardProps) {
   const logoInputRef = useRef<HTMLInputElement>(null);
   
@@ -548,6 +587,82 @@ function GatewayCard({
                 onCheckedChange={onToggleSandbox}
               />
             </div>
+
+            {/* Payment Mode & Custom Messages */}
+            {onConfigChange && (
+              <div className="space-y-3 p-3 rounded-lg bg-secondary/50">
+                <div>
+                  <Label className="text-sm font-medium">পেমেন্ট মোড</Label>
+                  <Select
+                    value={gateway.additional_config?.payment_mode || 'manual'}
+                    onValueChange={(value: 'api' | 'manual' | 'redirect') => {
+                      onConfigChange({ 
+                        ...gateway.additional_config, 
+                        payment_mode: value 
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="মোড নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="api">API ইন্টিগ্রেশন (স্বয়ংক্রিয়)</SelectItem>
+                      <SelectItem value="redirect">রিডাইরেক্ট চেকআউট</SelectItem>
+                      <SelectItem value="manual">ম্যানুয়াল নির্দেশনা</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    API = গ্রাহক সরাসরি পেমেন্ট করবে | Redirect = গেটওয়ে পেজে যাবে | Manual = নির্দেশনা দেখাবে
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-medium">কাস্টম নির্দেশনা (ম্যানুয়াল মোডে দেখাবে)</Label>
+                  <Textarea
+                    value={gateway.additional_config?.custom_instructions || ''}
+                    onChange={(e) => {
+                      onConfigChange({ 
+                        ...gateway.additional_config, 
+                        custom_instructions: e.target.value 
+                      });
+                    }}
+                    placeholder="পেমেন্ট করার ধাপগুলো লিখুন..."
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">তথ্য বার্তা (পেমেন্ট সিলেক্ট করলে দেখাবে)</Label>
+                  <Input
+                    value={gateway.additional_config?.info_message || ''}
+                    onChange={(e) => {
+                      onConfigChange({ 
+                        ...gateway.additional_config, 
+                        info_message: e.target.value 
+                      });
+                    }}
+                    placeholder="যেমন: আপনাকে বিকাশ পেমেন্ট পেজে নিয়ে যাওয়া হবে"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium">সাকসেস বার্তা (পেমেন্ট সম্পন্ন হলে দেখাবে)</Label>
+                  <Input
+                    value={gateway.additional_config?.success_message || ''}
+                    onChange={(e) => {
+                      onConfigChange({ 
+                        ...gateway.additional_config, 
+                        success_message: e.target.value 
+                      });
+                    }}
+                    placeholder="যেমন: আলহামদুলিল্লাহ! আপনার দান সফল হয়েছে"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Credentials */}
             {isEditing ? (
