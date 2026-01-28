@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,6 +26,19 @@ export default function LoginPage() {
   // Get the redirect path from location state, or default to /admin
   const defaultAfterLogin = isAdmin ? "/admin" : "/";
   const from = (location.state as { from?: string })?.from || defaultAfterLogin;
+
+  // Fetch institution settings for logo
+  const { data: institution } = useQuery({
+    queryKey: ["institution-login"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institution_settings")
+        .select("name, logo_url")
+        .maybeSingle();
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,11 +173,21 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-2xl">ج</span>
-            </div>
+            {institution?.logo_url ? (
+              <img 
+                src={institution.logo_url} 
+                alt="Logo" 
+                className="w-14 h-14 rounded-2xl object-contain bg-primary/10 p-1"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-2xl">ج</span>
+              </div>
+            )}
           </Link>
-          <h1 className="mt-4 text-xl font-bold text-foreground leading-tight">আল জামিয়াতুল আরাবিয়া</h1>
+          <h1 className="mt-4 text-xl font-bold text-foreground leading-tight">
+            {institution?.name || "আল জামিয়াতুল আরাবিয়া"}
+          </h1>
           <p className="text-muted-foreground">শাসন সিংগাতি মাদরাসা</p>
         </div>
 

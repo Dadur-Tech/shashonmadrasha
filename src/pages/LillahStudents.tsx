@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Heart, Users, Baby, Home, ArrowLeft, Search, BookOpen } from "lucide-react";
+import { PublicHeader } from "@/components/shared/PublicHeader";
+import { Heart, Users, Baby, Home, Search, BookOpen } from "lucide-react";
 import { useState } from "react";
 
 export default function LillahStudentsPage() {
@@ -61,23 +62,7 @@ export default function LillahStudentsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              <span>হোম</span>
-            </Link>
-            <h1 className="font-bold text-foreground">লিল্লাহ বোর্ডিং</h1>
-            <a href="/#donate">
-              <Button size="sm" className="gap-2">
-                <Heart className="w-4 h-4" />
-                দান করুন
-              </Button>
-            </a>
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="লিল্লাহ বোর্ডিং" />
 
       {/* Hero Section */}
       <section className="py-12 bg-gradient-to-b from-rose-50 to-background dark:from-rose-950/20">

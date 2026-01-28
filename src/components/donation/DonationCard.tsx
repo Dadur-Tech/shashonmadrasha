@@ -249,10 +249,21 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   const selectedAmount = formData.customAmount ? parseInt(formData.customAmount) : formData.amount;
 
   const handleSubmit = async () => {
-    if (!formData.donorName || !formData.donorPhone || selectedAmount <= 0) {
+    // For anonymous donors, only phone is required (for payment verification)
+    // For non-anonymous donors, name and phone are required
+    if (!formData.isAnonymous && !formData.donorName) {
       toast({
         title: "তথ্য পূরণ করুন",
-        description: "অনুগ্রহ করে সকল প্রয়োজনীয় তথ্য পূরণ করুন",
+        description: "অনুগ্রহ করে আপনার নাম দিন",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!formData.donorPhone || selectedAmount <= 0) {
+      toast({
+        title: "তথ্য পূরণ করুন",
+        description: "অনুগ্রহ করে মোবাইল নম্বর এবং দানের পরিমাণ দিন",
         variant: "destructive",
       });
       return;
@@ -263,7 +274,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
       // Create donation via secure edge function (with validation and rate limiting)
       const donationResponse = await supabase.functions.invoke('process-donation', {
         body: {
-          donor_name: formData.donorName,
+          donor_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
           donor_phone: formData.donorPhone,
           donor_email: formData.donorEmail || null,
           amount: selectedAmount,
@@ -432,16 +443,25 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
           </div>
 
           <div className="space-y-3">
-            <div>
-              <Label htmlFor="name">আপনার নাম *</Label>
-              <Input
-                id="name"
-                value={formData.donorName}
-                onChange={(e) => setFormData({ ...formData, donorName: e.target.value })}
-                placeholder="আপনার পুরো নাম"
-                disabled={formData.isAnonymous}
-              />
-            </div>
+            {!formData.isAnonymous && (
+              <div>
+                <Label htmlFor="name">আপনার নাম *</Label>
+                <Input
+                  id="name"
+                  value={formData.donorName}
+                  onChange={(e) => setFormData({ ...formData, donorName: e.target.value })}
+                  placeholder="আপনার পুরো নাম"
+                />
+              </div>
+            )}
+            
+            {formData.isAnonymous && (
+              <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                <p className="text-sm text-emerald-700 dark:text-emerald-400">
+                  ✓ আপনি বেনামী দাতা হিসেবে দান করছেন। আপনার পরিচয় গোপন থাকবে।
+                </p>
+              </div>
+            )}
             
             <div>
               <Label htmlFor="phone">মোবাইল নম্বর *</Label>

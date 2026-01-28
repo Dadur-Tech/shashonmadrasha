@@ -21,8 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trophy, Medal, Award, Search, GraduationCap, ArrowLeft, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Trophy, Medal, Award, Search, GraduationCap, Users } from "lucide-react";
+import { PublicHeader } from "@/components/shared/PublicHeader";
 
 const departmentLabels: Record<string, string> = {
   hifz: "হিফজ বিভাগ",
@@ -183,18 +183,7 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground py-4 shadow-lg">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <ArrowLeft className="w-5 h-5" />
-              <span>হোমে ফিরুন</span>
-            </Link>
-            <h1 className="text-xl font-bold">পরীক্ষার ফলাফল</h1>
-            <div className="w-24" />
-          </div>
-        </div>
-      </header>
+      <PublicHeader title="পরীক্ষার ফলাফল" />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
