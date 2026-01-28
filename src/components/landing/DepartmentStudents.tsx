@@ -93,16 +93,16 @@ export function DepartmentStudents() {
   });
 
   return (
-    <section className="py-20 bg-background relative">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-14">
+    <section className="py-12 md:py-20 bg-background relative">
+      <div className="container mx-auto px-3 md:px-4">
+        <div className="text-center mb-8 md:mb-14">
           <motion.span
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4"
+            className="inline-flex items-center gap-2 px-4 py-1.5 md:px-5 md:py-2 rounded-full bg-primary/10 text-primary text-xs md:text-sm font-semibold mb-3 md:mb-4"
           >
-            <BookOpen className="w-4 h-4" />
+            <BookOpen className="w-3 h-3 md:w-4 md:h-4" />
             বিভাগ সমূহ
           </motion.span>
           <motion.h2
@@ -110,7 +110,7 @@ export function DepartmentStudents() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             viewport={{ once: true }}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4"
+            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 md:mb-4"
           >
             আমাদের শিক্ষা বিভাগ
           </motion.h2>
@@ -119,14 +119,14 @@ export function DepartmentStudents() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-muted-foreground max-w-2xl mx-auto text-lg"
+            className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-lg"
           >
             বিভিন্ন বিভাগে ছাত্রদের বিন্যাস ও শিক্ষা কার্যক্রম
           </motion.p>
         </div>
 
         {/* Department Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-16">
           {departmentData?.map((dept, index) => {
             const Icon = dept.config.icon;
             return (
@@ -134,30 +134,30 @@ export function DepartmentStudents() {
                 key={dept.department}
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.1 * index, type: "spring", stiffness: 100 }}
+                transition={{ delay: 0.05 * index, type: "spring", stiffness: 100 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
               >
                 <Card className={`border-2 ${dept.config.borderColor} ${dept.config.bgColor} h-full transition-all duration-300 hover:shadow-xl overflow-hidden`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className={`w-14 h-14 rounded-2xl bg-white dark:bg-background flex items-center justify-center shadow-sm`}>
-                        <Icon className={`w-7 h-7 ${dept.config.color}`} />
+                  <CardContent className="p-3 sm:p-4 md:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-3 md:mb-6">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-white dark:bg-background flex items-center justify-center shadow-sm shrink-0`}>
+                        <Icon className={`w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ${dept.config.color}`} />
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-foreground">{dept.config.label}</h3>
-                        <p className="text-sm text-muted-foreground">{dept.classes.length} টি ক্লাস</p>
+                      <div className="min-w-0">
+                        <h3 className="text-sm sm:text-base md:text-lg font-bold text-foreground truncate">{dept.config.label}</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">{dept.classes.length} টি ক্লাস</p>
                       </div>
                     </div>
                     
                     <div className="flex items-end justify-between">
                       <div>
-                        <p className="text-4xl font-bold text-foreground">
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
                           {dept.count.toLocaleString('bn-BD')}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">জন ছাত্র</p>
+                        <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">জন ছাত্র</p>
                       </div>
-                      <Badge className={`${dept.config.color} bg-white dark:bg-background border ${dept.config.borderColor}`}>
+                      <Badge className={`${dept.config.color} bg-white dark:bg-background border ${dept.config.borderColor} text-xs`}>
                         সক্রিয়
                       </Badge>
                     </div>
@@ -174,22 +174,22 @@ export function DepartmentStudents() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-secondary/30 rounded-3xl p-8"
+            className="bg-secondary/30 rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-8"
           >
-            <h3 className="text-xl font-bold text-center mb-8 text-foreground">আমাদের কিছু ছাত্র</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-6">
+            <h3 className="text-lg md:text-xl font-bold text-center mb-4 md:mb-8 text-foreground">আমাদের কিছু ছাত্র</h3>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-3 sm:gap-4 md:gap-6">
               {sampleStudents.map((student: any, index: number) => (
                 <motion.div
                   key={student.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.05 * index }}
+                  transition={{ delay: 0.03 * index }}
                   viewport={{ once: true }}
                   whileHover={{ scale: 1.05 }}
                   className="text-center group"
                 >
                   <Link to={`/student/${student.student_id}`}>
-                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full overflow-hidden bg-white dark:bg-background border-3 border-primary/30 mb-3 shadow-md group-hover:shadow-lg group-hover:border-primary/60 transition-all cursor-pointer">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 mx-auto rounded-full overflow-hidden bg-white dark:bg-background border-2 border-primary/30 mb-1.5 md:mb-3 shadow-md group-hover:shadow-lg group-hover:border-primary/60 transition-all cursor-pointer">
                       {student.photo_url ? (
                         <img 
                           src={student.photo_url} 
@@ -197,13 +197,13 @@ export function DepartmentStudents() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-xl font-bold">
+                        <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-sm sm:text-lg md:text-xl font-bold">
                           {student.full_name.charAt(0)}
                         </div>
                       )}
                     </div>
-                    <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{student.full_name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs sm:text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{student.full_name}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                       {student.classes?.name || 'N/A'}
                     </p>
                   </Link>
@@ -212,11 +212,11 @@ export function DepartmentStudents() {
             </div>
 
             {/* View All Students Button */}
-            <div className="text-center mt-8">
+            <div className="text-center mt-4 md:mt-8">
               <Link to="/students">
-                <Button size="lg" className="gap-2 px-8 shadow-lg hover:shadow-xl transition-all">
+                <Button size="default" className="gap-2 px-4 md:px-8 shadow-lg hover:shadow-xl transition-all text-sm md:text-base">
                   সকল ছাত্র দেখুন
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
               </Link>
             </div>

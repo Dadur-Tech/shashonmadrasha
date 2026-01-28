@@ -51,14 +51,14 @@ export function HeroSection() {
   const secondPart = institutionNameParts.slice(3).join(" ") || "শাসন সিংগাতী মাদ্রাসা";
 
   return (
-    <section className="relative pt-28 pb-20 md:pt-36 md:pb-32 overflow-hidden">
+    <section className="relative pt-20 pb-12 md:pt-28 md:pb-20 lg:pt-36 lg:pb-32 overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 hero-gradient opacity-5" />
-      <div className="absolute top-20 right-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
+      <div className="absolute top-20 right-10 w-48 md:w-72 h-48 md:h-72 bg-accent/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-10 left-10 w-64 md:w-96 h-64 md:h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] md:w-[800px] h-[600px] md:h-[800px] bg-primary/5 rounded-full blur-3xl" />
       
-      {/* Decorative floating elements */}
+      {/* Decorative floating elements - Hidden on mobile for performance */}
       <motion.div 
         animate={{ y: [0, -20, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -100,7 +100,7 @@ export function HeroSection() {
         </div>
       </motion.div>
       
-      <div className="container mx-auto px-4 relative">
+      <div className="container mx-auto px-3 md:px-4 relative">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -113,12 +113,12 @@ export function HeroSection() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5 }}
-                className="mb-6"
+                className="mb-4 md:mb-6"
               >
                 <img 
                   src={institution.logo_url} 
                   alt={institutionName}
-                  className="w-24 h-24 md:w-32 md:h-32 mx-auto rounded-2xl object-cover shadow-xl border-4 border-primary/20"
+                  className="w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 mx-auto rounded-xl md:rounded-2xl object-cover shadow-xl border-2 md:border-4 border-primary/20"
                 />
               </motion.div>
             )}
@@ -128,15 +128,15 @@ export function HeroSection() {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 text-primary text-sm font-semibold mb-8 shadow-lg backdrop-blur-sm border border-primary/20"
+              className="inline-flex items-center gap-1.5 md:gap-2 px-4 py-1.5 md:px-6 md:py-2.5 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 text-primary text-xs md:text-sm font-semibold mb-4 md:mb-8 shadow-lg backdrop-blur-sm border border-primary/20"
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
               بسم الله الرحمن الرحيم
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
             </motion.span>
             
             {/* Main Title */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4 md:mb-6 leading-tight">
               <motion.span
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -149,7 +149,7 @@ export function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="block text-gradient mt-3"
+                className="block text-gradient mt-1 md:mt-3"
               >
                 {secondPart}
               </motion.span>
@@ -160,7 +160,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed"
+              className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-muted-foreground mb-6 md:mb-10 max-w-3xl mx-auto leading-relaxed px-2"
             >
               {(institution as any)?.description || (institution as any)?.motto || 
                 "ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি আধুনিক শিক্ষায় সুদক্ষ আলেম-উলামা তৈরির প্রতিষ্ঠান।"}
@@ -171,24 +171,24 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4"
             >
-              <a href="#admission">
-                <Button size="lg" className="gap-2 px-10 py-7 text-lg shadow-xl hover:shadow-2xl transition-all group">
-                  <Book className="w-5 h-5" />
+              <a href="#admission" className="w-full sm:w-auto">
+                <Button size="default" className="gap-2 px-6 py-5 md:px-10 md:py-7 text-sm md:text-lg shadow-xl hover:shadow-2xl transition-all group w-full sm:w-auto">
+                  <Book className="w-4 h-4 md:w-5 md:h-5" />
                   ভর্তি তথ্য
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </a>
-              <Link to="/courses">
-                <Button size="lg" variant="outline" className="gap-2 px-10 py-7 text-lg border-2 hover:bg-primary/5 group">
-                  <PlayCircle className="w-5 h-5" />
+              <Link to="/courses" className="w-full sm:w-auto">
+                <Button size="default" variant="outline" className="gap-2 px-6 py-5 md:px-10 md:py-7 text-sm md:text-lg border-2 hover:bg-primary/5 group w-full sm:w-auto">
+                  <PlayCircle className="w-4 h-4 md:w-5 md:h-5" />
                   অনলাইন ক্লাস
                 </Button>
               </Link>
-              <a href="#donate">
-                <Button size="lg" variant="ghost" className="gap-2 px-10 py-7 text-lg hover:bg-accent/10">
-                  <Heart className="w-5 h-5 text-accent" />
+              <a href="#donate" className="w-full sm:w-auto">
+                <Button size="default" variant="ghost" className="gap-2 px-6 py-5 md:px-10 md:py-7 text-sm md:text-lg hover:bg-accent/10 w-full sm:w-auto">
+                  <Heart className="w-4 h-4 md:w-5 md:h-5 text-accent" />
                   দান করুন
                 </Button>
               </a>
@@ -199,7 +199,7 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1 }}
-              className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
+              className="mt-8 md:mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 max-w-3xl mx-auto"
             >
               {[
                 { 
@@ -229,11 +229,11 @@ export function HeroSection() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1.2 + index * 0.1 }}
                   whileHover={{ scale: 1.05, y: -5 }}
-                  className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all cursor-default"
+                  className="text-center p-2.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all cursor-default"
                 >
-                  <stat.icon className="w-6 h-6 text-primary/60 mx-auto mb-2" />
-                  <p className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
+                  <stat.icon className="w-4 h-4 md:w-6 md:h-6 text-primary/60 mx-auto mb-1 md:mb-2" />
+                  <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary">{stat.value}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">{stat.label}</p>
                 </motion.div>
               ))}
             </motion.div>

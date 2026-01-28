@@ -217,31 +217,34 @@ export default function Index() {
       <HeroSection />
 
       {/* Quick Links Section */}
-      <section className="py-12 -mt-16 relative z-10">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-6xl mx-auto">
+      <section className="py-8 md:py-12 -mt-8 md:-mt-16 relative z-10">
+        <div className="container mx-auto px-3 md:px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4 max-w-6xl mx-auto">
             {[
-              { icon: PlayCircle, label: "অনলাইন ক্লাস", href: "/courses", color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/40" },
-              { icon: FileText, label: "পরীক্ষার ফলাফল", href: "/results", color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950/40" },
-              { icon: Users, label: "ছাত্র তালিকা", href: "/students", color: "text-emerald-600", bgColor: "bg-emerald-50 dark:bg-emerald-950/40" },
-              { icon: Heart, label: "লিল্লাহ বোর্ডিং", href: "/lillah-students", color: "text-rose-600", bgColor: "bg-rose-50 dark:bg-rose-950/40" },
-              { icon: Award, label: "প্রাক্তন ছাত্র", href: "/alumni", color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950/40" },
+              { icon: PlayCircle, label: "অনলাইন ক্লাস", shortLabel: "ক্লাস", href: "/courses", color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/40" },
+              { icon: FileText, label: "পরীক্ষার ফলাফল", shortLabel: "ফলাফল", href: "/results", color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-950/40" },
+              { icon: Users, label: "ছাত্র তালিকা", shortLabel: "ছাত্র", href: "/students", color: "text-emerald-600", bgColor: "bg-emerald-50 dark:bg-emerald-950/40" },
+              { icon: Heart, label: "লিল্লাহ বোর্ডিং", shortLabel: "লিল্লাহ", href: "/lillah-students", color: "text-rose-600", bgColor: "bg-rose-50 dark:bg-rose-950/40" },
+              { icon: Award, label: "প্রাক্তন ছাত্র", shortLabel: "প্রাক্তন", href: "/alumni", color: "text-amber-600", bgColor: "bg-amber-50 dark:bg-amber-950/40" },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
                 viewport={{ once: true }}
               >
                 <Link to={item.href}>
-                  <Card className={`${item.bgColor} border-transparent hover:shadow-lg transition-all group cursor-pointer`}>
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className={`p-2 rounded-lg bg-white dark:bg-background shadow-sm`}>
-                        <item.icon className={`w-5 h-5 ${item.color}`} />
+                  <Card className={`${item.bgColor} border-transparent hover:shadow-lg transition-all group cursor-pointer h-full`}>
+                    <CardContent className="p-2.5 sm:p-3 md:p-4 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                      <div className={`p-1.5 sm:p-2 rounded-lg bg-white dark:bg-background shadow-sm shrink-0`}>
+                        <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${item.color}`} />
                       </div>
-                      <span className="font-medium text-sm">{item.label}</span>
-                      <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="font-medium text-xs sm:text-sm text-center sm:text-left leading-tight">
+                        <span className="hidden sm:inline">{item.label}</span>
+                        <span className="sm:hidden">{item.shortLabel}</span>
+                      </span>
+                      <ArrowRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                     </CardContent>
                   </Card>
                 </Link>

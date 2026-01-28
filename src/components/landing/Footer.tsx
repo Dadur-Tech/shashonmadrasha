@@ -28,47 +28,47 @@ export function Footer() {
   const description = (institution as any)?.description || (institution as any)?.motto;
 
   return (
-    <footer className="py-12 border-t border-border bg-card">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-4">
+    <footer className="py-8 md:py-12 border-t border-border bg-card">
+      <div className="container mx-auto px-3 md:px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
               {institution?.logo_url ? (
                 <img 
                   src={institution.logo_url} 
                   alt={institutionName}
-                  className="w-10 h-10 rounded-xl object-cover shadow-lg"
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover shadow-lg"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-                  <span className="text-primary-foreground font-bold text-lg">ج</span>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
+                  <span className="text-primary-foreground font-bold text-sm md:text-lg">ج</span>
                 </div>
               )}
               <div>
-                <h3 className="font-bold text-foreground">{shortName}</h3>
-                <p className="text-xs text-muted-foreground">{subName}</p>
+                <h3 className="font-bold text-foreground text-sm md:text-base">{shortName}</h3>
+                <p className="text-[10px] md:text-xs text-muted-foreground">{subName}</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">
               {description || "ইসলামী শিক্ষার আলোকবর্তিকা। কুরআন, হাদীস ও দ্বীনি ইলমের পাশাপাশি চরিত্র গঠন ও নৈতিক শিক্ষায় আলোকিত প্রতিষ্ঠান।"}
             </p>
             {institution?.principal_name && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-xs md:text-sm text-muted-foreground mt-2">
                 <strong>মুহতামিম:</strong> {institution.principal_name}
               </p>
             )}
             
             {/* Social Links */}
             {(facebookUrl || youtubeUrl || whatsappNumber) && (
-              <div className="flex items-center gap-3 mt-4">
+              <div className="flex items-center gap-2 md:gap-3 mt-3 md:mt-4">
                 {facebookUrl && (
                   <a 
                     href={facebookUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 md:w-9 md:h-9 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center transition-colors"
                   >
-                    <Facebook className="w-4 h-4 text-blue-600" />
+                    <Facebook className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
                   </a>
                 )}
                 {youtubeUrl && (
@@ -76,9 +76,9 @@ export function Footer() {
                     href={youtubeUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 md:w-9 md:h-9 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center transition-colors"
                   >
-                    <Youtube className="w-4 h-4 text-red-600" />
+                    <Youtube className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
                   </a>
                 )}
                 {whatsappNumber && (
@@ -86,9 +86,9 @@ export function Footer() {
                     href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg bg-green-500/10 hover:bg-green-500/20 flex items-center justify-center transition-colors"
+                    className="w-7 h-7 md:w-9 md:h-9 rounded-lg bg-green-500/10 hover:bg-green-500/20 flex items-center justify-center transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4 text-green-600" />
+                    <MessageCircle className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
                   </a>
                 )}
               </div>
@@ -96,8 +96,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4">দ্রুত লিংক</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <h4 className="font-semibold text-foreground mb-2 md:mb-4 text-sm md:text-base">দ্রুত লিংক</h4>
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><a href="#about" className="hover:text-foreground transition-colors">পরিচিতি</a></li>
               <li><a href="#departments" className="hover:text-foreground transition-colors">বিভাগ সমূহ</a></li>
               <li><Link to="/courses" className="hover:text-foreground transition-colors">কোর্স ও ক্লাস</Link></li>
@@ -106,8 +106,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4">পরিষেবা</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
+            <h4 className="font-semibold text-foreground mb-2 md:mb-4 text-sm md:text-base">পরিষেবা</h4>
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground">
               <li><a href="#donate" className="hover:text-foreground transition-colors">দান করুন</a></li>
               <li><a href="#admission" className="hover:text-foreground transition-colors">ভর্তি তথ্য</a></li>
               <li><Link to="/students" className="hover:text-foreground transition-colors">ছাত্র তালিকা</Link></li>
@@ -117,30 +117,30 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground mb-4">যোগাযোগ</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 flex-shrink-0" />
-                <a href={`tel:${institution?.phone?.replace(/\s/g, '')}`} className="hover:text-foreground transition-colors">
+            <h4 className="font-semibold text-foreground mb-2 md:mb-4 text-sm md:text-base">যোগাযোগ</h4>
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground">
+              <li className="flex items-center gap-1.5 md:gap-2">
+                <Phone className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                <a href={`tel:${institution?.phone?.replace(/\s/g, '')}`} className="hover:text-foreground transition-colors truncate">
                   {institution?.phone || "+৮৮০ ১৭XX-XXXXXX"}
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 flex-shrink-0" />
-                <a href={`mailto:${institution?.email}`} className="hover:text-foreground transition-colors">
+              <li className="flex items-center gap-1.5 md:gap-2">
+                <Mail className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />
+                <a href={`mailto:${institution?.email}`} className="hover:text-foreground transition-colors truncate">
                   {institution?.email || "info@madrasa.com"}
                 </a>
               </li>
-              <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                <span>{institution?.address || "শাসন সিংগাতী, বাংলাদেশ"}</span>
+              <li className="flex items-start gap-1.5 md:gap-2">
+                <MapPin className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0 mt-0.5" />
+                <span className="line-clamp-2">{institution?.address || "শাসন সিংগাতী, বাংলাদেশ"}</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
+        <div className="pt-4 md:pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
+          <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
             © {new Date().getFullYear()} {institutionName}। সর্বস্বত্ব সংরক্ষিত।
           </p>
           <div className="flex items-center gap-2">
