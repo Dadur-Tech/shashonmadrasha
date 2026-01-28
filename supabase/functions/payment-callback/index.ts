@@ -257,6 +257,55 @@ serve(async (req) => {
         transactionId = txn?.transaction_id || null;
       }
     }
+    // Handle Nagad callback
+    else if (gateway === 'nagad') {
+      const paymentRefId = url.searchParams.get('payment_ref_id') || body.paymentRefId;
+      const callbackStatus = url.searchParams.get('status') || body.status;
+      transactionId = body.orderId || body.merchant_order_id;
+      gatewayTransactionId = paymentRefId;
+      
+      console.log('Nagad callback:', { paymentRefId, callbackStatus, body: JSON.stringify(body).substring(0, 300) });
+      
+      if (callbackStatus === 'Success' || body.status === 'Success') {
+        paymentStatus = 'completed';
+      } else if (callbackStatus === 'Cancelled') {
+        paymentStatus = 'cancelled';
+      } else {
+        paymentStatus = 'failed';
+      }
+    }
+    // Handle Rocket callback
+    else if (gateway === 'rocket') {
+      transactionId = body.tran_id || url.searchParams.get('tran_id');
+      gatewayTransactionId = body.bank_tran_id || body.val_id;
+      const rocketStatus = url.searchParams.get('status') || body.status;
+      
+      console.log('Rocket callback:', { tran_id: transactionId, status: rocketStatus });
+      
+      if (rocketStatus === 'success' && (body.status === 'VALID' || body.status === 'VALIDATED')) {
+        paymentStatus = 'completed';
+      } else if (rocketStatus === 'cancel') {
+        paymentStatus = 'cancelled';
+      } else {
+        paymentStatus = 'failed';
+      }
+    }
+    // Handle Upay callback
+    else if (gateway === 'upay') {
+      transactionId = body.merchant_txn_id || url.searchParams.get('txn_id');
+      gatewayTransactionId = body.upay_txn_id;
+      const upayStatus = url.searchParams.get('status') || body.status;
+      
+      console.log('Upay callback:', { merchant_txn_id: transactionId, status: upayStatus });
+      
+      if (upayStatus === 'success' || body.status === 'SUCCESS') {
+        paymentStatus = 'completed';
+      } else if (upayStatus === 'cancel') {
+        paymentStatus = 'cancelled';
+      } else {
+        paymentStatus = 'failed';
+      }
+    }
     // Handle manual verification
     else if (gateway === 'manual') {
       transactionId = body.transaction_id;
