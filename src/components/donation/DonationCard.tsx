@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { handleDatabaseError, getSecureErrorMessage } from "@/lib/error-handler";
-import { useBkashCheckout } from "@/hooks/use-bkash-checkout";
+// bKash embedded checkout hook removed - using redirect checkout instead
 import type { Database } from "@/integrations/supabase/types";
 
 type PaymentGatewayType = Database["public"]["Enums"]["payment_gateway_type"];
@@ -202,39 +202,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   const selectedAmount = formData.customAmount ? parseInt(formData.customAmount) : formData.amount;
   const selectedGateway = gateways.find(g => g.gateway_type === formData.paymentMethod);
   const paymentMode = selectedGateway?.additional_config?.payment_mode || 'manual';
-  const isBkashEmbedded = formData.paymentMethod === 'bkash' && paymentMode === 'api';
-
-  // bKash embedded checkout hook
-  const {
-    isLoading: bkashLoading,
-    isScriptLoaded: bkashScriptLoaded,
-    initializeCheckout: initBkashCheckout,
-  } = useBkashCheckout({
-    amount: selectedAmount,
-    referenceId: donationId || '',
-    referenceType: 'donation',
-    payerName: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
-    payerPhone: formData.donorPhone,
-    isSandbox: selectedGateway?.sandbox_mode ?? true,
-    onSuccess: (data) => {
-      toast({
-        title: "আলহামদুলিল্লাহ!",
-        description: `আপনার দান সফলভাবে গৃহীত হয়েছে। Transaction ID: ${data.trxID}`,
-      });
-      onSuccess();
-    },
-    onError: (error) => {
-      toast({
-        title: "পেমেন্ট সমস্যা",
-        description: error,
-        variant: "destructive",
-      });
-      setLoading(false);
-    },
-    onClose: () => {
-      setLoading(false);
-    },
-  });
+  // isBkashEmbedded - removed, now using redirect checkout for bKash API mode
 
   // Load enabled payment gateways from public view (excludes sensitive API keys)
   useEffect(() => {
@@ -363,21 +331,50 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
         }
       }
       
-      // For bKash with embedded checkout (API mode)
-      if (isBkashEmbedded && bkashScriptLoaded) {
-        toast({
-          title: "bKash চেকআউট খুলছে...",
-          description: "অনুগ্রহ করে পেমেন্ট সম্পন্ন করুন",
+      // For bKash with API mode - use redirect checkout (official bKash payment page)
+      if (formData.paymentMethod === 'bkash' && paymentMode === 'api') {
+        const response = await supabase.functions.invoke('initiate-payment', {
+          body: {
+            gateway: 'bkash',
+            amount: selectedAmount,
+            reference_id: createdDonationId,
+            reference_type: 'donation',
+            payer_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
+            payer_phone: formData.donorPhone,
+            return_url: window.location.origin + '/#donate',
+          },
         });
-        // The hook will handle the embedded popup
-        setTimeout(() => {
-          initBkashCheckout();
-        }, 500);
-        return;
+
+        if (response.error) throw new Error(response.error.message);
+        
+        const result = response.data;
+        console.log("bKash initiate-payment result:", result);
+        
+        // Check if we got the bKash checkout URL
+        if (result.paymentData?.bkashURL) {
+          toast({
+            title: "bKash পেমেন্ট পেজে নিয়ে যাওয়া হচ্ছে...",
+            description: "অনুগ্রহ করে পিন দিয়ে পেমেন্ট সম্পন্ন করুন।",
+          });
+          window.location.href = result.paymentData.bkashURL;
+          return;
+        } else if (result.paymentUrl) {
+          window.location.href = result.paymentUrl;
+          return;
+        } else {
+          // API failed, show manual instructions
+          setPaymentData({
+            ...result.paymentData,
+            donationId: createdDonationId,
+            merchantNumber: selectedGateway?.merchant_id,
+          });
+          setStep(4);
+          return;
+        }
       }
       
-      // For mobile wallets (non-embedded mode), show payment instructions
-      if (['bkash', 'nagad', 'rocket', 'upay'].includes(formData.paymentMethod)) {
+      // For other mobile wallets (Nagad, Rocket, uPay), show payment instructions
+      if (['nagad', 'rocket', 'upay'].includes(formData.paymentMethod)) {
         const response = await supabase.functions.invoke('initiate-payment', {
           body: {
             gateway: formData.paymentMethod,
@@ -391,16 +388,31 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
         });
 
         if (response.error) throw new Error(response.error.message);
+        
+        setPaymentData({
+          ...response.data.paymentData,
+          donationId: createdDonationId,
+          merchantNumber: selectedGateway?.merchant_id,
+        });
+        setStep(4);
+        return;
+      }
+      
+      // For bKash manual mode, show payment instructions
+      if (formData.paymentMethod === 'bkash' && paymentMode !== 'api') {
+        const response = await supabase.functions.invoke('initiate-payment', {
+          body: {
+            gateway: 'bkash',
+            amount: selectedAmount,
+            reference_id: createdDonationId,
+            reference_type: 'donation',
+            payer_name: formData.isAnonymous ? "বেনামী দাতা" : formData.donorName,
+            payer_phone: formData.donorPhone,
+            return_url: window.location.origin + '/#donate',
+          },
+        });
 
-        // If API mode returns a checkout URL (for redirect checkout), redirect
-        if (response.data?.paymentUrl && !isBkashEmbedded) {
-          toast({
-            title: "পেমেন্ট পেজে নিয়ে যাওয়া হচ্ছে",
-            description: `${selectedGateway?.display_name || formData.paymentMethod} এ পেমেন্ট সম্পন্ন করুন।`,
-          });
-          window.location.href = response.data.paymentUrl;
-          return;
-        }
+        if (response.error) throw new Error(response.error.message);
         
         setPaymentData({
           ...response.data.paymentData,
@@ -679,12 +691,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
                       : `আপনাকে ${selectedGateway?.display_name} পেমেন্ট পেজে নিয়ে যাওয়া হবে।`
                     }
                   </p>
-                  {isBkash && !bkashScriptLoaded && (
-                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      bKash SDK লোড হচ্ছে...
-                    </p>
-                  )}
+                  {/* bKash SDK loading indicator - removed since using redirect checkout */}
                 </div>
               );
             }
