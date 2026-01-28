@@ -205,15 +205,37 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   const paymentMode = selectedGateway?.additional_config?.payment_mode || 'manual';
   // isBkashEmbedded - removed, now using redirect checkout for bKash API mode
 
-  // In Lovable preview the app runs inside an iframe; many payment providers block being iframed.
-  // In that case, we show a "Open in new tab" button instead of navigating this frame.
-  const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+  // Check if running inside Lovable preview iframe (not the published site)
+  // The published site should never be embedded, so we check for lovableproject.com in parent
+  const isLovablePreview = (() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      // If we can't access parent origin or it's different and contains lovable, we're in preview
+      if (window.self === window.top) return false;
+      // We're in an iframe - check if it's Lovable editor preview
+      return window.location.hostname.includes('lovableproject.com') || 
+             window.location.hostname.includes('lovable.app');
+    } catch {
+      // Cross-origin iframe - likely Lovable preview
+      return true;
+    }
+  })();
+  
   const openPaymentPage = (url: string) => {
-    if (isEmbedded) {
+    console.log("openPaymentPage called with URL:", url);
+    console.log("isLovablePreview:", isLovablePreview, "window.self !== window.top:", window.self !== window.top);
+    
+    // For Lovable preview iframe, show a link to open in new tab
+    // For published site, redirect directly
+    if (isLovablePreview && window.self !== window.top) {
+      console.log("Showing redirect step 5 for preview");
       setRedirectUrl(url);
       setStep(5);
       return;
     }
+    // Direct redirect for published sites
+    console.log("Redirecting directly to payment page...");
+    // Keep loading state while redirecting
     window.location.href = url;
   };
 
@@ -444,6 +466,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
       
       onSuccess();
     } catch (error: unknown) {
+      console.error("Donation processing error:", error);
       handleDatabaseError(error, "donation-processing");
     } finally {
       setLoading(false);
