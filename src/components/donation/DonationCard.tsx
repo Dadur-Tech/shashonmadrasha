@@ -188,6 +188,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   const [loadingGateways, setLoadingGateways] = useState(true);
   const [paymentData, setPaymentData] = useState<any>(null);
   const [donationId, setDonationId] = useState<string | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     donorName: "",
     donorPhone: "",
@@ -203,6 +204,18 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
   const selectedGateway = gateways.find(g => g.gateway_type === formData.paymentMethod);
   const paymentMode = selectedGateway?.additional_config?.payment_mode || 'manual';
   // isBkashEmbedded - removed, now using redirect checkout for bKash API mode
+
+  // In Lovable preview the app runs inside an iframe; many payment providers block being iframed.
+  // In that case, we show a "Open in new tab" button instead of navigating this frame.
+  const isEmbedded = typeof window !== 'undefined' && window.self !== window.top;
+  const openPaymentPage = (url: string) => {
+    if (isEmbedded) {
+      setRedirectUrl(url);
+      setStep(5);
+      return;
+    }
+    window.location.href = url;
+  };
 
   // Load enabled payment gateways from public view (excludes sensitive API keys)
   useEffect(() => {
@@ -326,7 +339,7 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
         
         if (result.paymentUrl) {
           // Redirect to payment gateway
-          window.location.href = result.paymentUrl;
+          openPaymentPage(result.paymentUrl);
           return;
         }
       }
@@ -356,10 +369,10 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             title: "bKash পেমেন্ট পেজে নিয়ে যাওয়া হচ্ছে...",
             description: "অনুগ্রহ করে পিন দিয়ে পেমেন্ট সম্পন্ন করুন।",
           });
-          window.location.href = result.paymentData.bkashURL;
+          openPaymentPage(result.paymentData.bkashURL);
           return;
         } else if (result.paymentUrl) {
-          window.location.href = result.paymentUrl;
+          openPaymentPage(result.paymentUrl);
           return;
         } else {
           // API failed, show manual instructions
@@ -686,8 +699,8 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
               return (
                 <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
                   <p className="text-sm text-green-700 dark:text-green-400">
-                    <strong>ইনস্ট্যান্ট পেমেন্ট:</strong> {isBkash 
-                      ? `${selectedGateway?.display_name} এর অফিসিয়াল চেকআউট পপআপ খুলবে যেখানে পিন দিয়ে সরাসরি পেমেন্ট করতে পারবেন।`
+            <strong>ইনস্ট্যান্ট পেমেন্ট:</strong> {isBkash 
+              ? `${selectedGateway?.display_name} এর অফিসিয়াল চেকআউট পেজ খুলবে যেখানে পিন দিয়ে সরাসরি পেমেন্ট করতে পারবেন।`
                       : `আপনাকে ${selectedGateway?.display_name} পেমেন্ট পেজে নিয়ে যাওয়া হবে।`
                     }
                   </p>
@@ -791,6 +804,55 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             <Button onClick={onSuccess} className="flex-1 gap-2">
               <Check className="w-4 h-4" />
               বুঝেছি, বন্ধ করুন
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Step 5: Redirect Payment Link (for iframe/preview environments) */}
+      {step === 5 && redirectUrl && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-4"
+        >
+          <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-sm text-muted-foreground">
+              এই প্রিভিউ ভিউতে পেমেন্ট পেজ iframe-এর মধ্যে খুলতে পারে না, তাই নতুন ট্যাবে খুলুন।
+            </p>
+          </div>
+
+          <a href={redirectUrl} target="_blank" rel="noreferrer" className="block">
+            <Button className="w-full gap-2">
+              <ExternalLink className="w-4 h-4" />
+              পেমেন্ট পেজ খুলুন
+            </Button>
+          </a>
+
+          <div className="p-4 rounded-lg bg-secondary border">
+            <p className="text-sm text-muted-foreground mb-2">লিংক কপি করুন (যদি দরকার হয়)</p>
+            <div className="flex items-center gap-2">
+              <Input readOnly value={redirectUrl} />
+              <Button variant="outline" onClick={() => copyToClipboard(redirectUrl)}>
+                <Copy className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRedirectUrl(null);
+                setStep(3);
+              }}
+              className="flex-1"
+            >
+              পেছনে
+            </Button>
+            <Button onClick={onSuccess} className="flex-1 gap-2">
+              <Check className="w-4 h-4" />
+              বন্ধ করুন
             </Button>
           </div>
         </motion.div>
