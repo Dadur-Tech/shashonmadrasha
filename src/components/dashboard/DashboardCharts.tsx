@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, Tooltip } from "recharts";
 import { motion } from "framer-motion";
 
 interface DepartmentData {
@@ -66,7 +65,7 @@ export function DepartmentPieChart({ data }: { data: DepartmentData[] }) {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip formatter={(value: number, name: string) => [value, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -144,7 +143,7 @@ export function MonthlyIncomeChart({ data }: { data: MonthlyData[] }) {
                   tickFormatter={(value) => `৳${(value/1000).toFixed(0)}k`} 
                   width={45}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <Tooltip formatter={(value: number, name: string) => [`৳${value.toLocaleString()}`, name]} />
                 <Area 
                   type="monotone" 
                   dataKey="income" 
@@ -221,7 +220,7 @@ export function AttendanceBarChart() {
                   width={40}
                   domain={[0, 100]}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <Tooltip formatter={(value: number, name: string) => [`${value}%`, name]} />
                 <Bar 
                   dataKey="present" 
                   fill="hsl(142.1 76.2% 36.3%)" 
