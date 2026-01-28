@@ -58,10 +58,10 @@ export const validationSchemas = {
     .max(500, "ঠিকানা ৫০০ অক্ষরের মধ্যে হতে হবে")
     .or(z.literal("")),
 
-  // Amount validation (positive number)
+  // Amount validation (min 10 BDT for payment gateways)
   amount: z
     .number()
-    .min(1, "পরিমাণ ১ বা তার বেশি হতে হবে")
+    .min(10, "পরিমাণ কমপক্ষে ১০ টাকা হতে হবে")
     .max(100000000, "পরিমাণ অনেক বেশি"),
 
   amountOptional: z
