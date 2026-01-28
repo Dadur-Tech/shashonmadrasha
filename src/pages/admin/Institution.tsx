@@ -43,6 +43,13 @@ export default function InstitutionPage() {
     email: "",
     website: "",
     principal: "",
+    description: "",
+    workingHours: "",
+    offDay: "",
+    facebookUrl: "",
+    youtubeUrl: "",
+    whatsappNumber: "",
+    motto: "",
   });
 
   const { data: institution, isLoading } = useQuery({
@@ -91,6 +98,13 @@ export default function InstitutionPage() {
         email: institution.email || "",
         website: institution.website || "",
         principal: institution.principal_name || "",
+        description: (institution as any).description || "",
+        workingHours: (institution as any).working_hours || "",
+        offDay: (institution as any).off_day || "",
+        facebookUrl: (institution as any).facebook_url || "",
+        youtubeUrl: (institution as any).youtube_url || "",
+        whatsappNumber: (institution as any).whatsapp_number || "",
+        motto: (institution as any).motto || "",
       });
       setLogoUrl(institution.logo_url || null);
     }
@@ -160,6 +174,13 @@ export default function InstitutionPage() {
         website: formData.website || null,
         principal_name: formData.principal || null,
         logo_url: logoUrl,
+        description: formData.description || null,
+        working_hours: formData.workingHours || null,
+        off_day: formData.offDay || null,
+        facebook_url: formData.facebookUrl || null,
+        youtube_url: formData.youtubeUrl || null,
+        whatsapp_number: formData.whatsappNumber || null,
+        motto: formData.motto || null,
       };
 
       if (institution?.id) {
@@ -358,6 +379,69 @@ export default function InstitutionPage() {
                     placeholder="www.example.com"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>অফিস সময়</Label>
+                    <Input
+                      value={formData.workingHours}
+                      onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="সকাল ৯টা - বিকাল ৫টা"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ছুটির দিন</Label>
+                    <Input
+                      value={formData.offDay}
+                      onChange={(e) => setFormData({ ...formData, offDay: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="শুক্রবার"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Social Media */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" />
+                  সোশ্যাল মিডিয়া
+                </CardTitle>
+                <CardDescription>সামাজিক যোগাযোগ মাধ্যমের লিংক</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>ফেসবুক পেজ URL</Label>
+                    <Input
+                      value={formData.facebookUrl}
+                      onChange={(e) => setFormData({ ...formData, facebookUrl: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="https://facebook.com/..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ইউটিউব চ্যানেল URL</Label>
+                    <Input
+                      value={formData.youtubeUrl}
+                      onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                      disabled={!isEditing}
+                      placeholder="https://youtube.com/..."
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>হোয়াটসঅ্যাপ নম্বর</Label>
+                  <Input
+                    value={formData.whatsappNumber}
+                    onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="+৮৮০ ১৭XX-XXXXXX"
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -366,7 +450,7 @@ export default function InstitutionPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-primary" />
-                  প্রশাসন
+                  প্রশাসন ও বিবরণ
                 </CardTitle>
                 <CardDescription>মাদরাসা প্রশাসনের তথ্য</CardDescription>
               </CardHeader>
@@ -378,6 +462,25 @@ export default function InstitutionPage() {
                     onChange={(e) => setFormData({ ...formData, principal: e.target.value })}
                     disabled={!isEditing}
                     placeholder="মাওলানা মুহাম্মদ..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>মাদরাসার মটো/শ্লোগান</Label>
+                  <Input
+                    value={formData.motto}
+                    onChange={(e) => setFormData({ ...formData, motto: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="ইসলামী শিক্ষার আলোকবর্তিকা"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>মাদরাসার বিবরণ (হোমপেজে দেখাবে)</Label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    disabled={!isEditing}
+                    placeholder="মাদরাসার সংক্ষিপ্ত বিবরণ লিখুন..."
+                    rows={4}
                   />
                 </div>
               </CardContent>
