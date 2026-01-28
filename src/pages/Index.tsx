@@ -39,12 +39,11 @@ import { UpcomingEvents } from "@/components/landing/UpcomingEvents";
 import { UserDropdown } from "@/components/shared/UserDropdown";
 
 const navLinks = [
+  { href: "#donate", label: "দান করুন" },
   { href: "#about", label: "পরিচিতি" },
   { href: "#departments", label: "বিভাগ" },
   { href: "/courses", label: "অনলাইন ক্লাস", isRoute: true },
   { href: "#results", label: "ফলাফল" },
-  { href: "#gallery", label: "গ্যালারি" },
-  { href: "#donate", label: "দান" },
   { href: "#admission", label: "ভর্তি" },
   { href: "#contact", label: "যোগাযোগ" },
 ];
@@ -107,7 +106,11 @@ export default function Index() {
                   <a 
                     key={link.href}
                     href={link.href} 
-                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    className={`text-sm font-medium transition-colors ${
+                      link.href === "#donate" 
+                        ? "text-primary font-semibold hover:text-primary/80" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
                     {link.label}
                   </a>
@@ -164,7 +167,11 @@ export default function Index() {
                   <a 
                     key={link.href}
                     href={link.href} 
-                    className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    className={`py-2 text-sm font-medium transition-colors ${
+                      link.href === "#donate" 
+                        ? "text-primary font-semibold" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
@@ -254,6 +261,11 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ========== DONATION SECTION (TOP PRIORITY) ========== */}
+      <div id="donate">
+        <DonationSection />
+      </div>
+
       {/* Stats Section */}
       <MadrasaStats />
 
@@ -267,6 +279,9 @@ export default function Index() {
       <div id="departments">
         <DepartmentStudents />
       </div>
+
+      {/* Lillah Boarding Section */}
+      <LillahBoardingSection />
 
       {/* Weekly Meal Schedule */}
       <WeeklyMealSchedule />
@@ -287,9 +302,6 @@ export default function Index() {
         <UpcomingEvents />
       </div>
 
-      {/* Lillah Boarding Section */}
-      <LillahBoardingSection />
-
       {/* Recent Results Section */}
       <div id="results">
         <RecentResults />
@@ -298,12 +310,6 @@ export default function Index() {
       {/* Gallery Section */}
       <div id="gallery">
         <MadrasaGallery />
-      </div>
-
-
-      {/* Donation Section */}
-      <div id="donate">
-        <DonationSection />
       </div>
 
       {/* Online Admission Section */}
