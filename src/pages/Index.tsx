@@ -35,10 +35,6 @@ import { Footer } from "@/components/landing/Footer";
 import { AnnouncementBanner } from "@/components/landing/AnnouncementBanner";
 import { UpcomingEvents } from "@/components/landing/UpcomingEvents";
 import { UserDropdown } from "@/components/shared/UserDropdown";
-import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
-import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
-import { FAQSection } from "@/components/landing/FAQSection";
-import { TestimonialsSection } from "@/components/landing/TestimonialsSection";
 
 const navLinks = [
   { href: "#about", label: "পরিচিতি" },
@@ -276,17 +272,6 @@ export default function Index() {
         <MadrasaGallery />
       </div>
 
-      {/* Features Grid */}
-      <FeaturesGrid />
-
-      {/* Why Choose Us */}
-      <WhyChooseUs />
-
-      {/* Testimonials */}
-      <TestimonialsSection />
-
-      {/* FAQ Section */}
-      <FAQSection />
 
       {/* Donation Section */}
       <div id="donate">
