@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { 
   Users, 
@@ -22,11 +22,13 @@ import {
   UserPlus,
   Mail,
   Lock,
+  Settings,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { RolePermissionsManager } from "@/components/admin/RolePermissionsManager";
 
 type AppRole = "super_admin" | "admin" | "accountant" | "teacher" | "staff";
 
@@ -317,130 +319,150 @@ export default function UserManagementPage() {
           </Dialog>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {(["super_admin", "admin", "accountant", "teacher", "staff"] as AppRole[]).map((role) => {
-            const count = users.filter((u) => u.roles.includes(role)).length;
-            return (
-              <Card key={role} className="border-border/50">
-                <CardContent className="p-4 text-center">
-                  <p className="text-2xl font-bold">{count}</p>
-                  <p className="text-sm text-muted-foreground">{roleLabels[role]}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        {/* Tabs for Users and Permissions */}
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="users" className="gap-2">
+              <Users className="w-4 h-4" />
+              ইউজার তালিকা
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="gap-2">
+              <Settings className="w-4 h-4" />
+              পারমিশন সেটিংস
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Search */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="নাম বা ইমেইল দিয়ে খুঁজুন..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <TabsContent value="users" className="space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {(["super_admin", "admin", "accountant", "teacher", "staff"] as AppRole[]).map((role) => {
+                const count = users.filter((u) => u.roles.includes(role)).length;
+                return (
+                  <Card key={role} className="border-border/50">
+                    <CardContent className="p-4 text-center">
+                      <p className="text-2xl font-bold">{count}</p>
+                      <p className="text-sm text-muted-foreground">{roleLabels[role]}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>সকল ইউজার ({filteredUsers.length})</CardTitle>
-            <CardDescription>ইউজারদের রোল পরিবর্তন করতে রোল ব্যাজে ক্লিক করুন</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>নাম</TableHead>
-                  <TableHead>রোল</TableHead>
-                  <TableHead>যোগদান</TableHead>
-                  <TableHead>অ্যাকশন</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user, index) => (
-                  <motion.tr
-                    key={user.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="border-b"
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {getRoleIcon(user.roles)}
-                        </div>
-                        <div>
-                          <p className="font-medium">{user.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles.length === 0 ? (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            কোনো রোল নেই
-                          </Badge>
-                        ) : (
-                          user.roles.map((role) => (
-                            <Badge
-                              key={role}
-                              variant="outline"
-                              className={`${roleColors[role]} cursor-pointer`}
-                              onClick={() => {
-                                if (user.id !== currentUser?.id) {
-                                  removeRoleMutation.mutate({ userId: user.id, role });
-                                }
-                              }}
-                            >
-                              {roleLabels[role]}
-                              {user.id !== currentUser?.id && (
-                                <Trash2 className="w-3 h-3 ml-1 opacity-50" />
-                              )}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString("bn-BD")}
-                    </TableCell>
-                    <TableCell>
-                      {user.id !== currentUser?.id && (
-                        <Select
-                          onValueChange={(role) =>
-                            addRoleMutation.mutate({ userId: user.id, role: role as AppRole })
-                          }
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="রোল দিন" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(["super_admin", "admin", "accountant", "teacher", "staff"] as AppRole[])
-                              .filter((r) => !user.roles.includes(r))
-                              .map((role) => (
-                                <SelectItem key={role} value={role}>
+            {/* Search */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="নাম বা ইমেইল দিয়ে খুঁজুন..."
+                    className="pl-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Users Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>সকল ইউজার ({filteredUsers.length})</CardTitle>
+                <CardDescription>ইউজারদের রোল পরিবর্তন করতে রোল ব্যাজে ক্লিক করুন</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>নাম</TableHead>
+                      <TableHead>রোল</TableHead>
+                      <TableHead>যোগদান</TableHead>
+                      <TableHead>অ্যাকশন</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user, index) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                        className="border-b"
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              {getRoleIcon(user.roles)}
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.full_name}</p>
+                              <p className="text-sm text-muted-foreground">{user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles.length === 0 ? (
+                              <Badge variant="outline" className="text-muted-foreground">
+                                কোনো রোল নেই
+                              </Badge>
+                            ) : (
+                              user.roles.map((role) => (
+                                <Badge
+                                  key={role}
+                                  variant="outline"
+                                  className={`${roleColors[role]} cursor-pointer`}
+                                  onClick={() => {
+                                    if (user.id !== currentUser?.id) {
+                                      removeRoleMutation.mutate({ userId: user.id, role });
+                                    }
+                                  }}
+                                >
                                   {roleLabels[role]}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    </TableCell>
-                  </motion.tr>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                                  {user.id !== currentUser?.id && (
+                                    <Trash2 className="w-3 h-3 ml-1 opacity-50" />
+                                  )}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.created_at).toLocaleDateString("bn-BD")}
+                        </TableCell>
+                        <TableCell>
+                          {user.id !== currentUser?.id && (
+                            <Select
+                              onValueChange={(role) =>
+                                addRoleMutation.mutate({ userId: user.id, role: role as AppRole })
+                              }
+                            >
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue placeholder="রোল দিন" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {(["super_admin", "admin", "accountant", "teacher", "staff"] as AppRole[])
+                                  .filter((r) => !user.roles.includes(r))
+                                  .map((role) => (
+                                    <SelectItem key={role} value={role}>
+                                      {roleLabels[role]}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </TableCell>
+                      </motion.tr>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="permissions">
+            <RolePermissionsManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
