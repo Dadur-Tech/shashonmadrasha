@@ -71,6 +71,13 @@ const gatewayIcons: Record<string, string> = {
   manual: "✋",
 };
 
+interface PaymentGatewayConfig {
+  payment_mode?: 'api' | 'manual' | 'redirect';
+  custom_instructions?: string;
+  success_message?: string;
+  info_message?: string;
+}
+
 interface PaymentGateway {
   id: string;
   gateway_type: PaymentGatewayType;
@@ -79,6 +86,7 @@ interface PaymentGateway {
   merchant_id: string | null;
   sandbox_mode: boolean;
   logo_url: string | null;
+  additional_config: PaymentGatewayConfig | null;
 }
 
 export const DonationSection = () => {
@@ -214,7 +222,10 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             }
             // For other gateways like manual, always include
             return true;
-          });
+          }).map(g => ({
+            ...g,
+            additional_config: g.additional_config as PaymentGatewayConfig | null,
+          })) as PaymentGateway[];
           
           setGateways(validGateways);
           if (validGateways.length > 0) {
@@ -539,23 +550,56 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             )}
           </div>
 
-          {formData.paymentMethod === "manual" && (
-            <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-sm text-amber-700 dark:text-amber-400">
-                <strong>ম্যানুয়াল পেমেন্ট:</strong> দান জমা দেওয়ার পর আমাদের সাথে যোগাযোগ করুন অথবা 
-                সরাসরি মাদরাসায় এসে পেমেন্ট করুন।
-              </p>
-            </div>
-          )}
-
-          {['sslcommerz', 'amarpay'].includes(formData.paymentMethod) && (
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-              <p className="text-sm text-blue-700 dark:text-blue-400">
-                <strong>অনলাইন পেমেন্ট:</strong> আপনাকে নিরাপদ পেমেন্ট পেইজে নিয়ে যাওয়া হবে। 
-                সেখানে আপনি কার্ড/মোবাইল ব্যাংকিং/নেট ব্যাংকিং যেকোনো মাধ্যমে পেমেন্ট করতে পারবেন।
-              </p>
-            </div>
-          )}
+          {/* Show custom info message for selected gateway */}
+          {formData.paymentMethod && (() => {
+            const selectedGateway = gateways.find(g => g.gateway_type === formData.paymentMethod);
+            const infoMessage = selectedGateway?.additional_config?.info_message;
+            const paymentMode = selectedGateway?.additional_config?.payment_mode;
+            
+            if (infoMessage) {
+              return (
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-sm text-foreground">{infoMessage}</p>
+                </div>
+              );
+            }
+            
+            // Default messages based on gateway type
+            if (formData.paymentMethod === "manual") {
+              return (
+                <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    <strong>ম্যানুয়াল পেমেন্ট:</strong> দান জমা দেওয়ার পর আমাদের সাথে যোগাযোগ করুন অথবা 
+                    সরাসরি মাদরাসায় এসে পেমেন্ট করুন।
+                  </p>
+                </div>
+              );
+            }
+            
+            if (['sslcommerz', 'amarpay'].includes(formData.paymentMethod) || paymentMode === 'redirect') {
+              return (
+                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
+                    <strong>অনলাইন পেমেন্ট:</strong> আপনাকে নিরাপদ পেমেন্ট পেইজে নিয়ে যাওয়া হবে। 
+                    সেখানে আপনি কার্ড/মোবাইল ব্যাংকিং/নেট ব্যাংকিং যেকোনো মাধ্যমে পেমেন্ট করতে পারবেন।
+                  </p>
+                </div>
+              );
+            }
+            
+            if (paymentMode === 'api' && ['bkash', 'nagad', 'rocket', 'upay'].includes(formData.paymentMethod)) {
+              return (
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    <strong>ইনস্ট্যান্ট পেমেন্ট:</strong> আপনাকে {selectedGateway?.display_name} পেমেন্ট পেজে নিয়ে যাওয়া হবে 
+                    যেখানে পিন দিয়ে সরাসরি পেমেন্ট করতে পারবেন।
+                  </p>
+                </div>
+              );
+            }
+            
+            return null;
+          })()}
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
@@ -601,15 +645,23 @@ function DonationForm({ category, onSuccess }: DonationFormProps) {
             </div>
           </div>
 
-          <div className="p-4 rounded-lg bg-secondary border">
-            <h4 className="font-bold mb-3 flex items-center gap-2">
-              <span className="text-2xl">{gatewayIcons[paymentData.gateway]}</span>
-              পেমেন্ট নির্দেশনা
-            </h4>
-            <div className="whitespace-pre-line text-sm text-muted-foreground">
-              {paymentData.instructions}
-            </div>
-          </div>
+          {/* Show custom instructions from admin config or default */}
+          {(() => {
+            const selectedGateway = gateways.find(g => g.gateway_type === paymentData.gateway);
+            const customInstructions = selectedGateway?.additional_config?.custom_instructions;
+            
+            return (
+              <div className="p-4 rounded-lg bg-secondary border">
+                <h4 className="font-bold mb-3 flex items-center gap-2">
+                  <span className="text-2xl">{gatewayIcons[paymentData.gateway]}</span>
+                  পেমেন্ট নির্দেশনা
+                </h4>
+                <div className="whitespace-pre-line text-sm text-muted-foreground">
+                  {customInstructions || paymentData.instructions}
+                </div>
+              </div>
+            );
+          })()}
 
           {paymentData.merchantNumber && (
             <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">

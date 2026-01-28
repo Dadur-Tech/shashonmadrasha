@@ -1816,6 +1816,7 @@ export type Database = {
       }
       payment_gateways_public: {
         Row: {
+          additional_config: Json | null
           created_at: string | null
           display_name: string | null
           display_order: number | null
@@ -1830,6 +1831,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          additional_config?: Json | null
           created_at?: string | null
           display_name?: string | null
           display_order?: number | null
@@ -1844,6 +1846,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          additional_config?: Json | null
           created_at?: string | null
           display_name?: string | null
           display_order?: number | null
