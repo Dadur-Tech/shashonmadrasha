@@ -32,6 +32,7 @@ import {
   Bell,
   Book,
   Home,
+  CloudDownload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -72,6 +73,7 @@ const secondaryNavItems: NavItem[] = [
   { title: "ইউজার ম্যানেজমেন্ট", href: "/admin/users", icon: ShieldCheck },
   { title: "পেমেন্ট গেটওয়ে", href: "/admin/payment-gateways", icon: CreditCard },
   { title: "প্রতিষ্ঠান সেটিংস", href: "/admin/institution", icon: Building2 },
+  { title: "ব্যাকআপ ডাউনলোড", href: "/admin/backup", icon: CloudDownload },
   { title: "সেটিংস", href: "/admin/settings", icon: Settings },
   { title: "সাহায্য", href: "/admin/help", icon: HelpCircle },
 ];
