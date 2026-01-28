@@ -119,11 +119,13 @@ serve(async (req) => {
         isSandbox: gatewayConfig.sandbox_mode,
       });
       paymentUrl = paymentData.paymentUrl;
-    } else if (gateway === 'bkash') {
-      // Check if API mode is enabled
+  } else if (gateway === 'bkash') {
+      // Check if API mode is enabled for embedded checkout
       if (paymentMode === 'api' && gatewayConfig.api_key_encrypted && gatewayConfig.api_secret_encrypted) {
         try {
-          paymentData = await initiateBkash({
+          console.log('Initiating bKash embedded checkout...');
+          
+          const bkashResult = await initiateBkash({
             appKey: gatewayConfig.api_key_encrypted,
             appSecret: gatewayConfig.api_secret_encrypted,
             username: gatewayConfig.merchant_id || '',
@@ -135,11 +137,21 @@ serve(async (req) => {
             isSandbox: gatewayConfig.sandbox_mode,
           });
           
-          if (paymentData.bkashURL) {
-            paymentUrl = paymentData.bkashURL;
+          console.log('bKash initiate result:', JSON.stringify(bkashResult));
+          
+          // For embedded checkout, we need paymentID and idToken
+          if (bkashResult.paymentID && bkashResult.idToken) {
+            paymentData = {
+              type: 'embedded_checkout',
+              paymentID: bkashResult.paymentID,
+              idToken: bkashResult.idToken,
+              statusCode: bkashResult.statusCode,
+              bkashURL: bkashResult.bkashURL,
+            };
+            paymentUrl = bkashResult.bkashURL || '';
           } else {
-            // If bKash API fails, fallback to manual
-            console.error('bKash API returned no URL:', paymentData);
+            // API returned error
+            console.error('bKash API error:', bkashResult);
             paymentData = {
               type: 'mobile_wallet',
               gateway,
@@ -147,11 +159,12 @@ serve(async (req) => {
               amount,
               instructions: getMobileWalletInstructions(gateway, gatewayConfig.merchant_id, amount, gatewayConfig.additional_config?.custom_instructions),
               merchantNumber: gatewayConfig.merchant_id,
-              apiError: paymentData.statusMessage || 'API সমস্যা - ম্যানুয়াল পেমেন্ট করুন',
+              apiError: bkashResult.statusMessage || 'API সমস্যা - ম্যানুয়াল পেমেন্ট করুন',
+              statusCode: bkashResult.statusCode,
             };
           }
         } catch (error) {
-          console.error('bKash API error:', error);
+          console.error('bKash API exception:', error);
           // Fallback to manual on error
           paymentData = {
             type: 'mobile_wallet',
